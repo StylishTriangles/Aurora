@@ -14,6 +14,8 @@ class Options : public QWidget
 public:
     explicit Options(QWidget *parent = 0);
     ~Options();
+signals:
+    void submenuExit();
 
 private slots:
     void on_pushButton_clicked();
