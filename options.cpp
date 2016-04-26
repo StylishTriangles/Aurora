@@ -15,5 +15,5 @@ Options::~Options()
 
 void Options::on_pushButton_clicked()
 {
-
+    hide();
 }
