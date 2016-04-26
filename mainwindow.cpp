@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "options.h"
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -20,6 +21,13 @@ void MainWindow::on_pushButton_clicked()
 
 void MainWindow::on_pushButton_2_clicked()
 {
-    Game g;
-    g.show();
+    //Game g;
+    //g.show();
+}
+
+void MainWindow::on_pushButton_3_clicked()
+{
+    Options O(this);
+    O.show();
+    //this->hide();
 }
