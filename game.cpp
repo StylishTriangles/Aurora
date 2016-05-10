@@ -11,7 +11,6 @@ Game::~Game()
 }
 
 
-void Game::resizeEvent(QResizeEvent* E)
+void Game::resizeEvent(QResizeEvent*)
 {
-    this->resize(E->size());
 }

@@ -19,12 +19,13 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete opt;
+    delete gameScr;
     delete ui;
 }
 // public
 void MainWindow::resizeEvent(QResizeEvent *)
 {
-
+    gameScr->resize(this->size());
 }
 
 // private slots
