@@ -18,6 +18,11 @@ MainWindow::~MainWindow()
     delete opt;
     delete ui;
 }
+// public
+void MainWindow::resizeEvent(QResizeEvent *)
+{
+
+}
 
 // private slots
 void MainWindow::on_exitButton_clicked()

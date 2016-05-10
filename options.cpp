@@ -13,7 +13,7 @@ Options::~Options()
     delete ui;
 }
 
-void Options::on_pushButton_clicked()
+void Options::on_returnButton_clicked()
 {
     this->hide();
     emit submenuExit();

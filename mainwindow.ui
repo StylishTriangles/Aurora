@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Aurora</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <property name="palette">
@@ -432,8 +432,8 @@
    <widget class="QPushButton" name="exitButton">
     <property name="geometry">
      <rect>
-      <x>150</x>
-      <y>160</y>
+      <x>160</x>
+      <y>150</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -445,7 +445,7 @@
    <widget class="QPushButton" name="newGameButton">
     <property name="geometry">
      <rect>
-      <x>150</x>
+      <x>160</x>
       <y>80</y>
       <width>75</width>
       <height>23</height>
@@ -458,8 +458,8 @@
    <widget class="QPushButton" name="optionsButton">
     <property name="geometry">
      <rect>
-      <x>150</x>
-      <y>130</y>
+      <x>160</x>
+      <y>120</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -471,11 +471,21 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>170</x>
-      <y>20</y>
-      <width>47</width>
-      <height>13</height>
+      <x>160</x>
+      <y>10</y>
+      <width>91</width>
+      <height>51</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>14</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="cursor">
+     <cursorShape>CrossCursor</cursorShape>
     </property>
     <property name="text">
      <string>AURORA</string>

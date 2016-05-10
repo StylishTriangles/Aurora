@@ -18,7 +18,7 @@ signals:
     void submenuExit();
 
 private slots:
-    void on_pushButton_clicked();
+    void on_returnButton_clicked();
 
 private:
     Ui::Options *ui;

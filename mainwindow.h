@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include "options.h"
+#include "game.h"
 
 namespace Ui {
 class MainWindow;
@@ -15,7 +16,8 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    
+
+    void resizeEvent(QResizeEvent*) Q_DECL_OVERRIDE;
 
 private slots:
     void on_exitButton_clicked();
@@ -27,6 +29,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     Options* opt;
+    Game* game;
 
 };
 
