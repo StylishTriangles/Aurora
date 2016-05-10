@@ -22,5 +22,4 @@ HEADERS  += mainwindow.h \
     game.h
 
 FORMS    += mainwindow.ui \
-    options.ui \
-    game.ui
+    options.ui

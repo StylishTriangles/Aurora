@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "options.h"
+#include "game.h"
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -9,6 +10,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     opt = new Options(this);
     opt->hide();
+    gameScr = new Game(this);
+    gameScr->hide();
     // polaczenie sygnalu wyjscia submenuExit() klasy opt ze slotem show() klasy centralWidget
     QObject::connect(opt,SIGNAL(submenuExit(void)),ui->centralWidget,SLOT(show()));
 }
@@ -27,8 +30,8 @@ void MainWindow::on_exitButton_clicked()
 
 void MainWindow::on_newGameButton_clicked()
 {
-    //Game g;
-    //g.show();
+    ui->centralWidget->hide();
+    gameScr->show();
 }
 
 void MainWindow::on_optionsButton_clicked()
