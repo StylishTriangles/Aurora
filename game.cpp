@@ -1,14 +1,17 @@
 #include "game.h"
-#include "ui_game.h"
 
 Game::Game(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::Game)
+    QOpenGLWidget(parent)
 {
-    ui->setupUi(this);
+    this->setMinimumSize(100, 100);
 }
 
 Game::~Game()
 {
-    delete ui;
+}
+
+
+void Game::resizeEvent(QResizeEvent* E)
+{
+    this->resize(E->size());
 }

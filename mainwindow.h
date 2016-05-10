@@ -29,8 +29,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     Options* opt;
-    Game* game;
-
+    Game* gameScr;
 };
 
 #endif // MAINWINDOW_H
