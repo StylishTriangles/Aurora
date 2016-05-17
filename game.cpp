@@ -14,3 +14,10 @@ Game::~Game()
 void Game::resizeEvent(QResizeEvent*)
 {
 }
+
+void Game::initializeGL()
+{
+    mainCamera.setToIdentity();
+    mainCamera.translate(0, 0, -1);
+
+}
