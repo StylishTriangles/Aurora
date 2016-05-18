@@ -5,22 +5,24 @@
 #include <QOpenGLWidget>
 #include <QResizeEvent>
 #include <QMatrix4x4>
+#include <QOpenGLFunctions>
 
 namespace Ui {
 class Game;
 }
 
-class Game : public QOpenGLWidget
+class Game : public QOpenGLWidget, protected QOpenGLFunctions
 {
     Q_OBJECT
 
 public:
     explicit Game(QWidget *parent = 0);
     ~Game();
-    void initializeGL() Q_DECL_OVERRIDE;
 
-public slots:
-    virtual void resizeEvent(QResizeEvent*) Q_DECL_OVERRIDE;
+protected:
+    void initializeGL() Q_DECL_OVERRIDE;
+    virtual void resizeGL(int w ,int h) Q_DECL_OVERRIDE;
+    virtual void paintGL() Q_DECL_OVERRIDE;
 
 private:
     QMatrix4x4 mainCamera;
