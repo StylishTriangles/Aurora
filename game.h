@@ -6,9 +6,8 @@
 #include <QResizeEvent>
 #include <QMatrix4x4>
 #include <QOpenGLFunctions>
-#include <thread>
-#include <chrono>
 #include <QDebug>
+
 
 namespace Ui {
 class Game;
@@ -26,6 +25,8 @@ protected:
     void initializeGL() Q_DECL_OVERRIDE;
     virtual void resizeGL(int w ,int h) Q_DECL_OVERRIDE;
     virtual void paintGL() Q_DECL_OVERRIDE;
+    void drawTriangle();
+    void drawSquare();
 
 private:
     QMatrix4x4 mainCamera;
