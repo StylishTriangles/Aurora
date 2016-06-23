@@ -7,6 +7,7 @@
 #include <QMatrix4x4>
 #include <QOpenGLFunctions>
 #include <QDebug>
+#include <vector>
 
 
 namespace Ui {
@@ -27,6 +28,7 @@ protected:
     virtual void paintGL() Q_DECL_OVERRIDE;
     void drawTriangle();
     void drawSquare();
+    void drawCircle();
 
 private:
     QMatrix4x4 mainCamera;
