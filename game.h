@@ -6,6 +6,9 @@
 #include <QResizeEvent>
 #include <QMatrix4x4>
 #include <QOpenGLFunctions>
+#include <thread>
+#include <chrono>
+#include <QDebug>
 
 namespace Ui {
 class Game;
