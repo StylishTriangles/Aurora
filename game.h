@@ -6,7 +6,7 @@
 #include <QResizeEvent>
 #include <QMatrix4x4>
 //#include <QOpenGLFunctions>
-#include <QOpenGLFunctions_4_4_Core>
+#include <QOpenGLFunctions_4_3_Core>
 #include <QDebug>
 #include <vector>
 
@@ -15,7 +15,7 @@ namespace Ui {
 class Game;
 }
 
-class Game : public QOpenGLWidget, protected QOpenGLFunctions_4_4_Core
+class Game : public QOpenGLWidget, protected QOpenGLFunctions_4_3_Core
 {
     Q_OBJECT
 

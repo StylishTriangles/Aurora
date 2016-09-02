@@ -260,5 +260,7 @@ void Game::paintGL()
     drawCircle(0.5f,0.5f,0.2f);
     drawCircle(-0.2f,-0.2f,0.2f);
     drawCircle(0.2f,0.2f,0.2f);
+    drawCircle(-0.2f,0.2f,0.2f);
+    drawCircle(0.2f,-0.3f,0.2f);
 
 }

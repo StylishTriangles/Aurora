@@ -23,3 +23,7 @@ HEADERS  += mainwindow.h \
 
 FORMS    += mainwindow.ui \
     options.ui
+
+DISTFILES += \
+    fragmentShader.fsh \
+    vertexShader.vsh
