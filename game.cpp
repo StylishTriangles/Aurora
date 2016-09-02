@@ -1,5 +1,5 @@
 #include "game.h"
-#include <QOpenGLFunctions>
+//#include <QDebug>
 
 Game::Game(QWidget *parent) :
     QOpenGLWidget(parent)
@@ -16,7 +16,7 @@ void Game::initializeGL()
     initializeOpenGLFunctions();
     mainCamera.setToIdentity();
     mainCamera.translate(0, 0, -1);
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 1.0f, 0.0f);
 
 }
 
@@ -165,7 +165,7 @@ void Game::drawSquare(){
     glDeleteBuffers(1, &EBO);
 }
 
-void Game::drawCircle(){
+void Game::drawCircle(float cx, float cy, float scale){
     const GLchar* vertexShaderSource = "#version 330 core\n"
     "layout (location = 0) in vec3 position;\n"
     "void main()\n"
@@ -174,7 +174,7 @@ void Game::drawCircle(){
     "}\0";
 
 
-    const GLchar* fragmentShaderSource = "#version 330 core\n"
+    const GLchar* fragmentShaderSource = "#version 3 core\n"
     "out vec4 color;\n"
     "void main()\n"
     "{\n"
@@ -210,24 +210,25 @@ void Game::drawCircle(){
     glDeleteShader(fragmentShader);
 
     std::vector<GLfloat> vertices;
+    vertices.push_back(cx);
+    vertices.push_back(cy);
     vertices.push_back(0.0f);
-    vertices.push_back(0.0f);
-    vertices.push_back(0.0f);
-    for(float i=0.0f; i<8*M_PI; i+=(M_PI/360)){
-        vertices.push_back(sinf(i));
-        vertices.push_back(cosf(i));
+    for(float i=0.0f; i<=2*M_PI; i+=(M_PI/360)){
+        vertices.push_back(fmaf(sinf(i), scale, cx));
+        vertices.push_back(fmaf(cosf(i), scale, cy));
+//        qDebug() << sinf(i) << cosf(i);
         vertices.push_back(0.0f);
     }
 
-    GLuint indices[vertices.size()];
-
-    for(int i=0; i<vertices.size(); i+=3){
+    std::vector<GLuint> indices(vertices.size()-3);
+    for(unsigned int i=0; i<indices.size()-3; i+=3){
         indices[i]=0;
         indices[i+1]=i/3+1;
-        if((i/3+1)==vertices.size())
-        indices[i+2]=1;
+        if(i+3>=indices.size()-3)
+            indices[i+2]=1;
         else
-        indices[i+2]=i/3+2;
+            indices[i+2]=i/3+2;
+//        qDebug() << indices[i] << indices[i+1] << indices[i+2];
     }
 
     GLuint VBO, EBO;
@@ -235,10 +236,10 @@ void Game::drawCircle(){
     glGenBuffers(1, &EBO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size(), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*vertices.size(), vertices.data(), GL_DYNAMIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*indices.size(), indices.data(), GL_DYNAMIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
@@ -246,7 +247,7 @@ void Game::drawCircle(){
 
     glUseProgram(shaderProgram);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glDrawElements(GL_TRIANGLES, vertices.size(), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
 }
@@ -254,7 +255,10 @@ void Game::drawCircle(){
 void Game::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    drawCircle();
+    drawCircle(0.5f,0.5f,0.2f);
+    drawCircle(-0.2f,-0.2f,0.2f);
+    drawCircle(0.2f,0.2f,0.2f);
 
 }

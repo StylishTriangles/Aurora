@@ -5,7 +5,8 @@
 #include <QOpenGLWidget>
 #include <QResizeEvent>
 #include <QMatrix4x4>
-#include <QOpenGLFunctions>
+//#include <QOpenGLFunctions>
+#include <QOpenGLFunctions_4_4_Core>
 #include <QDebug>
 #include <vector>
 
@@ -14,7 +15,7 @@ namespace Ui {
 class Game;
 }
 
-class Game : public QOpenGLWidget, protected QOpenGLFunctions
+class Game : public QOpenGLWidget, protected QOpenGLFunctions_4_4_Core
 {
     Q_OBJECT
 
@@ -28,7 +29,7 @@ protected:
     virtual void paintGL() Q_DECL_OVERRIDE;
     void drawTriangle();
     void drawSquare();
-    void drawCircle();
+    void drawCircle(float cx, float cy, float scale);
 
 private:
     QMatrix4x4 mainCamera;
