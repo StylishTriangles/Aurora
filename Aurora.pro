@@ -15,11 +15,13 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     options.cpp \
-    game.cpp
+    game.cpp \
+    glsphere.cpp
 
 HEADERS  += mainwindow.h \
     options.h \
-    game.h
+    game.h \
+    glsphere.h
 
 FORMS    += mainwindow.ui \
     options.ui
