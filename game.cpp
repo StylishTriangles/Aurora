@@ -1,5 +1,5 @@
 #include "game.h"
-//#include <QDebug>
+
 
 Game::Game(QWidget *parent) :
     QOpenGLWidget(parent)
@@ -16,8 +16,13 @@ void Game::initializeGL()
     initializeOpenGLFunctions();
     mainCamera.setToIdentity();
     mainCamera.translate(0, 0, -1);
-    glClearColor(0.0f, 0.0f, 1.0f, 0.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
+    m_vao.create();
+    QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
+
+    Vbo.create();
+    setupVBOAttribute();
 }
 
 void Game::resizeGL(int w, int h)
@@ -166,7 +171,7 @@ void Game::drawSquare(){
 }
 
 void Game::drawCircle(float cx, float cy, float scale){
-    const GLchar* vertexShaderSource = "#version 330 core\n"
+    const GLchar* vertexShaderSource = "#version 430 core\n"
     "layout (location = 0) in vec3 position;\n"
     "void main()\n"
     "{\n"
@@ -174,11 +179,11 @@ void Game::drawCircle(float cx, float cy, float scale){
     "}\0";
 
 
-    const GLchar* fragmentShaderSource = "#version 3 core\n"
+    const GLchar* fragmentShaderSource = "#version 430 core\n"
     "out vec4 color;\n"
     "void main()\n"
     "{\n"
-    "color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+    "color = vec4(0.3f, 0.3f, 0.3f, 1.0f);\n"
     "}\n\0";
 
     GLint success;
@@ -210,13 +215,17 @@ void Game::drawCircle(float cx, float cy, float scale){
     glDeleteShader(fragmentShader);
 
     std::vector<GLfloat> vertices;
-    vertices.push_back(cx);
-    vertices.push_back(cy);
-    vertices.push_back(0.0f);
-    for(float i=0.0f; i<=2*M_PI; i+=(M_PI/360)){
+    for(float i=0.0f; i<=2*M_PI; i+=(M_PI/180)){
+        vertices.push_back(cx);
+        vertices.push_back(cy);
+        vertices.push_back(0.0f);
+
         vertices.push_back(fmaf(sinf(i), scale, cx));
         vertices.push_back(fmaf(cosf(i), scale, cy));
-//        qDebug() << sinf(i) << cosf(i);
+        vertices.push_back(0.0f);
+
+        vertices.push_back(fmaf(sinf(i+M_PI/360), scale, cx));
+        vertices.push_back(fmaf(cosf(i+M_PI/360), scale, cy));
         vertices.push_back(0.0f);
     }
 
@@ -231,25 +240,32 @@ void Game::drawCircle(float cx, float cy, float scale){
 //        qDebug() << indices[i] << indices[i+1] << indices[i+2];
     }
 
-    GLuint VBO, EBO;
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    GLuint EBO;
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*vertices.size(), vertices.data(), GL_DYNAMIC_DRAW);
 
+    Vbo.bind();
+    Vbo.allocate(vertices.data(), vertices.size() * sizeof(GLfloat));
+
+
+    /*glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*indices.size(), indices.data(), GL_DYNAMIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-    glEnableVertexAttribArray(0);
-
 
     glUseProgram(shaderProgram);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
+    glDeleteBuffers(1, &EBO);*/
+
+    glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+
+    Vbo.release();
+}
+
+void Game::setupVBOAttribute(){
+    Vbo.bind();
+    this->glEnableVertexAttribArray(0);
+    this->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+    Vbo.release();
 }
 
 void Game::paintGL()
@@ -257,10 +273,8 @@ void Game::paintGL()
     glClear(GL_COLOR_BUFFER_BIT);
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    drawCircle(0.5f,0.5f,0.2f);
-    drawCircle(-0.2f,-0.2f,0.2f);
-    drawCircle(0.2f,0.2f,0.2f);
-    drawCircle(-0.2f,0.2f,0.2f);
-    drawCircle(0.2f,-0.3f,0.2f);
+    QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
+
+    drawCircle(0.0f, 0.0f, 1.0f);
 
 }

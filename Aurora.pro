@@ -25,5 +25,5 @@ FORMS    += mainwindow.ui \
     options.ui
 
 DISTFILES += \
-    fragmentShader.fsh \
-    vertexShader.vsh
+    fragmentShader.frag \
+    vertexShader.vert

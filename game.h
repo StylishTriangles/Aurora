@@ -3,10 +3,11 @@
 
 #include <QWidget>
 #include <QOpenGLWidget>
+#include <QOpenGLVertexArrayObject>
+#include <QOpenGLBuffer>
+#include <QOpenGLFunctions_4_3_Core>
 #include <QResizeEvent>
 #include <QMatrix4x4>
-//#include <QOpenGLFunctions>
-#include <QOpenGLFunctions_4_3_Core>
 #include <QDebug>
 #include <vector>
 
@@ -32,7 +33,11 @@ protected:
     void drawCircle(float cx, float cy, float scale);
 
 private:
+    void setupVBOAttribute();
+
     QMatrix4x4 mainCamera;
+    QOpenGLBuffer Vbo;
+    QOpenGLVertexArrayObject m_vao;
 };
 
 #endif // GAME_H
