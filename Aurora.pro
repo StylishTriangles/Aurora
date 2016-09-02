@@ -26,6 +26,7 @@ HEADERS  += mainwindow.h \
 FORMS    += mainwindow.ui \
     options.ui
 
-DISTFILES += \
-    fragmentShader.frag \
-    vertexShader.vert
+DISTFILES +=
+
+RESOURCES += \
+    shaders.qrc

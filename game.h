@@ -6,10 +6,11 @@
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions_4_3_Core>
+#include <QOpenGLShaderProgram>
 #include <QResizeEvent>
 #include <QMatrix4x4>
 #include <QDebug>
-#include <vector>
+#include <QVector>
 
 
 namespace Ui {
@@ -37,7 +38,8 @@ private:
 
     QMatrix4x4 mainCamera;
     QOpenGLBuffer Vbo;
-    QOpenGLVertexArrayObject m_vao;
+    QOpenGLVertexArrayObject Vao;
+    QOpenGLShaderProgram *sProgram;
 };
 
 #endif // GAME_H
