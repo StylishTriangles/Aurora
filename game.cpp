@@ -9,30 +9,37 @@ Game::Game(QWidget *parent) :
 
 Game::~Game()
 {
+    delete sProgram;
+    delete planetsProgram;
 }
 
 void Game::initializeGL()
 {
     initializeOpenGLFunctions();
-    mainCamera.setToIdentity();
-    mainCamera.translate(0, 0, -1);
     glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 
     Vao.create();
     QOpenGLVertexArrayObject::Binder vaoBinder(&Vao);
+    planetsProgram = new QOpenGLShaderProgram;
 
-    Vbo.create();
-    setupVBOAttribute();
+    projectionMat.setToIdentity();
+    projectionMat.perspective(45.0f, float(this->width()) / float(this->height()), 0.01f, 100.0f);
+    viewMat.setToIdentity();
+    viewMat.translate(0.0f, 0.0f, -8.0f);
+
+    planetVbo.create();
+
+
+    // temp
 }
 
 void Game::resizeGL(int w, int h)
 {
-    mainCamera.setToIdentity();
-    mainCamera.perspective(45.0f, w / float(h), 0.01f, 100.0f);
+    projectionMat.setToIdentity();
+    projectionMat.perspective(45.0f, w / float(h), 0.01f, 100.0f);
 }
 
 void Game::drawTriangle(){
-    sProgram = new QOpenGLShaderProgram;
     bool noerror = true;
     noerror = sProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/vertShader.vert");
     if (!noerror) {qDebug() << sProgram->log();}
@@ -56,10 +63,10 @@ void Game::drawTriangle(){
     glDrawArrays(GL_TRIANGLES, 0, sizeof(vertices)/sizeof(GLfloat));
 
     Vbo.release();
+    sProgram->release();
 }
 
 void Game::drawCircle(float cx, float cy, float scale){
-    sProgram = new QOpenGLShaderProgram;
     bool noerror = true;
     noerror = sProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/vertShader.vert");
     if (!noerror) {qDebug() << sProgram->log();}
@@ -91,6 +98,58 @@ void Game::drawCircle(float cx, float cy, float scale){
     glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 
     Vbo.release();
+    sProgram->release();
+}
+
+void Game::drawSphere(float radius)
+{
+    // compile shaders
+    static bool shadersLoaded = false;
+    if (!shadersLoaded)
+    {
+        bool noerror = true;
+        noerror = planetsProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/sphereshaderV.vert");
+        if (!noerror) {qDebug() << planetsProgram->log();}
+        noerror = planetsProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/sphereshader.frag");
+        if (!noerror) {qDebug() << planetsProgram->log();}
+        planetsProgram->bindAttributeLocation("position", 0);
+        planetsProgram->bindAttributeLocation("texCoord", 2);
+        noerror = planetsProgram->link();
+        if (!noerror) {qDebug() << planetsProgram->log();}
+        noerror = planetsProgram->bind();
+        if (!noerror) {qDebug() << planetsProgram->log();}
+        planetsProgram->setUniformValue("ourTexture1", 0);
+        shadersLoaded = true;
+    }
+    QMatrix4x4 modelMat;
+    modelMat.setToIdentity();
+    modelMat.translate(0.0f,0.0f,0.0f);
+    GLsphere ocean;
+    ocean.create(radius);
+    QOpenGLTexture* tex = new QOpenGLTexture(QImage(QString(":/planets/oceaniczna.png")));
+    ocean.setTexture(tex);
+
+    planetVbo.bind();
+    planetVbo.allocate(ocean.constData(),ocean.count()*sizeof(GLfloat));
+    for (int i = 0; i < ocean.count(); i++)
+    {
+        if (ocean.constData()[i] > 1.0f or ocean.constData()[i] < -1.0f)
+            qDebug() << i << ocean.constData()[i];
+    }
+
+    planetsProgram->setUniformValue("model",modelMat);
+    planetsProgram->setUniformValue("view",viewMat);
+    planetsProgram->setUniformValue("projection",projectionMat);
+    this->glEnableVertexAttribArray(0);
+    this->glEnableVertexAttribArray(2);
+    this->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), 0);
+    this->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), reinterpret_cast<GLvoid*>(3*sizeof(GLfloat)));
+
+
+    ocean.getTexture()->bind();
+    glDrawArrays(GL_TRIANGLES, 0, ocean.count());
+    planetVbo.release();
+    delete ocean.getTexture();
 }
 
 void Game::setupVBOAttribute(){
@@ -107,5 +166,6 @@ void Game::paintGL()
 
     QOpenGLVertexArrayObject::Binder vaoBinder(&Vao);
 
-    drawCircle(0.0f, 0.0f, 1.0f);
+//    drawCircle(0.0f, 0.0f, 1.0f);
+    drawSphere(0.5f);
 }

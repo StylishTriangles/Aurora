@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui
+CONFIG   += c++14
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -29,4 +30,5 @@ FORMS    += mainwindow.ui \
 DISTFILES +=
 
 RESOURCES += \
-    shaders.qrc
+    shaders.qrc \
+    textures.qrc
