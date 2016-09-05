@@ -1,4 +1,5 @@
 #include "glsphere.h"
+#include <QtGlobal>
 
 GLsphere::GLsphere() :
     m_texture(nullptr)
@@ -10,26 +11,26 @@ GLsphere::GLsphere(GLfloat radius) :
     create(radius);
 }
 
-void GLsphere::create(GLfloat radius)
+void GLsphere::create(GLfloat radius, const int parallelsAmount, const int meridiansAmount)
 {
+    Q_ASSERT(parallelsAmount>0 && meridiansAmount>0);
+
     m_data.resize(64*31*5*3);
-    const int meridiansAmount = 32;
-    const int parallelsAmount = 32;
     GLfloat* prevRound[meridiansAmount+1];
     GLfloat* currentRound[meridiansAmount+1];
     GLfloat cacheSin[meridiansAmount+1];
     GLfloat cacheCos[meridiansAmount+1];
     for (int i = 0; i <= meridiansAmount; i++)
     {
-        cacheSin[i] = sinf(GLfloat(i)*M_PI/16.0f);
-        cacheCos[i] = cosf(GLfloat(i)*M_PI/16.0f);
+        cacheSin[i] = sinf(2.0f*M_PI*GLfloat(i)/GLfloat(meridiansAmount));
+        cacheCos[i] = cosf(2.0f*M_PI*GLfloat(i)/GLfloat(meridiansAmount));
     }
     for (int i = 0; i <= meridiansAmount; i++)
     {
         prevRound[i] = new GLfloat[5];
         currentRound[i] = new GLfloat[5];
         prevRound[i][0] = 0.0f;
-        prevRound[i][1] = 0.5f;
+        prevRound[i][1] = radius;
         prevRound[i][2] = 0.0f;
         prevRound[i][3] = GLfloat(i)*1.0f/GLfloat(meridiansAmount);
         prevRound[i][4] = 0.0f;
@@ -79,7 +80,8 @@ void GLsphere::create(GLfloat radius)
             *it++ = prevRound[j][3];
             *it++ = prevRound[j][4];
 
-            if (i==1) break; // Biegun sklada sie z trojkatow, zatem przypda 1 trojkat na poludnik
+            if (i==1) continue; // Biegun sklada sie z trojkatow, zatem przypda 1 trojkat na poludnik,
+                                // dalszy kod sluzy do renderowania drugiej serii trojkatow, dlatego zostal pominiety
             // bottom-right corner
             *it++ = cacheSin[j+1]*r;
             *it++ = radius*cosf(M_PI*GLfloat(i)/GLfloat(parallelsAmount));
@@ -106,6 +108,7 @@ void GLsphere::create(GLfloat radius)
     }
     for (int j = 0; j < meridiansAmount; j++)
     {
+        // kod generowania 2. serii trojkatow
         *it++ = 0.0f;
         *it++ = -radius;
         *it++ = 0.0f;

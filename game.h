@@ -42,6 +42,8 @@ private:
     QOpenGLVertexArrayObject Vao;
     QOpenGLShaderProgram *sProgram;
     QOpenGLShaderProgram *planetsProgram;
+    // temp
+    QOpenGLTexture* tex;
 };
 
 #endif // GAME_H

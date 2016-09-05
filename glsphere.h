@@ -10,7 +10,7 @@ class GLsphere
 public:
     GLsphere();
     GLsphere(GLfloat radius);
-    void create(GLfloat radius);
+    void create(GLfloat radius, const int parallelsAmount = 32, const int meridiansAmount = 32);
     inline QOpenGLTexture* getTexture() {return m_texture;}
     inline void setTexture(QOpenGLTexture* tex) {m_texture = tex;}
     inline const GLfloat* constData() {return m_data.constData();}

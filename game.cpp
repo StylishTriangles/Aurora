@@ -11,12 +11,15 @@ Game::~Game()
 {
     delete sProgram;
     delete planetsProgram;
+    // temp
+    delete tex;
 }
 
 void Game::initializeGL()
 {
     initializeOpenGLFunctions();
     glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+    glEnable(GL_DEPTH_TEST);
 
     Vao.create();
     QOpenGLVertexArrayObject::Binder vaoBinder(&Vao);
@@ -24,8 +27,9 @@ void Game::initializeGL()
 
     projectionMat.setToIdentity();
     projectionMat.perspective(45.0f, float(this->width()) / float(this->height()), 0.01f, 100.0f);
+//    projectionMat.frustum(0.0f, 800.0f, 0.0f, 600.0f, 0.1f, 100.0f); // orthographic projection mode
     viewMat.setToIdentity();
-    viewMat.translate(0.0f, 0.0f, -8.0f);
+    viewMat.translate(0.0f, 0.0f, -2.0f);
 
     planetVbo.create();
 
@@ -105,6 +109,8 @@ void Game::drawSphere(float radius)
 {
     // compile shaders
     static bool shadersLoaded = false;
+    static long long iter = 0;
+    ++iter;
     if (!shadersLoaded)
     {
         bool noerror = true;
@@ -120,13 +126,15 @@ void Game::drawSphere(float radius)
         if (!noerror) {qDebug() << planetsProgram->log();}
         planetsProgram->setUniformValue("ourTexture1", 0);
         shadersLoaded = true;
+        // temp
+        tex = new QOpenGLTexture(QImage(QString(":/planets/oceaniczna.png")));
     }
     QMatrix4x4 modelMat;
     modelMat.setToIdentity();
     modelMat.translate(0.0f,0.0f,0.0f);
+    modelMat.rotate(float(iter*5),0.0f,1.0f);
     GLsphere ocean;
     ocean.create(radius);
-    QOpenGLTexture* tex = new QOpenGLTexture(QImage(QString(":/planets/oceaniczna.png")));
     ocean.setTexture(tex);
 
     planetVbo.bind();
@@ -149,7 +157,7 @@ void Game::drawSphere(float radius)
     ocean.getTexture()->bind();
     glDrawArrays(GL_TRIANGLES, 0, ocean.count());
     planetVbo.release();
-    delete ocean.getTexture();
+//    delete ocean.getTexture();
 }
 
 void Game::setupVBOAttribute(){
@@ -161,11 +169,10 @@ void Game::setupVBOAttribute(){
 
 void Game::paintGL()
 {
-    glClear(GL_COLOR_BUFFER_BIT);
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     QOpenGLVertexArrayObject::Binder vaoBinder(&Vao);
-
-//    drawCircle(0.0f, 0.0f, 1.0f);
     drawSphere(0.5f);
+
 }
