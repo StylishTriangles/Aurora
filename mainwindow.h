@@ -20,11 +20,11 @@ public:
     void resizeEvent(QResizeEvent*) Q_DECL_OVERRIDE;
 
 private slots:
+    void on_newGameButton_clicked();
+    void on_optionsButton_clicked();
     void on_exitButton_clicked();
 
-    void on_newGameButton_clicked();
-
-    void on_optionsButton_clicked();
+    void reload();
 
 private:
     Ui::MainWindow *ui;

@@ -5,15 +5,14 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    gameScr(nullptr)
 {
     ui->setupUi(this);
     opt = new Options(this);
     opt->hide();
-    gameScr = new Game(this);
-    gameScr->hide();
     // polaczenie sygnalu wyjscia submenuExit() klasy opt ze slotem show() klasy centralWidget
-    QObject::connect(opt,SIGNAL(submenuExit(void)),ui->centralWidget,SLOT(show()));
+    QObject::connect(opt, SIGNAL(submenuExit(void)), this, SLOT(reload(void)));
 }
 
 MainWindow::~MainWindow()
@@ -25,7 +24,8 @@ MainWindow::~MainWindow()
 // public
 void MainWindow::resizeEvent(QResizeEvent *)
 {
-    gameScr->resize(this->size());
+    if (gameScr!=nullptr)
+        gameScr->resize(this->size());
 }
 
 // private slots
@@ -36,6 +36,8 @@ void MainWindow::on_exitButton_clicked()
 
 void MainWindow::on_newGameButton_clicked()
 {
+    gameScr = new Game(this);
+    QObject::connect(gameScr, SIGNAL(exitToMenu(void)), this, SLOT(reload(void)));
     ui->centralWidget->hide();
     gameScr->show();
 }
@@ -44,4 +46,9 @@ void MainWindow::on_optionsButton_clicked()
 {
     ui->centralWidget->hide();
     opt->show();
+}
+
+void MainWindow::reload()
+{
+    ui->centralWidget->show();
 }

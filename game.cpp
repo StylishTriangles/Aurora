@@ -1,10 +1,16 @@
 #include "game.h"
+#include <QDebug>
 
 
 Game::Game(QWidget *parent) :
-    QOpenGLWidget(parent)
+    QOpenGLWidget(parent),
+    camXRot(0),
+    camYRot(0),
+    camZRot(0),
+    viewDist(-2.0f)
 {
     this->setMinimumSize(100, 100);
+    this->resize(parent->size());
 }
 
 Game::~Game()
@@ -13,6 +19,41 @@ Game::~Game()
     delete planetsProgram;
     // temp
     delete tex;
+}
+
+static void qNormalizeAngle(int &angle)
+{
+    while (angle < 0)
+        angle += 360 * 16;
+    while (angle > 360 * 16)
+        angle -= 360 * 16;
+}
+
+void Game::setXRotation(int angle)
+{
+    qNormalizeAngle(angle);
+    if (angle != camXRot) {
+        camXRot = angle;
+        update();
+    }
+}
+
+void Game::setYRotation(int angle)
+{
+    qNormalizeAngle(angle);
+    if (angle != camYRot) {
+        camYRot = angle;
+        update();
+    }
+}
+
+void Game::setZRotation(int angle)
+{
+    qNormalizeAngle(angle);
+    if (angle != camZRot) {
+        camZRot = angle;
+        update();
+    }
 }
 
 void Game::initializeGL()
@@ -28,8 +69,6 @@ void Game::initializeGL()
     projectionMat.setToIdentity();
     projectionMat.perspective(45.0f, float(this->width()) / float(this->height()), 0.01f, 100.0f);
 //    projectionMat.frustum(0.0f, 800.0f, 0.0f, 600.0f, 0.1f, 100.0f); // orthographic projection mode
-    viewMat.setToIdentity();
-    viewMat.translate(0.0f, 0.0f, -2.0f);
 
     planetVbo.create();
 
@@ -109,8 +148,8 @@ void Game::drawSphere(float radius)
 {
     // compile shaders
     static bool shadersLoaded = false;
-    static long long iter = 0;
-    ++iter;
+//    static long long iter = 0;
+//    ++iter;
     if (!shadersLoaded)
     {
         bool noerror = true;
@@ -132,7 +171,7 @@ void Game::drawSphere(float radius)
     QMatrix4x4 modelMat;
     modelMat.setToIdentity();
     modelMat.translate(0.0f,0.0f,0.0f);
-    modelMat.rotate(float(iter*5),0.0f,1.0f);
+//    modelMat.rotate(float(iter*5),0.0f,1.0f);
     GLsphere ocean;
     ocean.create(radius);
     ocean.setTexture(tex);
@@ -171,8 +210,61 @@ void Game::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 //    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    viewMat.setToIdentity();
+    viewMat.translate(0.0f, 0.0f, viewDist);
+    viewMat.rotate(180.0f- (camXRot/16.0f), 1.0f, .0f, .0f);
+    viewMat.rotate(camYRot/16.0f, .0f, 1.0f, .0f);
+    viewMat.rotate(camZRot/16.0f, .0f, .0f, 1.0f);
 
     QOpenGLVertexArrayObject::Binder vaoBinder(&Vao);
     drawSphere(0.5f);
+}
 
+void Game::mousePressEvent(QMouseEvent *event)
+{
+    lastCursorPos = event->pos();
+}
+
+void Game::mouseMoveEvent(QMouseEvent *event)
+{
+    int dx = event->x() - lastCursorPos.x();
+    int dy = event->y() - lastCursorPos.y();
+
+    if (event->buttons() & Qt::LeftButton) {
+        setXRotation(camXRot + 8 * dy);
+        setYRotation(camYRot + 8 * dx);
+    }
+//    else if (event->buttons() & Qt::RightButton) { // Hey I just met you
+//        setXRotation(m_xRot + 8 * dy);                and this is crazy
+//        setZRotation(m_zRot + 8 * dx);                here is my event
+//    }                                                 so fix me maybe
+    lastCursorPos = event->pos();
+}
+
+void Game::wheelEvent(QWheelEvent *event)
+{
+    QPoint numPixels = event->pixelDelta();
+    QPoint numDegrees = event->angleDelta();
+    if (!numPixels.isNull())
+    {
+        viewDist += float(numPixels.y())/5000.0f;
+    }
+    else
+    {
+        viewDist += float(numDegrees.y())/5000.0f;
+    }
+    event->accept();
+    this->update();
+}
+
+void Game::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Escape)
+    {
+        this->hide();
+        emit exitToMenu();
+    }
+    else
+        event->ignore();
+    event->accept();
 }

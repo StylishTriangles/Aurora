@@ -5,17 +5,17 @@ GLsphere::GLsphere() :
     m_texture(nullptr)
 {}
 
-GLsphere::GLsphere(GLfloat radius) :
+GLsphere::GLsphere(GLfloat radius, const int parallelsAmount, const int meridiansAmount) :
     m_texture(nullptr)
 {
-    create(radius);
+    create(radius, parallelsAmount, meridiansAmount);
 }
 
 void GLsphere::create(GLfloat radius, const int parallelsAmount, const int meridiansAmount)
 {
     Q_ASSERT(parallelsAmount>0 && meridiansAmount>0);
-
-    m_data.resize(64*31*5*3);
+    //    trojkatow na kwadrat|liczb na punkt|punktow w trojkacie
+    m_data.resize(2 * 5 * 3 * meridiansAmount*(parallelsAmount-1));
     GLfloat* prevRound[meridiansAmount+1];
     GLfloat* currentRound[meridiansAmount+1];
     GLfloat cacheSin[meridiansAmount+1];
@@ -34,11 +34,6 @@ void GLsphere::create(GLfloat radius, const int parallelsAmount, const int merid
         prevRound[i][2] = 0.0f;
         prevRound[i][3] = GLfloat(i)*1.0f/GLfloat(meridiansAmount);
         prevRound[i][4] = 0.0f;
-        currentRound[i][0] = 0.0f;
-        currentRound[i][1] = 0.0f;
-        currentRound[i][2] = 0.0f;
-        currentRound[i][3] = 0.0f;
-        currentRound[i][4] = 0.0f;
     }
     GLfloat r = 0.0f;
     GLfloat* it = m_data.data();
@@ -49,16 +44,11 @@ void GLsphere::create(GLfloat radius, const int parallelsAmount, const int merid
         for (int j = 0; j < meridiansAmount; j++)
         {
             // bottom-left corner
-            currentRound[j][0] = cacheSin[j]*r;
-            currentRound[j][1] = radius * cosf(M_PI*GLfloat(i)/GLfloat(parallelsAmount));
-            currentRound[j][2] = cacheCos[j]*r;
-            currentRound[j][3] = GLfloat(j)*1.0f/GLfloat(meridiansAmount);
-            currentRound[j][4] = GLfloat(i)*1.0f/GLfloat(parallelsAmount);
-            *it++ = currentRound[j][0];
-            *it++ = currentRound[j][1];
-            *it++ = currentRound[j][2];
-            *it++ = currentRound[j][3];
-            *it++ = currentRound[j][4];
+            *it++ = currentRound[j][0] = cacheSin[j]*r;
+            *it++ = currentRound[j][1] = radius * cosf(M_PI*GLfloat(i)/GLfloat(parallelsAmount));
+            *it++ = currentRound[j][2] = cacheCos[j]*r;
+            *it++ = currentRound[j][3] = GLfloat(j)*1.0f/GLfloat(meridiansAmount);
+            *it++ = currentRound[j][4] = GLfloat(i)*1.0f/GLfloat(parallelsAmount);
             // bottom-right corner
             *it++ = cacheSin[j+1]*r;
             *it++ = radius*cosf(M_PI*GLfloat(i)/GLfloat(parallelsAmount));
