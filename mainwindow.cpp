@@ -50,5 +50,11 @@ void MainWindow::on_optionsButton_clicked()
 
 void MainWindow::reload()
 {
+    if (gameScr != nullptr) {
+        QObject::disconnect(gameScr, SIGNAL(exitToMenu(void)), this, SLOT(reload(void)));
+        delete gameScr;
+        gameScr = nullptr;
+    }
+    this->setFocus();
     ui->centralWidget->show();
 }

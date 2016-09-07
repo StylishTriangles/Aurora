@@ -9,6 +9,7 @@
 #include <QResizeEvent>
 #include <QMatrix4x4>
 #include <QVector>
+#include <QKeyEvent>
 #include "glsphere.h"
 
 namespace Ui {
@@ -50,6 +51,7 @@ private:
     QOpenGLShaderProgram *sProgram;
     QOpenGLShaderProgram *planetsProgram;
     QPoint lastCursorPos;
+    bool shadersCompiled;
     // current camera rotation and position
     int camXRot, camYRot, camZRot;
     float viewDist;

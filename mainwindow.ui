@@ -488,6 +488,9 @@
        <height>23</height>
       </rect>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::NoFocus</enum>
+     </property>
      <property name="text">
       <string>Wyjdź</string>
      </property>
@@ -501,11 +504,17 @@
        <height>23</height>
       </rect>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::NoFocus</enum>
+     </property>
      <property name="text">
       <string>Opcje</string>
      </property>
     </widget>
     <widget class="QPushButton" name="newGameButton">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <property name="geometry">
       <rect>
        <x>20</x>
@@ -513,6 +522,9 @@
        <width>75</width>
        <height>23</height>
       </rect>
+     </property>
+     <property name="focusPolicy">
+      <enum>Qt::NoFocus</enum>
      </property>
      <property name="text">
       <string>Nowa Gra</string>

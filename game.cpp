@@ -4,18 +4,19 @@
 
 Game::Game(QWidget *parent) :
     QOpenGLWidget(parent),
-    camXRot(0),
-    camYRot(0),
-    camZRot(0),
+    shadersCompiled(false),
+    camXRot(0), camYRot(0), camZRot(0),
     viewDist(-2.0f)
 {
     this->setMinimumSize(100, 100);
     this->resize(parent->size());
+    this->setFocus();
 }
 
 Game::~Game()
 {
     delete sProgram;
+    planetsProgram->release();
     delete planetsProgram;
     // temp
     delete tex;
@@ -65,6 +66,7 @@ void Game::initializeGL()
     Vao.create();
     QOpenGLVertexArrayObject::Binder vaoBinder(&Vao);
     planetsProgram = new QOpenGLShaderProgram;
+    sProgram = new QOpenGLShaderProgram;
 
     projectionMat.setToIdentity();
     projectionMat.perspective(45.0f, float(this->width()) / float(this->height()), 0.01f, 100.0f);
@@ -147,10 +149,7 @@ void Game::drawCircle(float cx, float cy, float scale){
 void Game::drawSphere(float radius)
 {
     // compile shaders
-    static bool shadersLoaded = false;
-//    static long long iter = 0;
-//    ++iter;
-    if (!shadersLoaded)
+    if (!shadersCompiled)
     {
         bool noerror = true;
         noerror = planetsProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/sphereshaderV.vert");
@@ -164,14 +163,13 @@ void Game::drawSphere(float radius)
         noerror = planetsProgram->bind();
         if (!noerror) {qDebug() << planetsProgram->log();}
         planetsProgram->setUniformValue("ourTexture1", 0);
-        shadersLoaded = true;
+        shadersCompiled = true;
         // temp
         tex = new QOpenGLTexture(QImage(QString(":/planets/oceaniczna.png")));
     }
     QMatrix4x4 modelMat;
     modelMat.setToIdentity();
     modelMat.translate(0.0f,0.0f,0.0f);
-//    modelMat.rotate(float(iter*5),0.0f,1.0f);
     GLsphere ocean;
     ocean.create(radius);
     ocean.setTexture(tex);
@@ -212,7 +210,7 @@ void Game::paintGL()
 //    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     viewMat.setToIdentity();
     viewMat.translate(0.0f, 0.0f, viewDist);
-    viewMat.rotate(180.0f- (camXRot/16.0f), 1.0f, .0f, .0f);
+    viewMat.rotate(camXRot/16.0f, 1.0f, .0f, .0f);
     viewMat.rotate(camYRot/16.0f, .0f, 1.0f, .0f);
     viewMat.rotate(camZRot/16.0f, .0f, .0f, 1.0f);
 
@@ -261,8 +259,11 @@ void Game::keyPressEvent(QKeyEvent *event)
 {
     if (event->key() == Qt::Key_Escape)
     {
-        this->hide();
         emit exitToMenu();
+    }
+    else if (event->key() == Qt::Key_W)
+    {
+
     }
     else
         event->ignore();
