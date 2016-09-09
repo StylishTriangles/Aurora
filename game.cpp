@@ -1,59 +1,48 @@
 #include "game.h"
 #include <QDebug>
-
+#include <QtMath>
 
 Game::Game(QWidget *parent) :
     QOpenGLWidget(parent),
     shadersCompiled(false),
-    camXRot(0), camYRot(0), camZRot(0),
+    camXRot(0), camYRot(-90.0f), camZRot(0),
     viewDist(-2.0f)
 {
+    QSurfaceFormat format;
+    format.setSamples(4);
+    setFormat(format);
     this->setMinimumSize(100, 100);
     this->resize(parent->size());
     this->setFocus();
+    timer.start();
 }
 
 Game::~Game()
 {
-    delete sProgram;
     planetsProgram->release();
     delete planetsProgram;
     // temp
     delete tex;
 }
 
-static void qNormalizeAngle(int &angle)
+void Game::setXRotation(float angle)
 {
-    while (angle < 0)
-        angle += 360 * 16;
-    while (angle > 360 * 16)
-        angle -= 360 * 16;
-}
-
-void Game::setXRotation(int angle)
-{
-    qNormalizeAngle(angle);
     if (angle != camXRot) {
         camXRot = angle;
-        update();
     }
 }
 
-void Game::setYRotation(int angle)
+void Game::setYRotation(float angle)
 {
-    qNormalizeAngle(angle);
     if (angle != camYRot) {
         camYRot = angle;
-        update();
     }
 }
 
-void Game::setZRotation(int angle)
+void Game::setZRotation(float angle)
 {
-    qNormalizeAngle(angle);
     if (angle != camZRot) {
         camZRot = angle;
-        update();
     }
 }
 
@@ -62,11 +51,11 @@ void Game::initializeGL()
     initializeOpenGLFunctions();
     glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
     glEnable(GL_DEPTH_TEST);
+//    glEnable(GL_MULTISAMPLE);
 
     Vao.create();
     QOpenGLVertexArrayObject::Binder vaoBinder(&Vao);
     planetsProgram = new QOpenGLShaderProgram;
-    sProgram = new QOpenGLShaderProgram;
 
     projectionMat.setToIdentity();
     projectionMat.perspective(45.0f, float(this->width()) / float(this->height()), 0.01f, 100.0f);
@@ -74,8 +63,12 @@ void Game::initializeGL()
 
     planetVbo.create();
 
-
-    // temp
+    camPos   = QVector3D(0.0f, 0.0f,  3.0f);
+    camFront = QVector3D(0.0f, 0.0f, -1.0f);
+    camUp    = QVector3D(0.0f, 1.0f,  0.0f);
+    camSpeed = 0.05f;
+    rotationSpeed = 0.1f;
+    oldTime = timer.elapsed();
 }
 
 void Game::resizeGL(int w, int h)
@@ -84,69 +77,7 @@ void Game::resizeGL(int w, int h)
     projectionMat.perspective(45.0f, w / float(h), 0.01f, 100.0f);
 }
 
-void Game::drawTriangle(){
-    bool noerror = true;
-    noerror = sProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/vertShader.vert");
-    if (!noerror) {qDebug() << sProgram->log();}
-    noerror = sProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/fragShader.frag");
-    if (!noerror) {qDebug() << sProgram->log();}
-    sProgram->bindAttributeLocation("position", 0);
-    noerror = sProgram->link();
-    if (!noerror) {qDebug() << sProgram->log();}
-    noerror = sProgram->bind();
-    if (!noerror) {qDebug() << sProgram->log();}
-
-    GLfloat vertices[] = {
-        -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-        0.0f,  0.5f, 0.0f
-    };
-
-    Vbo.bind();
-    Vbo.allocate(vertices, sizeof(vertices));
-
-    glDrawArrays(GL_TRIANGLES, 0, sizeof(vertices)/sizeof(GLfloat));
-
-    Vbo.release();
-    sProgram->release();
-}
-
-void Game::drawCircle(float cx, float cy, float scale){
-    bool noerror = true;
-    noerror = sProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/vertShader.vert");
-    if (!noerror) {qDebug() << sProgram->log();}
-    noerror = sProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/fragShader.frag");
-    if (!noerror) {qDebug() << sProgram->log();}
-    sProgram->bindAttributeLocation("position", 0);
-    noerror = sProgram->link();
-    if (!noerror) {qDebug() << sProgram->log();}
-    noerror = sProgram->bind();
-    if (!noerror) {qDebug() << sProgram->log();}
-
-    QVector<GLfloat> vertices;
-    for(float i=0.0f; i<=2*M_PI; i+=(M_PI/360)){
-        vertices.push_back(cx);
-        vertices.push_back(cy);
-        vertices.push_back(0.0f);
-
-        vertices.push_back(fmaf(sinf(i), scale, cx));
-        vertices.push_back(fmaf(cosf(i), scale, cy));
-        vertices.push_back(0.0f);
-
-        vertices.push_back(fmaf(sinf(i+M_PI/360), scale, cx));
-        vertices.push_back(fmaf(cosf(i+M_PI/360), scale, cy));
-        vertices.push_back(0.0f);
-    }
-    Vbo.bind();
-    Vbo.allocate(vertices.data(), vertices.size() * sizeof(GLfloat));
-
-    glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-
-    Vbo.release();
-    sProgram->release();
-}
-
-void Game::drawSphere(float radius)
+void Game::drawSphere(float radius, float x, float y, float z)
 {
     // compile shaders
     if (!shadersCompiled)
@@ -169,7 +100,7 @@ void Game::drawSphere(float radius)
     }
     QMatrix4x4 modelMat;
     modelMat.setToIdentity();
-    modelMat.translate(0.0f,0.0f,0.0f);
+    modelMat.translate(x, y, z);
     GLsphere ocean;
     ocean.create(radius);
     ocean.setTexture(tex);
@@ -178,13 +109,14 @@ void Game::drawSphere(float radius)
     planetVbo.allocate(ocean.constData(),ocean.count()*sizeof(GLfloat));
     for (int i = 0; i < ocean.count(); i++)
     {
-        if (ocean.constData()[i] > 1.0f or ocean.constData()[i] < -1.0f)
+        if (ocean.constData()[i] > 2*radius or ocean.constData()[i] < -2*radius)
             qDebug() << i << ocean.constData()[i];
     }
 
     planetsProgram->setUniformValue("model",modelMat);
     planetsProgram->setUniformValue("view",viewMat);
     planetsProgram->setUniformValue("projection",projectionMat);
+
     this->glEnableVertexAttribArray(0);
     this->glEnableVertexAttribArray(2);
     this->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), 0);
@@ -197,25 +129,19 @@ void Game::drawSphere(float radius)
 //    delete ocean.getTexture();
 }
 
-void Game::setupVBOAttribute(){
-    Vbo.bind();
-    this->glEnableVertexAttribArray(0);
-    this->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
-    Vbo.release();
-}
-
 void Game::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 //    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     viewMat.setToIdentity();
-    viewMat.translate(0.0f, 0.0f, viewDist);
-    viewMat.rotate(camXRot/16.0f, 1.0f, .0f, .0f);
-    viewMat.rotate(camYRot/16.0f, .0f, 1.0f, .0f);
-    viewMat.rotate(camZRot/16.0f, .0f, .0f, 1.0f);
+    viewMat.lookAt(camPos, camPos + camFront, camUp);
 
     QOpenGLVertexArrayObject::Binder vaoBinder(&Vao);
-    drawSphere(0.5f);
+
+    drawSphere(0.5f, 0.0f, 0.0f, 0.0f);
+    //drawSphere(0.5f, sinf(qDegreesToRadians(float((timer.elapsed()-oldTime)/50))), cosf(qDegreesToRadians(float((timer.elapsed()-oldTime)/50))), 0.0f);
+    oldTime=timer.elapsed();
+    drawSphere(2.0f, 5.0f, 3.0f, 0.0f);
 }
 
 void Game::mousePressEvent(QMouseEvent *event)
@@ -229,14 +155,20 @@ void Game::mouseMoveEvent(QMouseEvent *event)
     int dy = event->y() - lastCursorPos.y();
 
     if (event->buttons() & Qt::LeftButton) {
-        setXRotation(camXRot + 8 * dy);
-        setYRotation(camYRot + 8 * dx);
+        setXRotation(camXRot + rotationSpeed * dy);
+        setYRotation(camYRot + rotationSpeed * dx);
     }
 //    else if (event->buttons() & Qt::RightButton) { // Hey I just met you
 //        setXRotation(m_xRot + 8 * dy);                and this is crazy
 //        setZRotation(m_zRot + 8 * dx);                here is my event
 //    }                                                 so fix me maybe
     lastCursorPos = event->pos();
+    QVector3D front;
+    front.setX(cosf(qDegreesToRadians(camYRot)) * cosf(qDegreesToRadians(camXRot)));
+    front.setY(sinf(qDegreesToRadians(camXRot)));
+    front.setZ(sinf(qDegreesToRadians(camYRot)) * cosf(qDegreesToRadians(camXRot)));
+    camFront = front.normalized();
+    this->update();
 }
 
 void Game::wheelEvent(QWheelEvent *event)
@@ -245,11 +177,11 @@ void Game::wheelEvent(QWheelEvent *event)
     QPoint numDegrees = event->angleDelta();
     if (!numPixels.isNull())
     {
-        viewDist += float(numPixels.y())/5000.0f;
+        camPos += camSpeed*float(numPixels.y()) * camFront;
     }
     else
     {
-        viewDist += float(numDegrees.y())/5000.0f;
+        camPos += camSpeed*float(numDegrees.y())/100.0f * camFront;
     }
     event->accept();
     this->update();
@@ -263,9 +195,32 @@ void Game::keyPressEvent(QKeyEvent *event)
     }
     else if (event->key() == Qt::Key_W)
     {
-
+        camPos += camSpeed * camFront;
+    }
+    else if (event->key() == Qt::Key_S)
+    {
+        camPos -= camSpeed * camFront;
+    }
+    if (event->key() == Qt::Key_D)
+    {
+        camPos += QVector3D::normal(camFront, camUp) * camSpeed;
+    }
+    else if (event->key() == Qt::Key_A)
+    {
+        camPos -= QVector3D::normal(camFront, camUp) * camSpeed;
+    }
+    if (event->key() == Qt::Key_R)
+    {
+        viewDist=-2.0f;
+        camPos   = QVector3D(0.0f, 0.0f,  3.0f);
+        camFront = QVector3D(0.0f, 0.0f, -1.0f);
+        camUp    = QVector3D(0.0f, 1.0f,  0.0f);
+        camXRot=0;
+        camYRot=0;
+        camZRot=0;
     }
     else
         event->ignore();
     event->accept();
+    this->update();
 }

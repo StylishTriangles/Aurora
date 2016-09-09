@@ -10,6 +10,7 @@
 #include <QMatrix4x4>
 #include <QVector>
 #include <QKeyEvent>
+#include <QElapsedTimer>
 #include "glsphere.h"
 
 namespace Ui {
@@ -25,9 +26,9 @@ public:
     ~Game();
 
 public slots:
-    void setXRotation(int angle);
-    void setYRotation(int angle);
-    void setZRotation(int angle);
+    void setXRotation(float angle);
+    void setYRotation(float angle);
+    void setZRotation(float angle);
 
 protected:
     void initializeGL() Q_DECL_OVERRIDE;
@@ -37,26 +38,25 @@ protected:
     virtual void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void wheelEvent(QWheelEvent* event) Q_DECL_OVERRIDE;
     void keyPressEvent(QKeyEvent* event);
-    void drawTriangle();
-    void drawCircle(float cx, float cy, float scale);
-    void drawSphere(GLfloat radius);
+    void drawSphere(float radius, float x, float y, float z);
 
 private:
     void setupVBOAttribute();
 
     QMatrix4x4 projectionMat, viewMat;
-    QOpenGLBuffer Vbo;
     QOpenGLBuffer planetVbo;
     QOpenGLVertexArrayObject Vao;
-    QOpenGLShaderProgram *sProgram;
     QOpenGLShaderProgram *planetsProgram;
     QPoint lastCursorPos;
     bool shadersCompiled;
     // current camera rotation and position
-    int camXRot, camYRot, camZRot;
-    float viewDist;
+    float camXRot, camYRot, camZRot;
+    float viewDist, camSpeed, rotationSpeed;
+    QVector3D camPos, camFront, camUp;
     // temp
     QOpenGLTexture* tex;
+    QElapsedTimer timer;
+    long long int oldTime;
 
 signals:
     void exitToMenu();
