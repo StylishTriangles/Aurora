@@ -17,12 +17,14 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     options.cpp \
     game.cpp \
-    glsphere.cpp
+    glsphere.cpp \
+    geometryprovider.cpp
 
 HEADERS  += mainwindow.h \
     options.h \
     game.h \
-    glsphere.h
+    glsphere.h \
+    geometryprovider.h
 
 FORMS    += mainwindow.ui \
     options.ui

@@ -12,6 +12,7 @@
 #include <QKeyEvent>
 #include <QElapsedTimer>
 #include "glsphere.h"
+#include "geometryprovider.h"
 
 namespace Ui {
 class Game;
