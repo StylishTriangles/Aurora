@@ -3,11 +3,32 @@
 #include <utility>
 
 template <typename T>
-inline T absVal(T val)
+inline T normalizeAngle(T val)
 {
-    return (val<0)?-val:val;
+    return (val<0)? 2.0f*M_PI+val : val;
 }
 
+template <typename T>
+inline T maxi(T a) {
+    return a;
+}
+
+template <typename T, typename... Args>
+T maxi(T a, T b, Args... args)
+{
+    return maxi((a>b)?a:b, args...);
+}
+
+template <typename T>
+inline T mini(T a) {
+    return a;
+}
+
+template <typename T, typename... Args>
+T mini(T a, T b, Args... args)
+{
+    return mini((a<b)?a:b, args...);
+}
 
 GeometryProvider::GeometryProvider()
 {
@@ -110,10 +131,36 @@ void GeometryProvider::texturize(Type T, QVector<GLfloat> &data, unsigned stride
 {
     if (T == Type::Icosahedron or T == Type::Geosphere)
     {
-        for (int seq = 0; seq < data.size(); seq += stride)
+        float a, b, c;
+        for (int seq = 0; seq < data.size(); seq += 3*stride)
         {
-            data[seq+texturePos] =      absVal(atan2f(data[seq+vertexPos], data[seq+vertexPos+2]))/M_PI;
-            data[seq+texturePos+1] =    absVal(atan2f(data[seq+vertexPos], data[seq+vertexPos+1]))/M_PI;
+            a=atan2f(data[seq+vertexPos], data[seq+vertexPos+2]);
+            b=atan2f(data[seq+vertexPos+stride], data[seq+vertexPos+2+stride]);
+            c=atan2f(data[seq+vertexPos+2*stride], data[seq+vertexPos+2+2*stride]);
+            if(maxi(a, b, c)>M_PI_2 && mini(a, b, c)<-M_PI_2){
+                if(a>=0.0f){
+                    if(b<0.0f){
+                        b+=2*M_PI;
+                    }
+                    if(c<0.0f){
+                        c+=2*M_PI;
+                    }
+                }
+                else{
+                    if(b>0.0f){
+                        b-=2*M_PI;
+                    }
+                    if(c>0.0f){
+                        c-=2*M_PI;
+                    }
+                }
+            }
+            data[seq+texturePos] = a/(2.0f*M_PI);
+            data[seq+texturePos+stride] = b/(2.0f*M_PI);
+            data[seq+texturePos+2*stride] = c/(2.0f*M_PI);
+            data[seq+texturePos+1] = 0.5f-asinf(data[seq+vertexPos+1])/(M_PI);
+            data[seq+texturePos+1+stride] = 0.5f-asinf(data[seq+vertexPos+1])/(M_PI);
+            data[seq+texturePos+1+2*stride] = 0.5f-asinf(data[seq+vertexPos+1])/(M_PI);
         }
     }
 }

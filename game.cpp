@@ -5,8 +5,7 @@
 Game::Game(QWidget *parent) :
     QOpenGLWidget(parent),
     shadersCompiled(false),
-    camXRot(0), camYRot(-90.0f), camZRot(0),
-    viewDist(-2.0f)
+    camXRot(0), camYRot(-90.0f), camZRot(0)
 {
     QSurfaceFormat format;
     format.setSamples(4);
@@ -129,6 +128,55 @@ void Game::drawSphere(float radius, float x, float y, float z)
 //    delete ocean.getTexture();
 }
 
+void Game::drawGeosphere(float x, float y, float z)
+{
+    // compile shaders
+    if (!shadersCompiled)
+    {
+        bool noerror = true;
+        noerror = planetsProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/sphereshaderV.vert");
+        if (!noerror) {qDebug() << planetsProgram->log();}
+        noerror = planetsProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/sphereshader.frag");
+        if (!noerror) {qDebug() << planetsProgram->log();}
+        planetsProgram->bindAttributeLocation("position", 0);
+        planetsProgram->bindAttributeLocation("texCoord", 2);
+        noerror = planetsProgram->link();
+        if (!noerror) {qDebug() << planetsProgram->log();}
+        noerror = planetsProgram->bind();
+        if (!noerror) {qDebug() << planetsProgram->log();}
+        planetsProgram->setUniformValue("ourTexture1", 0);
+        shadersCompiled = true;
+        // temp
+        tex = new QOpenGLTexture(QImage(QString(":/planets/oceaniczna.png")));
+    }
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+
+    QMatrix4x4 modelMat;
+    modelMat.setToIdentity();
+    modelMat.translate(x, y, z);
+    QVector<GLfloat> gsphere;
+    GeometryProvider g;
+    g.geosphere(gsphere, GeometryProvider::Four, 5, 0);
+    g.texturize(GeometryProvider::Geosphere, gsphere, 5, 3, 0);
+
+    planetVbo.bind();
+    planetVbo.allocate(gsphere.data(),gsphere.size()*sizeof(GLfloat));
+
+    planetsProgram->setUniformValue("model",modelMat);
+    planetsProgram->setUniformValue("view",viewMat);
+    planetsProgram->setUniformValue("projection",projectionMat);
+
+    this->glEnableVertexAttribArray(0);
+    this->glEnableVertexAttribArray(2);
+    this->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), 0);
+    this->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), reinterpret_cast<GLvoid*>(3*sizeof(GLfloat)));
+
+    tex->bind();
+    glDrawArrays(GL_TRIANGLES, 0, gsphere.count());
+    planetVbo.release();
+//    delete ocean.getTexture();
+}
+
 void Game::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -138,9 +186,10 @@ void Game::paintGL()
 
     QOpenGLVertexArrayObject::Binder vaoBinder(&Vao);
 
-    drawSphere(0.5f, 0.0f, 0.0f, 0.0f);
+//    drawSphere(1.0f, 0.0f, 0.0f, 0.0f);
+    drawGeosphere(0.0f, 0.0f, 0.0f);
     //drawSphere(0.5f, sinf(qDegreesToRadians(float((timer.elapsed()-oldTime)/50))), cosf(qDegreesToRadians(float((timer.elapsed()-oldTime)/50))), 0.0f);
-    oldTime=timer.elapsed();
+    //oldTime=timer.elapsed();
     drawSphere(2.0f, 5.0f, 3.0f, 0.0f);
 }
 
@@ -211,7 +260,6 @@ void Game::keyPressEvent(QKeyEvent *event)
     }
     if (event->key() == Qt::Key_R)
     {
-        viewDist=-2.0f;
         camPos   = QVector3D(0.0f, 0.0f,  3.0f);
         camFront = QVector3D(0.0f, 0.0f, -1.0f);
         camUp    = QVector3D(0.0f, 1.0f,  0.0f);

@@ -40,6 +40,7 @@ protected:
     void wheelEvent(QWheelEvent* event) Q_DECL_OVERRIDE;
     void keyPressEvent(QKeyEvent* event);
     void drawSphere(float radius, float x, float y, float z);
+    void drawGeosphere(float x, float y, float z);
 
 private:
     void setupVBOAttribute();
@@ -52,7 +53,7 @@ private:
     bool shadersCompiled;
     // current camera rotation and position
     float camXRot, camYRot, camZRot;
-    float viewDist, camSpeed, rotationSpeed;
+    float camSpeed, rotationSpeed;
     QVector3D camPos, camFront, camUp;
     // temp
     QOpenGLTexture* tex;
