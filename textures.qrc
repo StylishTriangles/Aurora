@@ -2,4 +2,7 @@
     <qresource prefix="/planets">
         <file>oceaniczna.png</file>
     </qresource>
+    <qresource prefix="/misc">
+        <file>skybox.png</file>
+    </qresource>
 </RCC>

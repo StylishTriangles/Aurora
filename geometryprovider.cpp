@@ -72,6 +72,12 @@ void GeometryProvider::icosahedron(QVector<GLfloat> &outData,  unsigned stride, 
     }
 }
 
+void GeometryProvider::icosahedron(QVector<GLfloat> &outData, unsigned stride, unsigned elemPos, unsigned texturePos)
+{
+    icosahedron(outData, stride, elemPos);
+    texturize(Icosahedron, outData, stride, texturePos, elemPos);
+}
+
 inline void itAppend (QVector<GLfloat>::iterator& it, QVector3D const& v)
 {
     *it++ = v[0];
@@ -125,6 +131,126 @@ void GeometryProvider::geosphere(QVector<GLfloat>& outData, SubdivisionCount sub
         }
     }
     outData = std::move(bufferLevel[subCount%2]);
+}
+
+void GeometryProvider::geosphere(QVector<GLfloat> &outData, SubdivisionCount subCount, unsigned stride, unsigned elemPos, unsigned texturePos)
+{
+    geosphere(outData, subCount, stride, elemPos);
+    texturize(Geosphere, outData, stride, texturePos, elemPos);
+}
+
+void GeometryProvider::sphere(QVector<GLfloat> &outData, const int parallelsAmount, const int meridiansAmount)
+{
+    const float radius = 1.0f;
+    Q_ASSERT(parallelsAmount>=2 && meridiansAmount>=2);
+    //    trojkatow na kwadrat|liczb na punkt|punktow w trojkacie
+    outData.resize(2 * 5 * 3 * meridiansAmount*(parallelsAmount-1));
+    GLfloat* prevRound[meridiansAmount+1];
+    GLfloat* currentRound[meridiansAmount+1];
+    GLfloat cacheSin[meridiansAmount+1];
+    GLfloat cacheCos[meridiansAmount+1];
+    for (int i = 0; i <= meridiansAmount; i++)
+    {
+        cacheSin[i] = sinf(2.0f*M_PI*GLfloat(i)/GLfloat(meridiansAmount));
+        cacheCos[i] = cosf(2.0f*M_PI*GLfloat(i)/GLfloat(meridiansAmount));
+    }
+    for (int i = 0; i <= meridiansAmount; i++)
+    {
+        prevRound[i] = new GLfloat[5];
+        currentRound[i] = new GLfloat[5];
+        prevRound[i][0] = 0.0f;
+        prevRound[i][1] = radius;
+        prevRound[i][2] = 0.0f;
+        prevRound[i][3] = GLfloat(i)*1.0f/GLfloat(meridiansAmount);
+        prevRound[i][4] = 0.0f;
+    }
+    GLfloat r = 0.0f;
+    GLfloat* it = outData.data();
+    for (int i = 1; i < parallelsAmount; i++)
+    {
+        GLfloat sinval = sinf(M_PI*GLfloat(i)/GLfloat(parallelsAmount));
+        r = sinval * radius;
+        for (int j = 0; j < meridiansAmount; j++)
+        {
+            // bottom-left corner
+            *it++ = currentRound[j][0] = cacheSin[j]*r;
+            *it++ = currentRound[j][1] = radius * cosf(M_PI*GLfloat(i)/GLfloat(parallelsAmount));
+            *it++ = currentRound[j][2] = cacheCos[j]*r;
+            *it++ = currentRound[j][3] = GLfloat(j)*1.0f/GLfloat(meridiansAmount);
+            *it++ = currentRound[j][4] = GLfloat(i)*1.0f/GLfloat(parallelsAmount);
+            // bottom-right corner
+            *it++ = cacheSin[j+1]*r;
+            *it++ = radius*cosf(M_PI*GLfloat(i)/GLfloat(parallelsAmount));
+            *it++ = cacheCos[j+1]*r;
+            *it++ = GLfloat(j+1)*1.0f/GLfloat(meridiansAmount);
+            *it++ = GLfloat(i)*1.0f/GLfloat(parallelsAmount);
+            if (j == meridiansAmount-1) // Zerowy wierzchołek zapisywany jest na koniec tablicy
+            {
+                currentRound[j+1][0] = cacheSin[j+1]*r;
+                currentRound[j+1][1] = radius*cosf(M_PI*GLfloat(i)/GLfloat(parallelsAmount));
+                currentRound[j+1][2] = cacheCos[j+1]*r;
+                currentRound[j+1][3] = GLfloat(j+1)*1.0f/GLfloat(meridiansAmount);
+                currentRound[j+1][4] = GLfloat(i)*1.0f/GLfloat(parallelsAmount);
+            }
+            // top-left corner
+            *it++ = prevRound[j][0];
+            *it++ = prevRound[j][1];
+            *it++ = prevRound[j][2];
+            *it++ = prevRound[j][3];
+            *it++ = prevRound[j][4];
+
+            if (i==1) continue; // Biegun sklada sie z trojkatow, zatem przypda 1 trojkat na poludnik,
+                                // dalszy kod sluzy do renderowania drugiej serii trojkatow, dlatego zostal pominiety
+            // bottom-right corner
+            *it++ = cacheSin[j+1]*r;
+            *it++ = radius*cosf(M_PI*GLfloat(i)/GLfloat(parallelsAmount));
+            *it++ = cacheCos[j+1]*r;
+            *it++ = GLfloat(j+1)*1.0f/GLfloat(meridiansAmount);
+            *it++ = GLfloat(i)*1.0f/GLfloat(parallelsAmount);
+            // top-left corner
+            *it++ = prevRound[j][0];
+            *it++ = prevRound[j][1];
+            *it++ = prevRound[j][2];
+            *it++ = prevRound[j][3];
+            *it++ = prevRound[j][4];
+            // top-right corner
+            *it++ = prevRound[j+1][0];
+            *it++ = prevRound[j+1][1];
+            *it++ = prevRound[j+1][2];
+            *it++ = prevRound[j+1][3];
+            *it++ = prevRound[j+1][4];
+        }
+        for (int j = 0; j <= meridiansAmount; j++)
+        {
+            std::swap(prevRound[j],currentRound[j]);
+        }
+    }
+    for (int j = 0; j < meridiansAmount; j++)
+    {
+        // kod generowania 2. serii trojkatow
+        *it++ = 0.0f;
+        *it++ = -radius;
+        *it++ = 0.0f;
+        *it++ = GLfloat(j+1)*1.0f/GLfloat(meridiansAmount);
+        *it++ = 1.0f;
+
+        *it++ = prevRound[j][0];
+        *it++ = prevRound[j][1];
+        *it++ = prevRound[j][2];
+        *it++ = prevRound[j][3];
+        *it++ = prevRound[j][4];
+
+        *it++ = prevRound[j+1][0];
+        *it++ = prevRound[j+1][1];
+        *it++ = prevRound[j+1][2];
+        *it++ = prevRound[j+1][3];
+        *it++ = prevRound[j+1][4];
+    }
+    for (int i = 0; i <= meridiansAmount; i++)
+    {
+        delete prevRound[i];
+        delete currentRound[i];
+    }
 }
 
 void GeometryProvider::texturize(Type T, QVector<GLfloat> &data, unsigned stride, unsigned texturePos, unsigned vertexPos)

@@ -26,21 +26,17 @@ public:
     explicit Game(QWidget *parent = 0);
     ~Game();
 
-public slots:
-    void setXRotation(float angle);
-    void setYRotation(float angle);
-    void setZRotation(float angle);
-
 protected:
     void initializeGL() Q_DECL_OVERRIDE;
-    virtual void resizeGL(int w ,int h) Q_DECL_OVERRIDE;
-    virtual void paintGL() Q_DECL_OVERRIDE;
-    virtual void mousePressEvent(QMouseEvent* event) Q_DECL_OVERRIDE;
-    virtual void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void resizeGL(int w ,int h) Q_DECL_OVERRIDE;
+    void paintGL() Q_DECL_OVERRIDE;
+    void mousePressEvent(QMouseEvent* event) Q_DECL_OVERRIDE;
+    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void wheelEvent(QWheelEvent* event) Q_DECL_OVERRIDE;
-    void keyPressEvent(QKeyEvent* event);
+    void keyPressEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
     void drawSphere(float radius, float x, float y, float z);
     void drawGeosphere(float x, float y, float z);
+    void drawSkybox(float radius = 50.0f);
 
 private:
     void setupVBOAttribute();
@@ -51,6 +47,9 @@ private:
     QOpenGLShaderProgram *planetsProgram;
     QPoint lastCursorPos;
     bool shadersCompiled;
+    // game world objects
+    QVector<GLfloat> geosphereModel;
+    QOpenGLTexture* skyboxTexture;
     // current camera rotation and position
     float camXRot, camYRot, camZRot;
     float camSpeed, rotationSpeed;

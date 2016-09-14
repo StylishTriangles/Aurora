@@ -22,33 +22,21 @@ Game::~Game()
     delete planetsProgram;
     // temp
     delete tex;
+    delete skyboxTexture;
 }
 
-void Game::setXRotation(float angle)
+inline void qNormalizeAngle(float& a)
 {
-    if (angle != camXRot) {
-        camXRot = angle;
-    }
-}
-
-void Game::setYRotation(float angle)
-{
-    if (angle != camYRot) {
-        camYRot = angle;
-    }
-}
-
-void Game::setZRotation(float angle)
-{
-    if (angle != camZRot) {
-        camZRot = angle;
-    }
+    if (a > 360.0f)
+        a -= 360.0f;
+    else if (a < 0.0f)
+        a += 360.0f;
 }
 
 void Game::initializeGL()
 {
     initializeOpenGLFunctions();
-    glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+    glClearColor(.0f, .0f, .0f, 0.0f);
     glEnable(GL_DEPTH_TEST);
 //    glEnable(GL_MULTISAMPLE);
 
@@ -68,6 +56,12 @@ void Game::initializeGL()
     camSpeed = 0.05f;
     rotationSpeed = 0.1f;
     oldTime = timer.elapsed();
+
+    // load textures
+    skyboxTexture = new QOpenGLTexture(QImage(QString(":/misc/skybox.png")));
+
+    // initialize models
+    GeometryProvider::geosphere(geosphereModel, GeometryProvider::Three, 5, 0, 3);
 }
 
 void Game::resizeGL(int w, int h)
@@ -100,17 +94,12 @@ void Game::drawSphere(float radius, float x, float y, float z)
     QMatrix4x4 modelMat;
     modelMat.setToIdentity();
     modelMat.translate(x, y, z);
-    GLsphere ocean;
-    ocean.create(radius);
-    ocean.setTexture(tex);
+    modelMat.scale(radius);
+    QVector<GLfloat> ocean;
+    GeometryProvider::sphere(ocean, 12, 12);
 
     planetVbo.bind();
     planetVbo.allocate(ocean.constData(),ocean.count()*sizeof(GLfloat));
-    for (int i = 0; i < ocean.count(); i++)
-    {
-        if (ocean.constData()[i] > 2*radius or ocean.constData()[i] < -2*radius)
-            qDebug() << i << ocean.constData()[i];
-    }
 
     planetsProgram->setUniformValue("model",modelMat);
     planetsProgram->setUniformValue("view",viewMat);
@@ -122,7 +111,7 @@ void Game::drawSphere(float radius, float x, float y, float z)
     this->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), reinterpret_cast<GLvoid*>(3*sizeof(GLfloat)));
 
 
-    ocean.getTexture()->bind();
+    tex->bind();
     glDrawArrays(GL_TRIANGLES, 0, ocean.count());
     planetVbo.release();
 //    delete ocean.getTexture();
@@ -154,13 +143,9 @@ void Game::drawGeosphere(float x, float y, float z)
     QMatrix4x4 modelMat;
     modelMat.setToIdentity();
     modelMat.translate(x, y, z);
-    QVector<GLfloat> gsphere;
-    GeometryProvider g;
-    g.geosphere(gsphere, GeometryProvider::Four, 5, 0);
-    g.texturize(GeometryProvider::Geosphere, gsphere, 5, 3, 0);
 
     planetVbo.bind();
-    planetVbo.allocate(gsphere.data(),gsphere.size()*sizeof(GLfloat));
+    planetVbo.allocate(geosphereModel.data(),geosphereModel.size()*sizeof(GLfloat));
 
     planetsProgram->setUniformValue("model",modelMat);
     planetsProgram->setUniformValue("view",viewMat);
@@ -172,9 +157,34 @@ void Game::drawGeosphere(float x, float y, float z)
     this->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), reinterpret_cast<GLvoid*>(3*sizeof(GLfloat)));
 
     tex->bind();
-    glDrawArrays(GL_TRIANGLES, 0, gsphere.count());
+    glDrawArrays(GL_TRIANGLES, 0, geosphereModel.count());
     planetVbo.release();
 //    delete ocean.getTexture();
+}
+
+void Game::drawSkybox(float radius)
+{
+    QMatrix4x4 modelMat;
+    modelMat.setToIdentity();
+    modelMat.translate(0,0,0);
+    modelMat.scale(radius);
+
+    planetVbo.bind();
+    planetVbo.allocate(geosphereModel.data(),geosphereModel.size()*sizeof(GLfloat));
+
+    planetsProgram->setUniformValue("model",modelMat);
+    planetsProgram->setUniformValue("view",viewMat);
+    planetsProgram->setUniformValue("projection",projectionMat);
+
+    this->glEnableVertexAttribArray(0);
+    this->glEnableVertexAttribArray(2);
+    this->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), 0);
+    this->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), reinterpret_cast<GLvoid*>(3*sizeof(GLfloat)));
+
+    skyboxTexture->bind();
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glDrawArrays(GL_TRIANGLES, 0, geosphereModel.count());
+    planetVbo.release();
 }
 
 void Game::paintGL()
@@ -191,6 +201,7 @@ void Game::paintGL()
     //drawSphere(0.5f, sinf(qDegreesToRadians(float((timer.elapsed()-oldTime)/50))), cosf(qDegreesToRadians(float((timer.elapsed()-oldTime)/50))), 0.0f);
     //oldTime=timer.elapsed();
     drawSphere(2.0f, 5.0f, 3.0f, 0.0f);
+    drawSkybox(50.0f);
 }
 
 void Game::mousePressEvent(QMouseEvent *event)
@@ -204,8 +215,13 @@ void Game::mouseMoveEvent(QMouseEvent *event)
     int dy = event->y() - lastCursorPos.y();
 
     if (event->buttons() & Qt::LeftButton) {
-        setXRotation(camXRot + rotationSpeed * dy);
-        setYRotation(camYRot + rotationSpeed * dx);
+        camXRot = camXRot + rotationSpeed * dy;
+        camYRot = camYRot + rotationSpeed * dx;
+        qNormalizeAngle(camYRot);
+        if (camXRot > 89.8f)
+            camXRot = 89.8f;
+        else if (camXRot < -89.8f)
+            camXRot = -89.8f;
     }
 //    else if (event->buttons() & Qt::RightButton) { // Hey I just met you
 //        setXRotation(m_xRot + 8 * dy);                and this is crazy

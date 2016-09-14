@@ -5,7 +5,7 @@
 
 namespace Aurora {
 
-void somethingA(QVector<GLFloat>& vertices, QOpenGLTexture& tex)
+void somethingA(QVector<GLfloat>& vertices, QOpenGLTexture& tex)
 {
 
 }
