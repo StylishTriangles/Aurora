@@ -18,7 +18,8 @@ SOURCES += main.cpp\
     options.cpp \
     game.cpp \
     glsphere.cpp \
-    geometryprovider.cpp
+    geometryprovider.cpp \
+    playground.cpp
 
 HEADERS  += mainwindow.h \
     options.h \
