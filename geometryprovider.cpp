@@ -159,8 +159,8 @@ void GeometryProvider::texturize(Type T, QVector<GLfloat> &data, unsigned stride
             data[seq+texturePos+stride] = b/(2.0f*M_PI);
             data[seq+texturePos+2*stride] = c/(2.0f*M_PI);
             data[seq+texturePos+1] = 0.5f-asinf(data[seq+vertexPos+1])/(M_PI);
-            data[seq+texturePos+1+stride] = 0.5f-asinf(data[seq+vertexPos+1])/(M_PI);
-            data[seq+texturePos+1+2*stride] = 0.5f-asinf(data[seq+vertexPos+1])/(M_PI);
+            data[seq+texturePos+1+stride] = 0.5f-asinf(data[seq+vertexPos+1+stride])/(M_PI);
+            data[seq+texturePos+1+2*stride] = 0.5f-asinf(data[seq+vertexPos+1+2*stride])/(M_PI);
         }
     }
 }
