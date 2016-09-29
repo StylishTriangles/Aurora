@@ -34,8 +34,9 @@ protected:
     void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void wheelEvent(QWheelEvent* event) Q_DECL_OVERRIDE;
     void keyPressEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
+    void keyReleaseEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
     void drawSphere(float radius, float x, float y, float z);
-    void drawGeosphere(float x, float y, float z);
+    void drawGeosphere(float x, float y, float z, float r = 1.0f);
     void drawSkybox(float radius = 50.0f);
 
 private:
@@ -55,7 +56,7 @@ private:
     float camSpeed, rotationSpeed;
     QVector3D camPos, camFront, camUp;
     // temp
-    QOpenGLTexture* tex;
+    QOpenGLTexture* tex, *atmo;
     QElapsedTimer timer;
     long long int oldTime;
 

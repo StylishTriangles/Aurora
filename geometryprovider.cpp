@@ -282,30 +282,30 @@ void GeometryProvider::texturize(Type T, QVector<GLfloat> &data, unsigned stride
             data[seq+texturePos + stride] = b/(2.0f*M_PI);
             data[seq+texturePos + 2*stride] = c/(2.0f*M_PI);
 
-//            data[seq+texturePos + 1] = 0.5f-asinf(data[seq+vertexPos + 1])/(M_PI);
-//            data[seq+texturePos + 1 + stride] = 0.5f-asinf(data[seq+vertexPos + 1 + stride])/(M_PI);
-//            data[seq+texturePos + 1 + 2*stride] = 0.5f-asinf(data[seq+vertexPos + 1 + 2*stride])/(M_PI);
+            data[seq+texturePos + 1] = 0.5f-asinf(data[seq+vertexPos + 1])/(M_PI);
+            data[seq+texturePos + 1 + stride] = 0.5f-asinf(data[seq+vertexPos + 1 + stride])/(M_PI);
+            data[seq+texturePos + 1 + 2*stride] = 0.5f-asinf(data[seq+vertexPos + 1 + 2*stride])/(M_PI);
             // store point angles in temporary variables
-            a = atan2f(data[seq+vertexPos + 1], data[seq+vertexPos]);
-            b = atan2f(data[seq+vertexPos + stride + 1], data[seq+vertexPos + stride]);
-            c = atan2f(data[seq+vertexPos + 2*stride + 1], data[seq+vertexPos + 2*stride]);
-            if(maxi(a, b, c)>M_PI_2 && mini(a, b, c)<-M_PI_2){
-                if(a>=0.0f){
-                    if(b<0.0f)
-                        b+=2*M_PI;
-                    if(c<0.0f)
-                        c+=2*M_PI;
-                }
-                else {
-                    if(b>0.0f)
-                        b-=2*M_PI;
-                    if(c>0.0f)
-                        c-=2*M_PI;
-                }
-            }
-            data[seq+texturePos + 1] = 0.5f-a/(2.0f*M_PI);
-            data[seq+texturePos + 1 + stride] = 0.5f*b/(2.0f*M_PI);
-            data[seq+texturePos + 1 + 2*stride] = 0.5f*c/(2.0f*M_PI);
+//            a = atan2f(data[seq+vertexPos], data[seq+vertexPos + 1]);
+//            b = atan2f(data[seq+vertexPos + stride], data[seq+vertexPos + stride + 1]);
+//            c = atan2f(data[seq+vertexPos + 2*stride], data[seq+vertexPos + 2*stride + 1]);
+//            if(maxi(a, b, c)>M_PI_2 && mini(a, b, c)<-M_PI_2){
+//                if(a>=0.0f){
+//                    if(b<0.0f)
+//                        b+=2*M_PI;
+//                    if(c<0.0f)
+//                        c+=2*M_PI;
+//                }
+//                else {
+//                    if(b>0.0f)
+//                        b-=2*M_PI;
+//                    if(c>0.0f)
+//                        c-=2*M_PI;
+//                }
+//            }
+//            data[seq+texturePos + 1] = 0.5f-a/(1.0f*M_PI);
+//            data[seq+texturePos + 1 + stride] = 0.5f-b/(1.0f*M_PI);
+//            data[seq+texturePos + 1 + 2*stride] = 0.5f-c/(1.0f*M_PI);
         }
     }
 }
