@@ -258,35 +258,54 @@ void GeometryProvider::texturize(Type T, QVector<GLfloat> &data, unsigned stride
     if (T == Type::Icosahedron or T == Type::Geosphere)
     {
         float a, b, c;
-        for (int seq = 0; seq < data.size(); seq += 3*stride)
+        for (int seq = 0; seq < data.size(); seq += 3*stride) // for each triangle
         {
-            a=atan2f(data[seq+vertexPos], data[seq+vertexPos+2]);
-            b=atan2f(data[seq+vertexPos+stride], data[seq+vertexPos+2+stride]);
-            c=atan2f(data[seq+vertexPos+2*stride], data[seq+vertexPos+2+2*stride]);
+            // store point angles in temporary variables
+            a = atan2f(data[seq+vertexPos], data[seq+vertexPos+2]);
+            b = atan2f(data[seq+vertexPos + stride], data[seq+vertexPos + 2 + stride]);
+            c = atan2f(data[seq+vertexPos + 2*stride], data[seq+vertexPos + 2 + 2*stride]);
             if(maxi(a, b, c)>M_PI_2 && mini(a, b, c)<-M_PI_2){
                 if(a>=0.0f){
-                    if(b<0.0f){
+                    if(b<0.0f)
                         b+=2*M_PI;
-                    }
-                    if(c<0.0f){
+                    if(c<0.0f)
                         c+=2*M_PI;
-                    }
                 }
                 else{
-                    if(b>0.0f){
+                    if(b>0.0f)
                         b-=2*M_PI;
-                    }
-                    if(c>0.0f){
+                    if(c>0.0f)
                         c-=2*M_PI;
-                    }
                 }
             }
             data[seq+texturePos] = a/(2.0f*M_PI);
-            data[seq+texturePos+stride] = b/(2.0f*M_PI);
-            data[seq+texturePos+2*stride] = c/(2.0f*M_PI);
-            data[seq+texturePos+1] = 0.5f-asinf(data[seq+vertexPos+1])/(M_PI);
-            data[seq+texturePos+1+stride] = 0.5f-asinf(data[seq+vertexPos+1+stride])/(M_PI);
-            data[seq+texturePos+1+2*stride] = 0.5f-asinf(data[seq+vertexPos+1+2*stride])/(M_PI);
+            data[seq+texturePos + stride] = b/(2.0f*M_PI);
+            data[seq+texturePos + 2*stride] = c/(2.0f*M_PI);
+
+//            data[seq+texturePos + 1] = 0.5f-asinf(data[seq+vertexPos + 1])/(M_PI);
+//            data[seq+texturePos + 1 + stride] = 0.5f-asinf(data[seq+vertexPos + 1 + stride])/(M_PI);
+//            data[seq+texturePos + 1 + 2*stride] = 0.5f-asinf(data[seq+vertexPos + 1 + 2*stride])/(M_PI);
+            // store point angles in temporary variables
+            a = atan2f(data[seq+vertexPos + 1], data[seq+vertexPos]);
+            b = atan2f(data[seq+vertexPos + stride + 1], data[seq+vertexPos + stride]);
+            c = atan2f(data[seq+vertexPos + 2*stride + 1], data[seq+vertexPos + 2*stride]);
+            if(maxi(a, b, c)>M_PI_2 && mini(a, b, c)<-M_PI_2){
+                if(a>=0.0f){
+                    if(b<0.0f)
+                        b+=2*M_PI;
+                    if(c<0.0f)
+                        c+=2*M_PI;
+                }
+                else {
+                    if(b>0.0f)
+                        b-=2*M_PI;
+                    if(c>0.0f)
+                        c-=2*M_PI;
+                }
+            }
+            data[seq+texturePos + 1] = 0.5f-a/(2.0f*M_PI);
+            data[seq+texturePos + 1 + stride] = 0.5f*b/(2.0f*M_PI);
+            data[seq+texturePos + 1 + 2*stride] = 0.5f*c/(2.0f*M_PI);
         }
     }
 }

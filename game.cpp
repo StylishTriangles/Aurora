@@ -139,6 +139,7 @@ void Game::drawGeosphere(float x, float y, float z)
         tex = new QOpenGLTexture(QImage(QString(":/planets/oceaniczna.png")));
     }
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 
     QMatrix4x4 modelMat;
     modelMat.setToIdentity();
@@ -183,6 +184,7 @@ void Game::drawSkybox(float radius)
 
     skyboxTexture->bind();
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
     glDrawArrays(GL_TRIANGLES, 0, geosphereModel.count());
     planetVbo.release();
 }

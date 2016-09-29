@@ -6,12 +6,12 @@
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions_4_3_Core>
 #include <QOpenGLShaderProgram>
+#include <QOpenGLTexture>
 #include <QResizeEvent>
 #include <QMatrix4x4>
 #include <QVector>
 #include <QKeyEvent>
 #include <QElapsedTimer>
-#include "glsphere.h"
 #include "geometryprovider.h"
 
 namespace Ui {
