@@ -37,14 +37,24 @@ GeometryProvider::GeometryProvider()
 
 void GeometryProvider::icosahedron(QVector<GLfloat> &outData,  unsigned stride, unsigned elemPos)
 {
+//    old papa mobile
+//    static const QVector3D icosahedronVertices[] = {
+//        QVector3D(-0.525731f, 0, 0.850651f), QVector3D(0.525731f, 0, 0.850651f),
+//        QVector3D(-0.525731f, 0, -0.850651f), QVector3D(0.525731f, 0, -0.850651f),
+//        QVector3D(0, 0.850651f, 0.525731f), QVector3D(0, 0.850651f, -0.525731f),
+//        QVector3D(0, -0.850651f, 0.525731f), QVector3D(0, -0.850651f, -0.525731f),
+//        QVector3D(0.850651f, 0.525731f, 0), QVector3D(-0.850651f, 0.525731f, 0),
+//        QVector3D(0.850651f, -0.525731f, 0), QVector3D(-0.850651f, -0.525731f, 0)
+//    };
     static const QVector3D icosahedronVertices[] = {
-        QVector3D(-0.525731f, 0, 0.850651f), QVector3D(0.525731f, 0, 0.850651f),
-        QVector3D(-0.525731f, 0, -0.850651f), QVector3D(0.525731f, 0, -0.850651f),
-        QVector3D(0, 0.850651f, 0.525731f), QVector3D(0, 0.850651f, -0.525731f),
-        QVector3D(0, -0.850651f, 0.525731f), QVector3D(0, -0.850651f, -0.525731f),
-        QVector3D(0.850651f, 0.525731f, 0), QVector3D(-0.850651f, 0.525731f, 0),
-        QVector3D(0.850651f, -0.525731f, 0), QVector3D(-0.850651f, -0.525731f, 0)
+        QVector3D(-0.525731f, -0.447214f, 0.723607f), QVector3D(0.525731f, -0.447214f, 0.723607f),
+        QVector3D(-0.525731f, 0.447214f, -0.723607f), QVector3D(0.525731f, 0.447214f, -0.723607f),
+        QVector3D(0.0f, 0.447214f, 0.894427f), QVector3D(0.0f, 1.0f, 0.0f),
+        QVector3D(0.0f, -1.0f, 0.0f), QVector3D(0.0f, -0.447214f, -0.894427f),
+        QVector3D(0.850651f, 0.447214f, 0.276393f), QVector3D(-0.850651f, 0.447214f, 0.276393f),
+        QVector3D(0.850651f, -0.447214f, -0.276393f), QVector3D(-0.850651f, -0.447214f, -0.276393f)
     };
+
     static QVector<int> icosahedronIndices = {
         1,4,0,  4,9,0,  4,5,9,  8,5,4,  1,8,4,
         1,10,8, 10,3,8, 8,3,5,  3,2,5,  3,7,2,
@@ -53,6 +63,20 @@ void GeometryProvider::icosahedron(QVector<GLfloat> &outData,  unsigned stride, 
     };
     const unsigned icosahedronFaces = 20;
     const unsigned vertexesPerTriangle = 3;
+
+
+    //debug
+//    double spin = atan2( 0.525731, 0.850651 );
+//    for (int i = 0; i < 12; i++)
+//    {
+//        QVector3D cpy = icosahedronVertices[i];
+//        QMatrix4x4 m;
+//        m.setToIdentity();
+//        m.rotate(spin/M_PI*180,1,0,0);
+//        cpy = m * cpy;
+//        qDebug() << qSetRealNumberPrecision( 6 ) << i << ": " << cpy[0] << cpy[1] << cpy[2];
+//        icosahedronVertices[i] = cpy;
+//    }
 
     outData.resize(icosahedronFaces * vertexesPerTriangle * stride);
     QVector<GLfloat>::iterator writeData = outData.begin();
@@ -264,20 +288,27 @@ void GeometryProvider::texturize(Type T, QVector<GLfloat> &data, unsigned stride
             a = atan2f(data[seq+vertexPos], data[seq+vertexPos+2]);
             b = atan2f(data[seq+vertexPos + stride], data[seq+vertexPos + 2 + stride]);
             c = atan2f(data[seq+vertexPos + 2*stride], data[seq+vertexPos + 2 + 2*stride]);
-            if(maxi(a, b, c)>M_PI_2 && mini(a, b, c)<-M_PI_2){
-                if(a>=0.0f){
+            if(maxi(a, b, c)>M_PI_2 && mini(a, b, c)<-M_PI_2) {
+                if(a>=0.0f) {
                     if(b<0.0f)
                         b+=2*M_PI;
                     if(c<0.0f)
                         c+=2*M_PI;
                 }
-                else{
+                else {
                     if(b>0.0f)
                         b-=2*M_PI;
                     if(c>0.0f)
                         c-=2*M_PI;
                 }
             }
+            // fix poles
+            if (data[seq+vertexPos+1] == -1.0f or data[seq+vertexPos+1] == 1.0f)
+                a = (b+c)/2;
+            else if (data[seq+vertexPos+1+stride] == -1.0f or data[seq+vertexPos+1+stride] == 1.0f)
+                b = (a+c)/2;
+            else if (data[seq+vertexPos+1+2*stride] == -1.0f or data[seq+vertexPos+1+2*stride] == 1.0f)
+                c = (a+b)/2;
             data[seq+texturePos] = a/(2.0f*M_PI);
             data[seq+texturePos + stride] = b/(2.0f*M_PI);
             data[seq+texturePos + 2*stride] = c/(2.0f*M_PI);
@@ -285,27 +316,6 @@ void GeometryProvider::texturize(Type T, QVector<GLfloat> &data, unsigned stride
             data[seq+texturePos + 1] = 0.5f-asinf(data[seq+vertexPos + 1])/(M_PI);
             data[seq+texturePos + 1 + stride] = 0.5f-asinf(data[seq+vertexPos + 1 + stride])/(M_PI);
             data[seq+texturePos + 1 + 2*stride] = 0.5f-asinf(data[seq+vertexPos + 1 + 2*stride])/(M_PI);
-            // store point angles in temporary variables
-//            a = atan2f(data[seq+vertexPos], data[seq+vertexPos + 1]);
-//            b = atan2f(data[seq+vertexPos + stride], data[seq+vertexPos + stride + 1]);
-//            c = atan2f(data[seq+vertexPos + 2*stride], data[seq+vertexPos + 2*stride + 1]);
-//            if(maxi(a, b, c)>M_PI_2 && mini(a, b, c)<-M_PI_2){
-//                if(a>=0.0f){
-//                    if(b<0.0f)
-//                        b+=2*M_PI;
-//                    if(c<0.0f)
-//                        c+=2*M_PI;
-//                }
-//                else {
-//                    if(b>0.0f)
-//                        b-=2*M_PI;
-//                    if(c>0.0f)
-//                        c-=2*M_PI;
-//                }
-//            }
-//            data[seq+texturePos + 1] = 0.5f-a/(1.0f*M_PI);
-//            data[seq+texturePos + 1 + stride] = 0.5f-b/(1.0f*M_PI);
-//            data[seq+texturePos + 1 + 2*stride] = 0.5f-c/(1.0f*M_PI);
         }
     }
 }

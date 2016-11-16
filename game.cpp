@@ -64,7 +64,7 @@ void Game::initializeGL()
     skyboxTexture = new QOpenGLTexture(QImage(QString(":/misc/skybox.png")));
 
     // initialize models
-    GeometryProvider::geosphere(geosphereModel, GeometryProvider::Three, 5, 0, 3);
+    GeometryProvider::geosphere(geosphereModel, GeometryProvider::Four, 5, 0, 3);
 
     // compile shaders
     bool noerror = true;
@@ -82,7 +82,7 @@ void Game::initializeGL()
     shadersCompiled = true;
     // temp
     tex = new QOpenGLTexture(QImage(QString(":/planets/oceaniczna.png")));
-    atmo = new QOpenGLTexture(QImage(QString("atmosphere.png")));
+    atmo = new QOpenGLTexture(QImage(QString("../Aurora/atmosphere.png")));
 }
 
 void Game::resizeGL(int w, int h)

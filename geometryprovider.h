@@ -5,6 +5,9 @@
 #include <QDebug>
 #include <QList>
 #include <qopengl.h>
+//debug
+#include <QMatrix4x4>
+
 class GeometryProvider; // magiczna linijka, ktora naprawia bledy laczenia statycznych funkcji
 
 class GeometryProvider
