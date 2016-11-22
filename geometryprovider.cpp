@@ -1,5 +1,6 @@
 #include "geometryprovider.h"
 #include <QtMath>
+#include <random>
 #include <utility>
 
 template <typename T>
@@ -47,12 +48,12 @@ void GeometryProvider::icosahedron(QVector<GLfloat> &outData,  unsigned stride, 
 //        QVector3D(0.850651f, -0.525731f, 0), QVector3D(-0.850651f, -0.525731f, 0)
 //    };
     static const QVector3D icosahedronVertices[] = {
-        QVector3D(-0.525731f, -0.447214f, 0.723607f), QVector3D(0.525731f, -0.447214f, 0.723607f),
-        QVector3D(-0.525731f, 0.447214f, -0.723607f), QVector3D(0.525731f, 0.447214f, -0.723607f),
-        QVector3D(0.0f, 0.447214f, 0.894427f), QVector3D(0.0f, 1.0f, 0.0f),
-        QVector3D(0.0f, -1.0f, 0.0f), QVector3D(0.0f, -0.447214f, -0.894427f),
-        QVector3D(0.850651f, 0.447214f, 0.276393f), QVector3D(-0.850651f, 0.447214f, 0.276393f),
-        QVector3D(0.850651f, -0.447214f, -0.276393f), QVector3D(-0.850651f, -0.447214f, -0.276393f)
+        QVector3D(-0.525731f, -0.447214f, 0.723607f).normalized(), QVector3D(0.525731f, -0.447214f, 0.723607f).normalized(),
+        QVector3D(-0.525731f, 0.447214f, -0.723607f).normalized(), QVector3D(0.525731f, 0.447214f, -0.723607f).normalized(),
+        QVector3D(0.0f, 0.447214f, 0.894427f).normalized(), QVector3D(0.0f, 1.0f, 0.0f),
+        QVector3D(0.0f, -1.0f, 0.0f), QVector3D(0.0f, -0.447214f, -0.894427f).normalized(),
+        QVector3D(0.850651f, 0.447214f, 0.276393f).normalized(), QVector3D(-0.850651f, 0.447214f, 0.276393f).normalized(),
+        QVector3D(0.850651f, -0.447214f, -0.276393f).normalized(), QVector3D(-0.850651f, -0.447214f, -0.276393f).normalized()
     };
 
     static QVector<int> icosahedronIndices = {
@@ -277,9 +278,73 @@ void GeometryProvider::sphere(QVector<GLfloat> &outData, const int parallelsAmou
     }
 }
 
+void GeometryProvider::titan(QVector<GLfloat>& modelSurface, SubdivisionCount subCount,
+                      int stride, int vertexPos, int texturePos, int normalPos, int seed)
+{
+    //initialize variables and random number generators
+    const GLfloat minIncrease = 0.01f; // percentage size increase
+    const GLfloat maxIncrease = 0.2f;
+    const GLfloat alpha = 5.5f; // gamma distribution consts
+    const GLfloat beta = 0.02f;
+    const GLfloat chance = 0.4f; // actual chance is slightly lower than this
+    std::mt19937 rng;
+    std::uniform_real_distribution<GLfloat> proc(0.0f, 1.0f);
+    std::gamma_distribution<GLfloat> height(alpha, beta);
+    if (seed == 0)
+        rng.seed(std::random_device()());
+    // create output buffers
+    QVector<GLfloat> modelPylons;
+    QVector<GLfloat> pylonTriangle(stride*3, 0.0f);
+    // functions
+    auto isInRange = [minIncrease, maxIncrease](float x) -> bool {return x >= minIncrease and x <= maxIncrease;};
+    auto modVertex = [](QVector<GLfloat>& target, QVector3D const& src, int pos) ->
+            void {target[pos] = src[0]; target[pos+1] = src[1]; target[pos+2] = src[2];};
+    auto insertTriangle = [&pylonTriangle, stride, vertexPos, modVertex](QVector3D const& a, QVector3D const& b, QVector3D const& c, QVector<GLfloat>& dst) ->
+            void {  modVertex(pylonTriangle, a, vertexPos);
+                    modVertex(pylonTriangle, b, vertexPos+stride);
+                    modVertex(pylonTriangle, c, vertexPos+2*stride);
+                    dst += pylonTriangle;};
+    // create geosphere with texture
+    geosphere(modelSurface, subCount, stride, vertexPos);
+    if (texturePos != -1)
+        texturize(TitanSurface, modelSurface, stride, texturePos, vertexPos);
+    for (int i = vertexPos; i < modelSurface.size(); i+=stride*3)
+    {
+        float h = height(rng);
+        if (proc(rng) < chance and isInRange(h))
+        {
+//            qDebug() << h;
+            float ratio = 1.0f + h;
+            QVector3D a(modelSurface[i], modelSurface[i+1], modelSurface[i+2]);
+            QVector3D b(modelSurface[i+stride], modelSurface[i+1+stride], modelSurface[i+2+stride]);
+            QVector3D c(modelSurface[i+2*stride], modelSurface[i+1+2*stride], modelSurface[i+2+2*stride]);
+            QVector3D d = a*=ratio;
+            QVector3D e = b*=ratio;
+            QVector3D f = c*=ratio;
+            // !TODO align vectors d,e,f closer to each other
+            //modify affected vertexes
+            modVertex(modelSurface, d, i);
+            modVertex(modelSurface, e, i+stride);
+            modVertex(modelSurface, f, i+2*stride);
+            // construct pylons from triangles
+            insertTriangle(d,a,b,modelPylons);
+            insertTriangle(d,e,a,modelPylons);
+            insertTriangle(e,b,c,modelPylons);
+            insertTriangle(e,f,b,modelPylons);
+            insertTriangle(f,c,a,modelPylons);
+            insertTriangle(f,d,c,modelPylons);
+        }
+    }
+    // set texture coordinates
+    texturize(TitanPylons, modelPylons, stride, texturePos, vertexPos);
+    // merge model data
+    modelSurface += modelPylons;
+    // !TODO generate surface normals
+}
+
 void GeometryProvider::texturize(Type T, QVector<GLfloat> &data, unsigned stride, unsigned texturePos, unsigned vertexPos)
 {
-    if (T == Type::Icosahedron or T == Type::Geosphere)
+    if (T == Type::Icosahedron or T == Type::Geosphere or T == Type::TitanSurface)
     {
         float a, b, c;
         for (int seq = 0; seq < data.size(); seq += 3*stride) // for each triangle
@@ -317,5 +382,9 @@ void GeometryProvider::texturize(Type T, QVector<GLfloat> &data, unsigned stride
             data[seq+texturePos + 1 + stride] = 0.5f-asinf(data[seq+vertexPos + 1 + stride])/(M_PI);
             data[seq+texturePos + 1 + 2*stride] = 0.5f-asinf(data[seq+vertexPos + 1 + 2*stride])/(M_PI);
         }
+    }
+    else if (T == Type::TitanPylons)
+    {
+        // !TODO
     }
 }

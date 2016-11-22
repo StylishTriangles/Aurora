@@ -13,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent) :
     opt->hide();
     // polaczenie sygnalu wyjscia submenuExit() klasy opt ze slotem show() klasy centralWidget
     QObject::connect(opt, SIGNAL(submenuExit(void)), this, SLOT(reload(void)));
+    loadGameSettings();
 }
 
 MainWindow::~MainWindow()
@@ -28,6 +29,11 @@ void MainWindow::resizeEvent(QResizeEvent *)
         gameScr->resize(this->size());
 }
 
+void MainWindow::loadGameSettings()
+{
+    tickDelayMs = 8;
+}
+
 // private slots
 void MainWindow::on_exitButton_clicked()
 {
@@ -37,7 +43,20 @@ void MainWindow::on_exitButton_clicked()
 void MainWindow::on_newGameButton_clicked()
 {
     gameScr = new Game(this);
+    gameWorker = new GameWorker(gameScr);
+    workerThread = new QThread;
+    actionTimer = new QTimer;
+    actionTimer->setTimerType(Qt::TimerType::PreciseTimer);
+    // prepare gameWorker thread
+    QObject::connect(actionTimer, SIGNAL(timeout(void)), gameWorker, SLOT(onTick(void)));
+    QObject::connect(gameWorker, SIGNAL(frameReady(void)), gameScr, SLOT(update(void)));
+    // connect signals from Game widget
     QObject::connect(gameScr, SIGNAL(exitToMenu(void)), this, SLOT(reload(void)));
+    actionTimer->start(tickDelayMs);
+    actionTimer->moveToThread(workerThread);
+    gameWorker->moveToThread(workerThread);
+    workerThread->start();
+
     ui->centralWidget->hide();
     gameScr->show();
 }
@@ -51,7 +70,11 @@ void MainWindow::on_optionsButton_clicked()
 void MainWindow::reload()
 {
     if (gameScr != nullptr) {
-        QObject::disconnect(gameScr, SIGNAL(exitToMenu(void)), this, SLOT(reload(void)));
+        actionTimer->deleteLater();
+        workerThread->exit();
+        workerThread->wait();
+        delete gameWorker;
+        delete workerThread;
         delete gameScr;
         gameScr = nullptr;
     }
