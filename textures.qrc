@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/planets">
-        <file>oceaniczna.png</file>
+        <file>earth.png</file>
     </qresource>
     <qresource prefix="/misc">
         <file>skybox.png</file>

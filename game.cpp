@@ -1,6 +1,7 @@
 #include "game.h"
 #include <QDebug>
 #include <QtMath>
+#include <QResource>
 
 Game::Game(QWidget *parent) :
     QOpenGLWidget(parent),
@@ -14,7 +15,6 @@ Game::Game(QWidget *parent) :
     this->setMinimumSize(100, 100);
     this->resize(parent->size());
     this->setFocus();
-    timer.start();
 }
 
 Game::~Game()
@@ -58,7 +58,6 @@ void Game::initializeGL()
     camUp    = QVector3D(0.0f, 1.0f,  0.0f);
     camSpeed = 0.05f;
     rotationSpeed = 0.1f;
-    oldTime = timer.elapsed();
 
     // load textures
     skyboxTexture = new QOpenGLTexture(QImage(QString(":/misc/skybox.png")));
@@ -83,7 +82,12 @@ void Game::initializeGL()
     shadersCompiled = true;
     // temp
     tex = new QOpenGLTexture(QImage(QString(":/planets/oceaniczna.png")));
+#ifdef QT_DEBUG
     atmo = new QOpenGLTexture(QImage(QString("../Aurora/atmosphere.png")));
+#else
+    QResource::registerResource("textures/textures.rcc");
+    atmo = new QOpenGLTexture(QImage(QString(":/planets/atmosphere.png")));
+#endif
 }
 
 void Game::resizeGL(int w, int h)

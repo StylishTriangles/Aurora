@@ -84,8 +84,6 @@ private:
     QSet<qint32> keys;
     // temp
     QOpenGLTexture* tex, *atmo;
-    QElapsedTimer timer;
-    long long int oldTime;
 
 signals:
     void exitToMenu();
