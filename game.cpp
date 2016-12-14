@@ -20,6 +20,8 @@ Game::Game(QWidget *parent) :
 Game::~Game()
 {
     planetsProgram->release();
+    for(auto p:models)
+        delete p;
     delete planetsProgram;
     // temp
     delete tex;
@@ -37,11 +39,11 @@ inline void qNormalizeAngle(float& a)
 void Game::initializeGL()
 {
     initializeOpenGLFunctions();
-    glClearColor(.0f, .0f, .0f, 0.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-//    glEnable(GL_MULTISAMPLE);
+    glEnable(GL_MULTISAMPLE);
 
     Vao.create();
     QOpenGLVertexArrayObject::Binder vaoBinder(&Vao);
@@ -63,9 +65,12 @@ void Game::initializeGL()
     skyboxTexture = new QOpenGLTexture(QImage(QString(":/misc/skybox.png")));
 
     // initialize models
-//    GeometryProvider::geosphere(geosphereModel, GeometryProvider::Four, 5, 0, 3);
-    GeometryProvider::geosphere(geosphereModel, GeometryProvider::Four, 5, 0, 3);
-    GeometryProvider::titan(titanModel, GeometryProvider::Two, 5, 0, 3, -1, 420);
+    QVector<GLfloat>* tmp=new QVector<GLfloat>;
+    GeometryProvider::geosphere(*tmp, GeometryProvider::Four, 5, 0, 3);
+    models["geosphere4"]=tmp;
+    tmp=new QVector<GLfloat>;
+    GeometryProvider::titan(*tmp, GeometryProvider::Two, 5, 0, 3, -1, 420);
+    models["titan4"]=tmp;
     // compile shaders
     bool noerror = true;
     noerror = planetsProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/sphereshaderV.vert");
@@ -81,13 +86,17 @@ void Game::initializeGL()
     planetsProgram->setUniformValue("ourTexture1", 0);
     shadersCompiled = true;
     // temp
-    tex = new QOpenGLTexture(QImage(QString(":/planets/oceaniczna.png")));
+    tex = new QOpenGLTexture(QImage(QString(":/planets/earth.png")));
+    obj.push_back(Modelcontainer(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 0.0f), "geosphere", tex, planetsProgram, Modelcontainer::Planet));
 #ifdef QT_DEBUG
     atmo = new QOpenGLTexture(QImage(QString("../Aurora/atmosphere.png")));
 #else
     QResource::registerResource("textures/textures.rcc");
     atmo = new QOpenGLTexture(QImage(QString(":/planets/atmosphere.png")));
 #endif
+    obj.push_back(Modelcontainer(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 0.0f), "geosphere", atmo, planetsProgram, Modelcontainer::Planet));
+    obj.back().scale=1.02f;
+    obj.push_back(Modelcontainer(QVector3D(2.0f, 2.0f, 2.0f), QVector3D(0.0f, 0.0f, 0.0f), "titan", tex, planetsProgram, Modelcontainer::Planet));
 }
 
 void Game::resizeGL(int w, int h)
@@ -96,36 +105,22 @@ void Game::resizeGL(int w, int h)
     projectionMat.perspective(45.0f, w / float(h), 0.01f, 100.0f);
 }
 
-void Game::drawSphere(float radius, float x, float y, float z)
+inline QVector<GLfloat>* Game::getModel(QString const & name, int detail)
 {
-    // compile shaders
-    if (!shadersCompiled)
-    {
-        bool noerror = true;
-        noerror = planetsProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/sphereshaderV.vert");
-        if (!noerror) {qDebug() << planetsProgram->log();}
-        noerror = planetsProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/sphereshader.frag");
-        if (!noerror) {qDebug() << planetsProgram->log();}
-        planetsProgram->bindAttributeLocation("position", 0);
-        planetsProgram->bindAttributeLocation("texCoord", 2);
-        noerror = planetsProgram->link();
-        if (!noerror) {qDebug() << planetsProgram->log();}
-        noerror = planetsProgram->bind();
-        if (!noerror) {qDebug() << planetsProgram->log();}
-        planetsProgram->setUniformValue("ourTexture1", 0);
-        shadersCompiled = true;
-        // temp
-        tex = new QOpenGLTexture(QImage(QString(":/planets/oceaniczna.png")));
-    }
+    auto ret = models.find(name + QString::number(detail));
+    Q_ASSERT_X(ret != models.end(), "Game::getModel()", (const char*)(name + QString::number(detail)).data());
+    return *ret;
+}
+
+void Game::drawModel(const Modelcontainer & mod)
+{
     QMatrix4x4 modelMat;
     modelMat.setToIdentity();
-    modelMat.translate(x, y, z);
-    modelMat.scale(radius);
-    QVector<GLfloat> ocean;
-    GeometryProvider::sphere(ocean, 12, 12);
+    modelMat.translate(mod.pos);
+    modelMat.scale(mod.scale);
 
     planetVbo.bind();
-    planetVbo.allocate(ocean.constData(),ocean.count()*sizeof(GLfloat));
+    planetVbo.allocate(getModel(mod.model,4)->data(),getModel(mod.model,4)->size()*sizeof(GLfloat));
 
     planetsProgram->setUniformValue("model",modelMat);
     planetsProgram->setUniformValue("view",viewMat);
@@ -136,38 +131,7 @@ void Game::drawSphere(float radius, float x, float y, float z)
     this->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), 0);
     this->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), reinterpret_cast<GLvoid*>(3*sizeof(GLfloat)));
 
-
-    tex->bind();
-    glDrawArrays(GL_TRIANGLES, 0, ocean.count());
-    planetVbo.release();
-//    delete ocean.getTexture();
-}
-
-void Game::drawGeosphere(float x, float y, float z, float r)
-{
-    drawGeosphere(geosphereModel, x, y, z, r);
-}
-
-void Game::drawGeosphere(QVector<GLfloat> const& modelGeometry, float x, float y, float z, float r)
-{
-    QMatrix4x4 modelMat;
-    modelMat.setToIdentity();
-    modelMat.translate(x, y, z);
-    modelMat.scale(r);
-
-    planetVbo.bind();
-    planetVbo.allocate(modelGeometry.data(),modelGeometry.size()*sizeof(GLfloat));
-
-    planetsProgram->setUniformValue("model",modelMat);
-    planetsProgram->setUniformValue("view",viewMat);
-    planetsProgram->setUniformValue("projection",projectionMat);
-
-    this->glEnableVertexAttribArray(0);
-    this->glEnableVertexAttribArray(2);
-    this->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), 0);
-    this->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), reinterpret_cast<GLvoid*>(3*sizeof(GLfloat)));
-
-    glDrawArrays(GL_TRIANGLES, 0, modelGeometry.count());
+    glDrawArrays(GL_TRIANGLES, 0, getModel(mod.model,4)->count());
     planetVbo.release();
 }
 
@@ -178,6 +142,7 @@ void Game::drawSkybox(float radius)
     modelMat.translate(camPos);
     modelMat.scale(radius);
 
+    geosphereModel=**models.find("geosphere4");
     planetVbo.bind();
     planetVbo.allocate(geosphereModel.data(),geosphereModel.size()*sizeof(GLfloat));
 
@@ -206,22 +171,14 @@ void Game::paintGL()
 
     QOpenGLVertexArrayObject::Binder vaoBinder(&Vao);
 
-//    drawSphere(1.0f, 0.0f, 0.0f, 0.0f);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-    tex->bind();
-    drawGeosphere(0.0f, 0.0f, 0.0f);
-    tex->release();
-    atmo->bind();
-    drawGeosphere(0.0f, 0.0f, 0.0f, 1.02f);
-    atmo->release();
-    // EXPERIMENTAL
-    tex->bind();
-    drawGeosphere(titanModel, 2.0f, 2.0f, -2.0f);
-    tex->release();
-    //drawSphere(0.5f, sinf(qDegreesToRadians(float((timer.elapsed()-oldTime)/50))), cosf(qDegreesToRadians(float((timer.elapsed()-oldTime)/50))), 0.0f);
-    //oldTime=timer.elapsed();
-//    drawSphere(2.0f, 5.0f, 3.0f, 0.0f);
+
+    for(int i=0; i<obj.size(); i++){
+        obj[i].tex->bind();
+        drawModel(obj[i]);
+        obj[i].tex->release();
+    }
     drawSkybox(50.0f);
 }
 

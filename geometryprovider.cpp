@@ -65,20 +65,6 @@ void GeometryProvider::icosahedron(QVector<GLfloat> &outData,  unsigned stride, 
     const unsigned icosahedronFaces = 20;
     const unsigned vertexesPerTriangle = 3;
 
-
-    //debug
-//    double spin = atan2( 0.525731, 0.850651 );
-//    for (int i = 0; i < 12; i++)
-//    {
-//        QVector3D cpy = icosahedronVertices[i];
-//        QMatrix4x4 m;
-//        m.setToIdentity();
-//        m.rotate(spin/M_PI*180,1,0,0);
-//        cpy = m * cpy;
-//        qDebug() << qSetRealNumberPrecision( 6 ) << i << ": " << cpy[0] << cpy[1] << cpy[2];
-//        icosahedronVertices[i] = cpy;
-//    }
-
     outData.resize(icosahedronFaces * vertexesPerTriangle * stride);
     QVector<GLfloat>::iterator writeData = outData.begin();
     QVector<int>::iterator it = icosahedronIndices.begin();

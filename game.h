@@ -13,7 +13,9 @@
 #include <QKeyEvent>
 #include <QElapsedTimer>
 #include <QSet>
+#include <QMap>
 #include "geometryprovider.h"
+#include "modelcontainer.h"
 
 namespace Ui {
 class Game;
@@ -56,14 +58,13 @@ protected:
     void wheelEvent(QWheelEvent* event) Q_DECL_OVERRIDE;
     void keyPressEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
     void keyReleaseEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
-    void drawSphere(float radius, float x, float y, float z);
-    void drawGeosphere(float x, float y, float z, float r = 1.0f);
-    void drawGeosphere(QVector<GLfloat> const& modelGeometry, float x, float y, float z, float r = 1.0f);
     void drawSkybox(float radius = 50.0f);
+    void drawModel(const Modelcontainer & mod);
 
     void parseInput(float dT);
 
 private:
+    QVector<GLfloat>* getModel(QString const & name, int detail);
     void setupVBOAttribute();
 
     QMatrix4x4 projectionMat, viewMat;
@@ -75,6 +76,8 @@ private:
     // game world objects
     QVector<GLfloat> geosphereModel;
     QVector<GLfloat> titanModel;
+    QHash<QString, QVector<GLfloat>*> models;
+    QVector<Modelcontainer> obj;
     QOpenGLTexture* skyboxTexture;
     // current camera rotation and position
     float camXRot, camYRot, camZRot;
