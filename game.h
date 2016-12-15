@@ -59,7 +59,7 @@ protected:
     void keyPressEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
     void keyReleaseEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
     void drawSkybox(float radius = 50.0f);
-    void drawModel(const Modelcontainer & mod);
+    void drawModel(ModelContainer* mod);
 
     void parseInput(float dT);
 
@@ -74,10 +74,9 @@ private:
     QPoint lastCursorPos;
     bool shadersCompiled;
     // game world objects
-    QVector<GLfloat> geosphereModel;
-    QVector<GLfloat> titanModel;
-    QHash<QString, QVector<GLfloat>*> models;
-    QVector<Modelcontainer> obj;
+    QHash<QString, QVector<GLfloat>*> mGeometry;
+    QHash<QString, QVector<QOpenGLTexture*>> textures;
+    QVector<ModelContainer*> obj;
     QOpenGLTexture* skyboxTexture;
     // current camera rotation and position
     float camXRot, camYRot, camZRot;

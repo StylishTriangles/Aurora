@@ -15,17 +15,23 @@ Game::Game(QWidget *parent) :
     this->setMinimumSize(100, 100);
     this->resize(parent->size());
     this->setFocus();
+    qDebug() << "ModelContainer:" << sizeof(ModelContainer) << "|" << "Game:" << sizeof(Game);
 }
 
 Game::~Game()
 {
     planetsProgram->release();
-    for(auto p:models)
+    for(auto p:mGeometry)
+    {
+        delete p;
+    }
+    for(auto p:obj)
         delete p;
     delete planetsProgram;
     // temp
     delete tex;
     delete skyboxTexture;
+    delete atmo;
 }
 
 inline void qNormalizeAngle(float& a)
@@ -65,12 +71,20 @@ void Game::initializeGL()
     skyboxTexture = new QOpenGLTexture(QImage(QString(":/misc/skybox.png")));
 
     // initialize models
-    QVector<GLfloat>* tmp=new QVector<GLfloat>;
-    GeometryProvider::geosphere(*tmp, GeometryProvider::Four, 5, 0, 3);
-    models["geosphere4"]=tmp;
-    tmp=new QVector<GLfloat>;
-    GeometryProvider::titan(*tmp, GeometryProvider::Two, 5, 0, 3, -1, 420);
-    models["titan4"]=tmp;
+    QVector<GLfloat>* tmp;
+    for (int i = 1; i <= 4; i++)
+    {
+        tmp = new QVector<GLfloat>;
+        GeometryProvider::geosphere(*tmp, GeometryProvider::SubdivisionCount(i), 5, 0, 3);
+        mGeometry[QStringLiteral("geosphere%1").arg(i)]=tmp;
+    }
+    for (int i = 1; i <= 4; i++)
+    {
+        tmp=new QVector<GLfloat>;
+        GeometryProvider::titan(*tmp, GeometryProvider::SubdivisionCount(i+1), 5, 0, 3, -1, 420);
+        mGeometry[QStringLiteral("titan%1").arg(i)]=tmp;
+    }
+
     // compile shaders
     bool noerror = true;
     noerror = planetsProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/sphereshaderV.vert");
@@ -87,16 +101,16 @@ void Game::initializeGL()
     shadersCompiled = true;
     // temp
     tex = new QOpenGLTexture(QImage(QString(":/planets/earth.png")));
-    obj.push_back(Modelcontainer(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 0.0f), "geosphere", tex, planetsProgram, Modelcontainer::Planet));
+    obj.push_back(new ModelContainer(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 0.0f), "geosphere", tex, planetsProgram, ModelContainer::Planet));
 #ifdef QT_DEBUG
     atmo = new QOpenGLTexture(QImage(QString("../Aurora/atmosphere.png")));
 #else
     QResource::registerResource("textures/textures.rcc");
     atmo = new QOpenGLTexture(QImage(QString(":/planets/atmosphere.png")));
 #endif
-    obj.push_back(Modelcontainer(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 0.0f), "geosphere", atmo, planetsProgram, Modelcontainer::Planet));
-    obj.back().scale=1.02f;
-    obj.push_back(Modelcontainer(QVector3D(2.0f, 2.0f, 2.0f), QVector3D(0.0f, 0.0f, 0.0f), "titan", tex, planetsProgram, Modelcontainer::Planet));
+    obj.push_back(new ModelContainer(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 0.0f), "geosphere", atmo, planetsProgram, ModelContainer::Planet));
+    obj.back()->scale=1.02f;
+    obj.push_back(new ModelContainer(QVector3D(2.0f, 2.0f, 2.0f), QVector3D(0.0f, 0.0f, 0.0f), "titan", tex, planetsProgram, ModelContainer::Planet));
 }
 
 void Game::resizeGL(int w, int h)
@@ -107,20 +121,25 @@ void Game::resizeGL(int w, int h)
 
 inline QVector<GLfloat>* Game::getModel(QString const & name, int detail)
 {
-    auto ret = models.find(name + QString::number(detail));
-    Q_ASSERT_X(ret != models.end(), "Game::getModel()", (const char*)(name + QString::number(detail)).data());
+    auto ret = mGeometry.find(name + QString::number(detail));
+    Q_ASSERT_X(ret != mGeometry.end(), "Game::getModel()", (const char*)(name + QString::number(detail)).data());
     return *ret;
 }
 
-void Game::drawModel(const Modelcontainer & mod)
+void Game::drawModel(ModelContainer* mod)
 {
     QMatrix4x4 modelMat;
     modelMat.setToIdentity();
-    modelMat.translate(mod.pos);
-    modelMat.scale(mod.scale);
+    modelMat.translate(mod->pos);
+    modelMat.scale(mod->scale);
 
     planetVbo.bind();
-    planetVbo.allocate(getModel(mod.model,4)->data(),getModel(mod.model,4)->size()*sizeof(GLfloat));
+    static auto distance = [](QVector3D const& camPos, QVector3D const& modPos) -> float {
+        return (camPos-modPos).length();
+    };
+    float d = distance(camPos, mod->pos);
+    int detailLevel = (d > 60.f)?1:(d > 30.f)?2:(d > 15.f)?3:4;
+    planetVbo.allocate(getModel(mod->model,detailLevel)->data(),getModel(mod->model,detailLevel)->size()*sizeof(GLfloat));
 
     planetsProgram->setUniformValue("model",modelMat);
     planetsProgram->setUniformValue("view",viewMat);
@@ -131,8 +150,10 @@ void Game::drawModel(const Modelcontainer & mod)
     this->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), 0);
     this->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), reinterpret_cast<GLvoid*>(3*sizeof(GLfloat)));
 
-    glDrawArrays(GL_TRIANGLES, 0, getModel(mod.model,4)->count());
+    glDrawArrays(GL_TRIANGLES, 0, getModel(mod->model,detailLevel)->count());
     planetVbo.release();
+    for (ModelContainer* m:mod->children)
+        drawModel(m);
 }
 
 void Game::drawSkybox(float radius)
@@ -142,9 +163,9 @@ void Game::drawSkybox(float radius)
     modelMat.translate(camPos);
     modelMat.scale(radius);
 
-    geosphereModel=**models.find("geosphere4");
+    QVector<GLfloat>* geosphereModel=*mGeometry.find("geosphere4");
     planetVbo.bind();
-    planetVbo.allocate(geosphereModel.data(),geosphereModel.size()*sizeof(GLfloat));
+    planetVbo.allocate(geosphereModel->data(),geosphereModel->size()*sizeof(GLfloat));
 
     planetsProgram->setUniformValue("model",modelMat);
     planetsProgram->setUniformValue("view",viewMat);
@@ -158,7 +179,7 @@ void Game::drawSkybox(float radius)
     skyboxTexture->bind();
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-    glDrawArrays(GL_TRIANGLES, 0, geosphereModel.count());
+    glDrawArrays(GL_TRIANGLES, 0, geosphereModel->count());
     planetVbo.release();
 }
 
@@ -175,9 +196,9 @@ void Game::paintGL()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 
     for(int i=0; i<obj.size(); i++){
-        obj[i].tex->bind();
+        obj[i]->tex->bind();
         drawModel(obj[i]);
-        obj[i].tex->release();
+        obj[i]->tex->release();
     }
     drawSkybox(50.0f);
 }
