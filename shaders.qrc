@@ -1,7 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>fragShader.frag</file>
-        <file>vertShader.vert</file>
         <file>sphereshader.frag</file>
         <file>sphereshaderV.vert</file>
     </qresource>

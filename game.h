@@ -61,6 +61,7 @@ protected:
     void drawSkybox(float radius = 50.0f);
     void drawModel(ModelContainer* mod);
 
+    void loadTextures();
     void parseInput(float dT);
 
 private:
@@ -75,17 +76,18 @@ private:
     bool shadersCompiled;
     // game world objects
     QHash<QString, QVector<GLfloat>*> mGeometry;
-    QHash<QString, QVector<QOpenGLTexture*>> textures;
+
+    QHash<QString, QOpenGLTexture*> textures;
     QVector<ModelContainer*> obj;
     QOpenGLTexture* skyboxTexture;
     // current camera rotation and position
     float camXRot, camYRot, camZRot;
     float camSpeed, rotationSpeed;
+    float camFov, camNear, camFar;
     QVector3D camPos, camFront, camUp;
     // input handling
     QSet<qint32> keys;
     // temp
-    QOpenGLTexture* tex, *atmo;
 
 signals:
     void exitToMenu();

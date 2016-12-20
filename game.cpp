@@ -6,7 +6,8 @@
 Game::Game(QWidget *parent) :
     QOpenGLWidget(parent),
     shadersCompiled(false),
-    camXRot(0), camYRot(-90.0f), camZRot(0)
+    camXRot(0), camYRot(-90.0f), camZRot(0),
+    camFov(60.0f), camNear(0.01f), camFar(100.0f)
 {
     QSurfaceFormat format;
     format.setSamples(4);
@@ -29,9 +30,7 @@ Game::~Game()
         delete p;
     delete planetsProgram;
     // temp
-    delete tex;
     delete skyboxTexture;
-    delete atmo;
 }
 
 inline void qNormalizeAngle(float& a)
@@ -56,7 +55,7 @@ void Game::initializeGL()
     planetsProgram = new QOpenGLShaderProgram;
 
     projectionMat.setToIdentity();
-    projectionMat.perspective(45.0f, float(this->width()) / float(this->height()), 0.01f, 100.0f);
+    projectionMat.perspective(camFov, float(this->width()) / float(this->height()), camNear, camFar);
 //    projectionMat.frustum(0.0f, 800.0f, 0.0f, 600.0f, 0.1f, 100.0f); // orthographic projection mode
 
     planetVbo.create();
@@ -81,7 +80,7 @@ void Game::initializeGL()
     for (int i = 1; i <= 4; i++)
     {
         tmp=new QVector<GLfloat>;
-        GeometryProvider::titan(*tmp, GeometryProvider::SubdivisionCount(i+1), 5, 0, 3, -1, 420);
+        GeometryProvider::titan(*tmp, GeometryProvider::SubdivisionCount(i), 5, 0, 3, -1, 420);
         mGeometry[QStringLiteral("titan%1").arg(i)]=tmp;
     }
 
@@ -99,24 +98,26 @@ void Game::initializeGL()
     if (!noerror) {qDebug() << planetsProgram->log();}
     planetsProgram->setUniformValue("ourTexture1", 0);
     shadersCompiled = true;
-    // temp
-    tex = new QOpenGLTexture(QImage(QString(":/planets/earth.png")));
-    obj.push_back(new ModelContainer(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 0.0f), "geosphere", tex, planetsProgram, ModelContainer::Planet));
-#ifdef QT_DEBUG
-    atmo = new QOpenGLTexture(QImage(QString("../Aurora/atmosphere.png")));
-#else
-    QResource::registerResource("textures/textures.rcc");
-    atmo = new QOpenGLTexture(QImage(QString(":/planets/atmosphere.png")));
-#endif
-    obj.push_back(new ModelContainer(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 0.0f), "geosphere", atmo, planetsProgram, ModelContainer::Planet));
-    obj.back()->scale=1.02f;
-    obj.push_back(new ModelContainer(QVector3D(2.0f, 2.0f, 2.0f), QVector3D(0.0f, 0.0f, 0.0f), "titan", tex, planetsProgram, ModelContainer::Planet));
+    // load textures
+    loadTextures();
+    // make models
+    obj.push_back(new ModelContainer(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 0.0f), "geosphere", "earth", planetsProgram, ModelContainer::Planet));
+    ModelContainer* tmpM = new ModelContainer(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 0.0f), "geosphere", "atmosphere", planetsProgram, ModelContainer::Planet);
+    tmpM->scale=1.02f;
+    obj.back()->addChild(tmpM); // add to earth
+    tmpM = new ModelContainer(QVector3D(0.0f, 0.0f, 2.1f), QVector3D(360.0f, 0.0f, 0.0f), "geosphere", "moon", planetsProgram, ModelContainer::Moon);
+    tmpM->scale=0.250f;
+    obj.back()->addChild(tmpM); // add to earth
+    obj.push_back(new ModelContainer(QVector3D(2.0f, 2.0f, 2.0f), QVector3D(0.0f, 0.0f, 0.0f), "titan", "earth", planetsProgram, ModelContainer::Planet));
+    tmpM = new ModelContainer(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 0.0f), "titan", "atmosphere", planetsProgram, ModelContainer::Planet);
+    tmpM->scale=1.01f;
+    obj.back()->addChild(tmpM);
 }
 
 void Game::resizeGL(int w, int h)
 {
     projectionMat.setToIdentity();
-    projectionMat.perspective(45.0f, w / float(h), 0.01f, 100.0f);
+    projectionMat.perspective(camFov, w / float(h), camNear, camFar);
 }
 
 inline QVector<GLfloat>* Game::getModel(QString const & name, int detail)
@@ -130,14 +131,15 @@ void Game::drawModel(ModelContainer* mod)
 {
     QMatrix4x4 modelMat;
     modelMat.setToIdentity();
-    modelMat.translate(mod->pos);
-    modelMat.scale(mod->scale);
+    modelMat.translate(mod->getPos());
+    modelMat.scale(mod->getScale());
 
+    textures[mod->tex]->bind();
     planetVbo.bind();
     static auto distance = [](QVector3D const& camPos, QVector3D const& modPos) -> float {
         return (camPos-modPos).length();
     };
-    float d = distance(camPos, mod->pos);
+    float d = distance(camPos, mod->pos) / mod->getScale();
     int detailLevel = (d > 60.f)?1:(d > 30.f)?2:(d > 15.f)?3:4;
     planetVbo.allocate(getModel(mod->model,detailLevel)->data(),getModel(mod->model,detailLevel)->size()*sizeof(GLfloat));
 
@@ -152,8 +154,9 @@ void Game::drawModel(ModelContainer* mod)
 
     glDrawArrays(GL_TRIANGLES, 0, getModel(mod->model,detailLevel)->count());
     planetVbo.release();
-    for (ModelContainer* m:mod->children)
-        drawModel(m);
+    textures[mod->tex]->release();
+    for (int i = 0; i < mod->children.size(); i++)
+        drawModel(mod->children[i]);
 }
 
 void Game::drawSkybox(float radius)
@@ -196,9 +199,7 @@ void Game::paintGL()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 
     for(int i=0; i<obj.size(); i++){
-        obj[i]->tex->bind();
         drawModel(obj[i]);
-        obj[i]->tex->release();
     }
     drawSkybox(50.0f);
 }
@@ -292,6 +293,24 @@ void Game::keyReleaseEvent(QKeyEvent *event)
         keys -= Qt::Key_Shift;
 }
 
+void Game::loadTextures()
+{
+    QOpenGLTexture* tex;
+    tex = new QOpenGLTexture(QImage(QString(":/planets/earth.png")));
+    textures.insert("earth", tex);
+
+#ifdef QT_DEBUG
+    tex = new QOpenGLTexture(QImage(QString("../Aurora/atmosphere.png")));
+    textures.insert("atmosphere", tex);
+    tex = new QOpenGLTexture(QImage(QString("../Aurora/moon.png")));
+    textures.insert("moon", tex);
+#else
+    QResource::registerResource("textures/textures.rcc");
+    tex = new QOpenGLTexture(QImage(QString(":/planets/atmosphere.png")));
+    textures.insert("atmosphere", tex);
+#endif
+}
+
 void Game::parseInput(float dT)
 {
     float camV = camSpeed * dT;
@@ -312,7 +331,7 @@ void Game::parseInput(float dT)
 void GameWorker::onTick()
 {
     qint64 nse = et.nsecsElapsed();
-    float dT = (float)(nse-lastTime)/10e8f;
+    float dT = (float)(nse-lastTime)/1e9f;
     lastTime = nse;
     g->parseInput(dT*25.0f);
     emit frameReady();

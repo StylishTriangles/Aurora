@@ -11,23 +11,30 @@ public:
     enum Type{
         Generic,
         Planet,
+        Moon,
         Star,
         Ship
     };
 
-    ModelContainer()=default;
-    ModelContainer(QVector3D _pos, QVector3D _rot, QString _model, QOpenGLTexture* _tex=nullptr,  QOpenGLShaderProgram* _shader=nullptr, Type _t=Generic);
+    ModelContainer(ModelContainer* _parent = nullptr):parent(_parent){}
+    ModelContainer(QVector3D _relativePos, QVector3D _relativeRot, QString _model, QString _tex,  QOpenGLShaderProgram* _shader=nullptr, Type _t=Generic);
     ~ModelContainer();
 
-    void addChild(ModelContainer const& m);
+    void addChild(ModelContainer & m);
+    void addChild(ModelContainer * m);
+    QVector3D getPos();
+    QVector3D getRot();
+    float getScale();
 
+    ModelContainer* parent;
     QVector3D pos, rot;
-    QOpenGLTexture* tex;
-    QOpenGLShaderProgram* shader;
     QString model;
+    QString tex;
+    QOpenGLShaderProgram* shader;
     Type t;
     GLfloat scale;
     QVector<ModelContainer*> children;
+
 };
 
 #endif // MODELCONTAINER_H
