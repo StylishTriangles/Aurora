@@ -31,22 +31,17 @@ T mini(T a, T b, Args... args)
     return mini((a<b)?a:b, args...);
 }
 
-GeometryProvider::GeometryProvider()
+void GeometryProvider::icosahedron(QVector<GLfloat> &outData, int stride, int vertexPos, int normalPos, int texturePos)
 {
-
-}
-
-void GeometryProvider::icosahedron(QVector<GLfloat> &outData,  unsigned stride, unsigned elemPos)
-{
-//    old papa mobile
-//    static const QVector3D icosahedronVertices[] = {
-//        QVector3D(-0.525731f, 0, 0.850651f), QVector3D(0.525731f, 0, 0.850651f),
-//        QVector3D(-0.525731f, 0, -0.850651f), QVector3D(0.525731f, 0, -0.850651f),
-//        QVector3D(0, 0.850651f, 0.525731f), QVector3D(0, 0.850651f, -0.525731f),
-//        QVector3D(0, -0.850651f, 0.525731f), QVector3D(0, -0.850651f, -0.525731f),
-//        QVector3D(0.850651f, 0.525731f, 0), QVector3D(-0.850651f, 0.525731f, 0),
-//        QVector3D(0.850651f, -0.525731f, 0), QVector3D(-0.850651f, -0.525731f, 0)
-//    };
+    //    old papa mobile
+    //    static const QVector3D icosahedronVertices[] = {
+    //        QVector3D(-0.525731f, 0, 0.850651f), QVector3D(0.525731f, 0, 0.850651f),
+    //        QVector3D(-0.525731f, 0, -0.850651f), QVector3D(0.525731f, 0, -0.850651f),
+    //        QVector3D(0, 0.850651f, 0.525731f), QVector3D(0, 0.850651f, -0.525731f),
+    //        QVector3D(0, -0.850651f, 0.525731f), QVector3D(0, -0.850651f, -0.525731f),
+    //        QVector3D(0.850651f, 0.525731f, 0), QVector3D(-0.850651f, 0.525731f, 0),
+    //        QVector3D(0.850651f, -0.525731f, 0), QVector3D(-0.850651f, -0.525731f, 0)
+    //    };
     static const QVector3D icosahedronVertices[] = {
         QVector3D(-0.525731f, -0.447214f, 0.723607f).normalized(), QVector3D(0.525731f, -0.447214f, 0.723607f).normalized(),
         QVector3D(-0.525731f, 0.447214f, -0.723607f).normalized(), QVector3D(0.525731f, 0.447214f, -0.723607f).normalized(),
@@ -68,7 +63,7 @@ void GeometryProvider::icosahedron(QVector<GLfloat> &outData,  unsigned stride, 
     outData.resize(icosahedronFaces * vertexesPerTriangle * stride);
     QVector<GLfloat>::iterator writeData = outData.begin();
     QVector<int>::iterator it = icosahedronIndices.begin();
-    writeData += elemPos; // ustawienie iteratora na pierwsze miejsce zapisu danych
+    writeData += vertexPos; // ustawienie iteratora na pierwsze miejsce zapisu danych
     unsigned delta = stride-3; // roznica pozycji wskaznika na poczatek nowego vertexa i pozycji wskaznika po zapisaniu vertexa
     while (it != icosahedronIndices.end())
     {
@@ -81,12 +76,12 @@ void GeometryProvider::icosahedron(QVector<GLfloat> &outData,  unsigned stride, 
         writeData += delta;
         ++it;
     }
-}
-
-void GeometryProvider::icosahedron(QVector<GLfloat> &outData, unsigned stride, unsigned elemPos, unsigned texturePos)
-{
-    icosahedron(outData, stride, elemPos);
-    texturize(Icosahedron, outData, stride, texturePos, elemPos);
+    // make uv map
+    if (texturePos != -1)
+        texturize(Icosahedron, outData, stride, vertexPos, texturePos);
+    // setup normals
+    if (normalPos != -1)
+        genNormals(Icosahedron, outData, stride, vertexPos, normalPos);
 }
 
 inline void itAppend (QVector<GLfloat>::iterator& it, QVector3D const& v)
@@ -106,7 +101,7 @@ void itSaveTriangle(QVector<GLfloat>::iterator& it, QVector3D const& a, QVector3
     it += delta;
 }
 
-void GeometryProvider::geosphere(QVector<GLfloat>& outData, SubdivisionCount subCount, unsigned stride, unsigned elemPos)
+void GeometryProvider::geosphere(QVector<GLfloat>& outData, SubdivisionCount subCount, int stride, int vertexPos, int normalPos, int texPos)
 {
     /*       0
     //      / \
@@ -116,15 +111,15 @@ void GeometryProvider::geosphere(QVector<GLfloat>& outData, SubdivisionCount sub
     //  /   \ /   \
     // 1-----B-----2 */
     QVector<GLfloat> bufferLevel[2];
-    icosahedron(bufferLevel[0],stride,elemPos);
+    icosahedron(bufferLevel[0],stride,vertexPos,-1,-1);
     for (int i = 1; i <= subCount; i++)
     {
         bool s = (i%2); // switch for the current buffer level
         bufferLevel[s].resize(bufferLevel[!s].size()*4); // rozmiar zwiekszony 4-krotnie
         QVector<GLfloat>::iterator bufferOut = bufferLevel[s].begin();
-        bufferOut += elemPos;
+        bufferOut += vertexPos;
         int delta = stride-3;
-        for (int j = elemPos; j < bufferLevel[!s].size(); j += 3*stride)
+        for (int j = vertexPos; j < bufferLevel[!s].size(); j += 3*stride)
         {
             QVector3D oldVert[3] = { {bufferLevel[!s][j],bufferLevel[!s][j+1],bufferLevel[!s][j+2]},
                                      {bufferLevel[!s][j+stride],bufferLevel[!s][j+stride+1],bufferLevel[!s][j+stride+2]},
@@ -142,12 +137,10 @@ void GeometryProvider::geosphere(QVector<GLfloat>& outData, SubdivisionCount sub
         }
     }
     outData = std::move(bufferLevel[subCount%2]);
-}
-
-void GeometryProvider::geosphere(QVector<GLfloat> &outData, SubdivisionCount subCount, unsigned stride, unsigned elemPos, unsigned texturePos)
-{
-    geosphere(outData, subCount, stride, elemPos);
-    texturize(Geosphere, outData, stride, texturePos, elemPos);
+    if (texPos != -1)
+        texturize(Geosphere, outData, stride, vertexPos, texPos);
+    if (normalPos != -1)
+        genNormals(Geosphere, outData, stride, vertexPos, normalPos);
 }
 
 void GeometryProvider::sphere(QVector<GLfloat> &outData, const int parallelsAmount, const int meridiansAmount)
@@ -211,7 +204,7 @@ void GeometryProvider::sphere(QVector<GLfloat> &outData, const int parallelsAmou
             *it++ = prevRound[j][4];
 
             if (i==1) continue; // Biegun sklada sie z trojkatow, zatem przypda 1 trojkat na poludnik,
-                                // dalszy kod sluzy do renderowania drugiej serii trojkatow, dlatego zostal pominiety
+            // dalszy kod sluzy do renderowania drugiej serii trojkatow, dlatego zostal pominiety
             // bottom-right corner
             *it++ = cacheSin[j+1]*r;
             *it++ = radius*cosf(M_PI*GLfloat(i)/GLfloat(parallelsAmount));
@@ -264,8 +257,8 @@ void GeometryProvider::sphere(QVector<GLfloat> &outData, const int parallelsAmou
     }
 }
 
-void GeometryProvider::titan(QVector<GLfloat>& modelSurface, SubdivisionCount subCount,
-                      int stride, int vertexPos, int texturePos, int normalPos, int seed)
+void GeometryProvider::titan(QVector<GLfloat>& modelSurface, SubdivisionCount subCount, int seed,
+                             int stride, int vertexPos, int normalPos, int texturePos)
 {
     //initialize variables and random number generators
     const GLfloat minIncrease = 0.01f; // percentage size increase
@@ -287,19 +280,19 @@ void GeometryProvider::titan(QVector<GLfloat>& modelSurface, SubdivisionCount su
             void {target[pos] = src[0]; target[pos+1] = src[1]; target[pos+2] = src[2];};
     auto insertTriangle = [&pylonTriangle, stride, vertexPos, modVertex](QVector3D const& a, QVector3D const& b, QVector3D const& c, QVector<GLfloat>& dst) ->
             void {  modVertex(pylonTriangle, a, vertexPos);
-                    modVertex(pylonTriangle, b, vertexPos+stride);
-                    modVertex(pylonTriangle, c, vertexPos+2*stride);
-                    dst += pylonTriangle;};
+        modVertex(pylonTriangle, b, vertexPos+stride);
+        modVertex(pylonTriangle, c, vertexPos+2*stride);
+        dst += pylonTriangle;};
     // create geosphere with texture
     geosphere(modelSurface, subCount, stride, vertexPos);
     if (texturePos != -1)
-        texturize(TitanSurface, modelSurface, stride, texturePos, vertexPos);
+        texturize(TitanSurface, modelSurface, stride, vertexPos, texturePos);
     for (int i = vertexPos; i < modelSurface.size(); i+=stride*3)
     {
         float h = height(rng);
         if (proc(rng) < chance and isInRange(h))
         {
-//            qDebug() << h;
+            //            qDebug() << h;
             float ratio = 1.0f + h;
             QVector3D a(modelSurface[i], modelSurface[i+1], modelSurface[i+2]);
             QVector3D b(modelSurface[i+stride], modelSurface[i+1+stride], modelSurface[i+2+stride]);
@@ -322,13 +315,13 @@ void GeometryProvider::titan(QVector<GLfloat>& modelSurface, SubdivisionCount su
         }
     }
     // set texture coordinates
-    texturize(TitanPylons, modelPylons, stride, texturePos, vertexPos);
+    texturize(TitanPylons, modelPylons, stride, vertexPos, texturePos);
     // merge model data
     modelSurface += modelPylons;
     // !TODO generate surface normals
 }
 
-void GeometryProvider::texturize(Type T, QVector<GLfloat> &data, unsigned stride, unsigned texturePos, unsigned vertexPos)
+void GeometryProvider::texturize(Type T, QVector<GLfloat> &data, unsigned stride, unsigned vertexPos, unsigned texturePos)
 {
     if (T == Type::Icosahedron or T == Type::Geosphere or T == Type::TitanSurface)
     {
@@ -372,5 +365,21 @@ void GeometryProvider::texturize(Type T, QVector<GLfloat> &data, unsigned stride
     else if (T == Type::TitanPylons)
     {
         // !TODO
+    }
+}
+
+void GeometryProvider::genNormals(Type geometryType, QVector<GLfloat>& data, unsigned stride, unsigned vertexPos, unsigned normalPos)
+{
+    if (geometryType == Icosahedron or geometryType == Geosphere) {
+        auto saveNorm = [&data](int pos, float x, float y, float z) -> void { data[pos]=x; data[pos+1]=y; data[pos+2]=z;};
+        for (int i = 0; i < data.size(); i+=stride*3)
+        {
+            QVector3D norm = QVector3D((data[i+vertexPos]+data[i+vertexPos+stride]+data[i+vertexPos+2*stride])/3,
+                                        (data[i+vertexPos+1]+data[i+vertexPos+stride+1]+data[i+vertexPos+2*stride+1])/3,
+                                        (data[i+vertexPos+2]+data[i+vertexPos+stride+2]+data[i+vertexPos+2*stride+2])/3);
+            saveNorm(i+normalPos, norm.x(), norm.y(), norm.z());
+            saveNorm(i+normalPos+stride, norm.x(), norm.y(), norm.z());
+            saveNorm(i+normalPos+2*stride, norm.x(), norm.y(), norm.z());
+        }
     }
 }

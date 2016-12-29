@@ -58,10 +58,10 @@ protected:
     void wheelEvent(QWheelEvent* event) Q_DECL_OVERRIDE;
     void keyPressEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
     void keyReleaseEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
-    void drawSkybox(float radius = 50.0f);
     void drawModel(ModelContainer* mod);
 
     void loadTextures();
+    void loadShaders();
     void parseInput(float dT);
 
 private:
@@ -71,9 +71,9 @@ private:
     QMatrix4x4 projectionMat, viewMat;
     QOpenGLBuffer planetVbo;
     QOpenGLVertexArrayObject Vao;
-    QOpenGLShaderProgram *planetsProgram;
+    QOpenGLShaderProgram *planetsProgram, *lightsProgram;
     QPoint lastCursorPos;
-    bool shadersCompiled;
+    bool shadersCompiled, initComplete;
     // game world objects
     QHash<QString, QVector<GLfloat>*> mGeometry;
 

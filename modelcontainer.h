@@ -10,6 +10,8 @@ class ModelContainer
 public:
     enum Type{
         Generic,
+        Skybox,
+        Titan,
         Planet,
         Moon,
         Star,
