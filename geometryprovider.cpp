@@ -252,8 +252,8 @@ void GeometryProvider::sphere(QVector<GLfloat> &outData, const int parallelsAmou
     }
     for (int i = 0; i <= meridiansAmount; i++)
     {
-        delete prevRound[i];
-        delete currentRound[i];
+        delete[] prevRound[i];
+        delete[] currentRound[i];
     }
 }
 

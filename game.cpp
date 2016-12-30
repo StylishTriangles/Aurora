@@ -8,7 +8,8 @@ Game::Game(QWidget *parent) :
     QOpenGLWidget(parent),
     shadersCompiled(false), initComplete(false),
     camXRot(0), camYRot(-90.0f), camZRot(0),
-    camFov(60.0f), camNear(0.01f), camFar(100.0f)
+    camFov(60.0f), camNear(0.01f), camFar(100.0f),
+    lightPos(0.0f, -2.0f, 0.0f), cnt(0)
 {
     QSurfaceFormat format;
     format.setSamples(4);
@@ -105,8 +106,8 @@ void Game::initializeGL()
 
     // test
     std::mt19937 r(420);
-    for (int i = 0; i < 600; i++) {
-        obj.push_back(new ModelContainer(QVector3D((float)r()*6/r.max()-3, (float)r()*6/r.max()-3, (float)r()*6/r.max()-3), QVector3D(0.0f, 0.0f, 0.0f), "geosphere", "earth", planetsProgram, ModelContainer::Planet));
+    for (int i = 0; i < 100; i++) {
+        obj.push_back(new ModelContainer(QVector3D((float)r()*4/r.max()-2, (float)r()*4/r.max()-2, (float)r()*4/r.max()-2), QVector3D(0.0f, 0.0f, 0.0f), "geosphere", "earth", planetsProgram, ModelContainer::Planet));
         obj.back()->scale=0.25f;
     }
     initComplete = true;
@@ -135,12 +136,13 @@ void Game::drawModel(ModelContainer* mod)
     modelMat.translate(mod->getPos());
     modelMat.scale(mod->getScale());
     QMatrix4x4 vp = projectionMat * viewMat;
-    textures[mod->tex]->bind();
+    textures[mod->tex]->bind(0);
+    textures[(mod->tex+"Spec")]->bind(1);
     planetVbo.bind();
     static auto distance = [](QVector3D const& camPos, QVector3D const& modPos) -> float {
         return (camPos-modPos).length();
     };
-    float d = distance(camPos, mod->pos) / mod->getScale();
+    float d = distance(camPos, mod->getPos()) / mod->getScale();
     int detailLevel = (d > 60.f)?1:(d > 30.f)?2:(d > 15.f)?3:4;
     if (mod->t == ModelContainer::Skybox or mod->t == ModelContainer::Titan)
         detailLevel = 3;
@@ -158,6 +160,13 @@ void Game::drawModel(ModelContainer* mod)
         planetsProgram->bind();
         planetsProgram->setUniformValue("vp",vp);
         planetsProgram->setUniformValue("modelMat",modelMat);
+//        planetsProgram->setUniformValue("modelNorm",modelMat.inverted().transposed());
+        planetsProgram->setUniformValue("light.position",lightPos);
+        planetsProgram->setUniformValue("light.ambient", QVector3D(0.2f, 0.2f, 0.2f)); //można zmieniac te wartosci i patrzec, co sie stanie
+        planetsProgram->setUniformValue("light.diffuse", QVector3D(0.4f, 0.4f, 0.4f)); //-||-
+        planetsProgram->setUniformValue("light.specular", QVector3D(0.5f, 0.5f, 0.5f)); //-||-
+        planetsProgram->setUniformValue("shininess", 32.0f);
+        planetsProgram->setUniformValue("viewPos", camPos);
     }
 
     this->glEnableVertexAttribArray(0);
@@ -169,7 +178,8 @@ void Game::drawModel(ModelContainer* mod)
 
     glDrawArrays(GL_TRIANGLES, 0, getModel(mod->model,detailLevel)->count());
     planetVbo.release();
-    textures[mod->tex]->release();
+//    textures[mod->tex]->release();
+//    textures[(mod->tex+"Spec")]->release();
     for (int i = 0; i < mod->children.size(); i++)
         drawModel(mod->children[i]);
 }
@@ -189,6 +199,7 @@ void Game::paintGL()
     for(int i=0; i<obj.size(); i++){
         drawModel(obj[i]);
     }
+    cnt++;
 }
 
 void Game::mousePressEvent(QMouseEvent *event)
@@ -297,10 +308,14 @@ void Game::loadTextures()
 #ifdef QT_DEBUG
     tex = new QOpenGLTexture(QImage(QString("../Aurora/atmosphere.png")));
     textures.insert("atmosphere", tex);
+    tex = new QOpenGLTexture(QImage(QString("../Aurora/atmosphere.png")));
+    textures.insert("atmosphereSpec", tex);
     tex = new QOpenGLTexture(QImage(QString("../Aurora/moon.png")));
     textures.insert("moon", tex);
-    tex= new QOpenGLTexture(QImage(QString(":/misc/skybox.png")));
+    tex = new QOpenGLTexture(QImage(QString(":/misc/skybox.png")));
     textures.insert("skybox", tex);
+    tex =  new QOpenGLTexture(QImage(QString("../Aurora/textures/earthSpec.png")));
+    textures.insert("earthSpec", tex);
 #else
     QResource::registerResource("textures/textures.rcc");
     tex = new QOpenGLTexture(QImage(QString(":/planets/atmosphere.png")));
@@ -322,17 +337,18 @@ void Game::loadShaders()
     noerror = planetsProgram->link();
     if (!noerror) {qDebug() << planetsProgram->log();}
     planetsProgram->setUniformValue("diffuseMap", 0);
+    planetsProgram->setUniformValue("specularMap", 1);
     shadersCompiled = true;
     if (!noerror) {qDebug() << planetsProgram->log();}
 
     // light source shader
     noerror = true;
-    noerror = lightsProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/lightVertex.vert");
-    noerror = lightsProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/lightFragment.frag");
+    noerror |= lightsProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/lightVertex.vert");
+    noerror |= lightsProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/lightFragment.frag");
     lightsProgram->bindAttributeLocation("position", 0);
     lightsProgram->bindAttributeLocation("normal", 1);
     lightsProgram->bindAttributeLocation("texCoord", 2);
-    noerror = lightsProgram->link();
+    noerror |= lightsProgram->link();
     lightsProgram->setUniformValue("tex", 0);
     shadersCompiled = true;
     if (!noerror) {qDebug() << lightsProgram->log();}
@@ -356,9 +372,9 @@ void Game::parseInput(float dT)
     // roll
     float dx = 0.0f;
     if (keys.find(Qt::Key_Q) != keys.end())
-        dx -= dT;
+        dx -= dT*rotationSpeed*100.0f;
     if (keys.find(Qt::Key_E) != keys.end())
-        dx += dT;
+        dx += dT*rotationSpeed*100.0f;
     if (dx != 0.0f)
     {
         camYRot = camYRot + rotationSpeed * dx;
@@ -378,15 +394,12 @@ void Game::parseInput(float dT)
 // GameWorker::
 void GameWorker::onTick()
 {
-    static int cnt = 0;
     qint64 nse = et.nsecsElapsed();
     float dT = (float)(nse-lastTime)/1e9f;
-    if (nse%1000000000LL < 8100000LL) {
-        qDebug() << "FPS:" << cnt;
-        cnt=0;
+    if (nse%1000000000LL < 8100000LL){
+        qDebug()<< "FPS:"<< g->cnt;
+        g->cnt=0;
     }
-    else
-        cnt++;
     lastTime = nse;
     g->parseInput(dT*25.0f);
     // gaym logic

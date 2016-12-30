@@ -85,9 +85,11 @@ private:
     float camSpeed, rotationSpeed;
     float camFov, camNear, camFar;
     QVector3D camPos, camFront, camUp;
+    QVector3D lightPos;
     // input handling
     QSet<qint32> keys;
     // temp
+    long long int cnt;
 
 signals:
     void exitToMenu();
