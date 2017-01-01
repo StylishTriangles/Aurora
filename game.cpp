@@ -9,7 +9,7 @@ Game::Game(QWidget *parent) :
     shadersCompiled(false), initComplete(false),
     camXRot(0), camYRot(-90.0f), camZRot(0),
     camFov(60.0f), camNear(0.01f), camFar(100.0f),
-    lightPos(0.0f, -2.0f, 0.0f), cnt(0)
+    lightPos(0.0f, -0.0f, 0.0f), cnt(0)
 {
     QSurfaceFormat format;
     format.setSamples(4);
@@ -48,11 +48,14 @@ void Game::initializeGL()
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
+//    glEnable(GL_DITHER);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_MULTISAMPLE);
+    //glEnable(GL_POLYGON_SMOOTH);
+    //glEnable(GL_TEXTURE_2D);
 
-    Vao.create();
-    QOpenGLVertexArrayObject::Binder vaoBinder(&Vao);
+    //Vao.create();
+    //QOpenGLVertexArrayObject::Binder vaoBinder(&Vao);
     planetsProgram = new QOpenGLShaderProgram;
     lightsProgram = new QOpenGLShaderProgram;
 
@@ -74,6 +77,7 @@ void Game::initializeGL()
     {
         tmp = new QVector<GLfloat>;
         GeometryProvider::geosphere(*tmp, GeometryProvider::SubdivisionCount(i));
+//        GeometryProvider::cube(*tmp);
         mGeometry[QStringLiteral("geosphere%1").arg(i)]=tmp;
     }
     for (int i = 3; i <= 3; i++)
@@ -107,9 +111,11 @@ void Game::initializeGL()
     // test
     std::mt19937 r(420);
     for (int i = 0; i < 100; i++) {
-        obj.push_back(new ModelContainer(QVector3D((float)r()*4/r.max()-2, (float)r()*4/r.max()-2, (float)r()*4/r.max()-2), QVector3D(0.0f, 0.0f, 0.0f), "geosphere", "earth", planetsProgram, ModelContainer::Planet));
+        obj.push_back(new ModelContainer(QVector3D((float)r()*8/r.max()-4, (float)r()*8/r.max()-4, (float)r()*8/r.max()-4), QVector3D((float)r(), (float)r(), (float)r()), "geosphere", "earth", planetsProgram, ModelContainer::Planet));
         obj.back()->scale=0.25f;
     }
+    obj.push_back(new ModelContainer(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 0.0f), "geosphere", "earth", planetsProgram, ModelContainer::Star));
+    obj.back()->scale = 0.1f;
     initComplete = true;
 }
 
@@ -128,16 +134,15 @@ inline QVector<GLfloat>* Game::getModel(QString const & name, int detail)
 
 void Game::drawModel(ModelContainer* mod)
 {
-    if (mod->t != ModelContainer::Planet)
-        return;
+//    if (mod->t != ModelContainer::Planet and mod->t != ModelContainer::Star)
+//        return;
 
     QMatrix4x4 modelMat;
     modelMat.setToIdentity();
     modelMat.translate(mod->getPos());
+    modelMat.rotate(23.0f,mod->getRot());
     modelMat.scale(mod->getScale());
     QMatrix4x4 vp = projectionMat * viewMat;
-    textures[mod->tex]->bind(0);
-    textures[(mod->tex+"Spec")]->bind(1);
     planetVbo.bind();
     static auto distance = [](QVector3D const& camPos, QVector3D const& modPos) -> float {
         return (camPos-modPos).length();
@@ -160,14 +165,18 @@ void Game::drawModel(ModelContainer* mod)
         planetsProgram->bind();
         planetsProgram->setUniformValue("vp",vp);
         planetsProgram->setUniformValue("modelMat",modelMat);
-//        planetsProgram->setUniformValue("modelNorm",modelMat.inverted().transposed());
+        planetsProgram->setUniformValue("modelNorm",modelMat.inverted().transposed());
         planetsProgram->setUniformValue("light.position",lightPos);
-        planetsProgram->setUniformValue("light.ambient", QVector3D(0.2f, 0.2f, 0.2f)); //można zmieniac te wartosci i patrzec, co sie stanie
-        planetsProgram->setUniformValue("light.diffuse", QVector3D(0.4f, 0.4f, 0.4f)); //-||-
-        planetsProgram->setUniformValue("light.specular", QVector3D(0.5f, 0.5f, 0.5f)); //-||-
+        planetsProgram->setUniformValue("light.ambient", QVector3D(0.1f, 0.1f, 0.1f)); //można zmieniac te wartosci i patrzec, co sie stanie
+        planetsProgram->setUniformValue("light.diffuse", QVector3D(0.3f, 0.3f, 0.3f)); //-||-
+        planetsProgram->setUniformValue("light.specular", QVector3D(0.7f, 0.7f, 0.7f)); //-||-
         planetsProgram->setUniformValue("shininess", 32.0f);
         planetsProgram->setUniformValue("viewPos", camPos);
+        planetsProgram->setUniformValue("diffuseMap", 0);
+        planetsProgram->setUniformValue("specularMap", 1);
     }
+    textures[mod->tex]->bind(0);
+    textures[(mod->tex+"Spec")]->bind(1);
 
     this->glEnableVertexAttribArray(0);
     this->glEnableVertexAttribArray(1);
@@ -178,8 +187,8 @@ void Game::drawModel(ModelContainer* mod)
 
     glDrawArrays(GL_TRIANGLES, 0, getModel(mod->model,detailLevel)->count());
     planetVbo.release();
-//    textures[mod->tex]->release();
-//    textures[(mod->tex+"Spec")]->release();
+    textures[mod->tex]->release();
+    textures[(mod->tex+"Spec")]->release();
     for (int i = 0; i < mod->children.size(); i++)
         drawModel(mod->children[i]);
 }
@@ -187,7 +196,7 @@ void Game::drawModel(ModelContainer* mod)
 void Game::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     viewMat.setToIdentity();
     viewMat.lookAt(camPos, camPos + camFront, camUp);
 
@@ -312,8 +321,12 @@ void Game::loadTextures()
     textures.insert("atmosphereSpec", tex);
     tex = new QOpenGLTexture(QImage(QString("../Aurora/moon.png")));
     textures.insert("moon", tex);
+    tex = new QOpenGLTexture(QImage(QString("../Aurora/moon.png")));
+    textures.insert("moonSpec", tex);
     tex = new QOpenGLTexture(QImage(QString(":/misc/skybox.png")));
     textures.insert("skybox", tex);
+    tex = new QOpenGLTexture(QImage(QString(":/misc/skybox.png")));
+    textures.insert("skyboxSpec", tex);
     tex =  new QOpenGLTexture(QImage(QString("../Aurora/textures/earthSpec.png")));
     textures.insert("earthSpec", tex);
 #else
@@ -336,8 +349,6 @@ void Game::loadShaders()
     planetsProgram->bindAttributeLocation("texCoord", 2);
     noerror = planetsProgram->link();
     if (!noerror) {qDebug() << planetsProgram->log();}
-    planetsProgram->setUniformValue("diffuseMap", 0);
-    planetsProgram->setUniformValue("specularMap", 1);
     shadersCompiled = true;
     if (!noerror) {qDebug() << planetsProgram->log();}
 
@@ -406,5 +417,6 @@ void GameWorker::onTick()
     if (!g->initComplete)
         return;
     g->obj[0]->pos.setZ(g->obj[0]->pos.z()+5e-3);
+//    g->lightPos = g->camPos;
     emit frameReady();
 }

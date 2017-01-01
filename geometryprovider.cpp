@@ -285,8 +285,6 @@ void GeometryProvider::titan(QVector<GLfloat>& modelSurface, SubdivisionCount su
         dst += pylonTriangle;};
     // create geosphere with texture
     geosphere(modelSurface, subCount, stride, vertexPos);
-    if (texturePos != -1)
-        texturize(TitanSurface, modelSurface, stride, vertexPos, texturePos);
     for (int i = vertexPos; i < modelSurface.size(); i+=stride*3)
     {
         float h = height(rng);
@@ -314,11 +312,18 @@ void GeometryProvider::titan(QVector<GLfloat>& modelSurface, SubdivisionCount su
             insertTriangle(f,d,c,modelPylons);
         }
     }
-    // set texture coordinates
-    texturize(TitanPylons, modelPylons, stride, vertexPos, texturePos);
+    // apply texture
+    if (texturePos != -1) {
+        texturize(TitanSurface, modelSurface, stride, vertexPos, texturePos);
+        texturize(TitanPylons, modelPylons, stride, vertexPos, texturePos); //!TODO
+    }
+    // generate surface normals
+    if (normalPos != -1) {
+        genNormals(TitanSurface, modelSurface, stride, vertexPos, normalPos);
+        genNormals(TitanPylons, modelSurface, stride, vertexPos, normalPos); //!TODO
+    }
     // merge model data
     modelSurface += modelPylons;
-    // !TODO generate surface normals
 }
 
 void GeometryProvider::texturize(Type T, QVector<GLfloat> &data, unsigned stride, unsigned vertexPos, unsigned texturePos)
@@ -370,16 +375,17 @@ void GeometryProvider::texturize(Type T, QVector<GLfloat> &data, unsigned stride
 
 void GeometryProvider::genNormals(Type geometryType, QVector<GLfloat>& data, unsigned stride, unsigned vertexPos, unsigned normalPos)
 {
-    if (geometryType == Icosahedron or geometryType == Geosphere) {
+    if (geometryType == Icosahedron or geometryType == Geosphere or geometryType == TitanSurface) {
         auto saveNorm = [&data](int pos, float x, float y, float z) -> void { data[pos]=x; data[pos+1]=y; data[pos+2]=z;};
         for (int i = 0; i < data.size(); i+=stride*3)
         {
-            QVector3D norm = QVector3D((data[i+vertexPos]+data[i+vertexPos+stride]+data[i+vertexPos+2*stride])/3,
-                                        (data[i+vertexPos+1]+data[i+vertexPos+stride+1]+data[i+vertexPos+2*stride+1])/3,
-                                        (data[i+vertexPos+2]+data[i+vertexPos+stride+2]+data[i+vertexPos+2*stride+2])/3);
-            saveNorm(i+normalPos, norm.x(), norm.y(), norm.z());
-            saveNorm(i+normalPos+stride, norm.x(), norm.y(), norm.z());
-            saveNorm(i+normalPos+2*stride, norm.x(), norm.y(), norm.z());
+//            QVector3D norm = QVector3D((data[i+vertexPos]+data[i+vertexPos+stride]+data[i+vertexPos+2*stride])/3,         NEVER DO DIS
+//                                        (data[i+vertexPos+1]+data[i+vertexPos+stride+1]+data[i+vertexPos+2*stride+1])/3,
+//                                        (data[i+vertexPos+2]+data[i+vertexPos+stride+2]+data[i+vertexPos+2*stride+2])/3);
+//                    +++  https://stackoverflow.com/questions/4703432/why-does-my-opengl-phong-shader-behave-like-a-flat-shader +++ <-second answer
+            saveNorm(i+normalPos, data[i+vertexPos], data[i+vertexPos+1], data[i+vertexPos+2]);
+            saveNorm(i+normalPos+stride, data[i+vertexPos+stride], data[i+vertexPos+stride+1], data[i+vertexPos+stride+2]);
+            saveNorm(i+normalPos+2*stride, data[i+vertexPos+2*stride], data[i+vertexPos+2*stride+1], data[i+vertexPos+2*stride+2]);
         }
     }
 }
