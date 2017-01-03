@@ -18,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    reload();
     delete opt;
     delete gameScr;
     delete ui;

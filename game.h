@@ -62,11 +62,12 @@ protected:
 
     void loadTextures();
     void loadShaders();
+    void allocateVbos();
     void parseInput(float dT);
 
 private:
-    QVector<GLfloat>* getModel(QString const & name, int detail);
-    void setupVBOAttribute();
+    int bindModel(ModelContainer* mod, int detail);
+    int bindModel(QString const & name, int detail);
 
     QMatrix4x4 projectionMat, viewMat;
     QOpenGLBuffer planetVbo;
@@ -76,6 +77,7 @@ private:
     bool shadersCompiled, initComplete;
     // game world objects
     QHash<QString, QVector<GLfloat>*> mGeometry;
+    QHash<QString, QOpenGLBuffer> mVbo;
 
     QHash<QString, QOpenGLTexture*> textures;
     QVector<ModelContainer*> obj;

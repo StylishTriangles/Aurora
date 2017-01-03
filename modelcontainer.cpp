@@ -1,9 +1,10 @@
 #include "modelcontainer.h"
 
 ModelContainer::ModelContainer(QVector3D _pos, QVector3D _rot, QString _model, QString _tex, QOpenGLShaderProgram* _shader, Type _t) :
-    parent(nullptr)
+    parent(nullptr),
+    scale(1.0f,1.0f,1.0f)
 {
-    pos=_pos;rot=_rot;tex=_tex;shader=_shader;model=_model;t=_t;scale=1.0f;
+    position=_pos;rotation=_rot;tex=_tex;shader=_shader;model=_model;type=_t;
 }
 
 ModelContainer::~ModelContainer()
@@ -26,26 +27,47 @@ void ModelContainer::addChild(ModelContainer* m)
     children.push_back(m);
 }
 
-QVector3D ModelContainer::getPos()
+QVector3D ModelContainer::getPos() const
 {
     if (parent == nullptr)
-        return pos;
+        return position;
     else
-        return pos+parent->getPos();
+        return position+parent->getPos();
 }
 
-QVector3D ModelContainer::getRot()
+QVector3D ModelContainer::getRot() const
 {
     if (parent == nullptr)
-        return rot;
+        return rotation;
     else
-        return rot+parent->getRot();
+        return rotation+parent->getRot();
 }
 
-GLfloat ModelContainer::getScale()
+QVector3D ModelContainer::getScale() const
 {
     if (parent == nullptr)
         return scale;
     else
         return scale*parent->getScale();
+}
+
+QMatrix4x4 ModelContainer::getModelMat() const
+{
+    QMatrix4x4 ret;
+    ret.translate(position);
+    ret.rotate(rotation.x(),1.0f,0.0f);
+    ret.rotate(rotation.y(),0.0f,1.0f);
+    ret.rotate(rotation.z(),0.0f,0.0f,1.0f);
+    ret.scale(scale);
+    if (type == Moon) {
+        QMatrix4x4 base;
+        base.translate(parent->getPos());
+        return base*ret;
+    }
+    else {
+        if (parent == nullptr)
+            return ret;
+        else
+            return parent->getModelMat()*ret;
+    }
 }

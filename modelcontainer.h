@@ -4,6 +4,7 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 #include <QMatrix4x4>
+#include <QVector3D>
 
 class ModelContainer
 {
@@ -15,26 +16,29 @@ public:
         Planet,
         Moon,
         Star,
-        Ship
+        Spaceship
     };
 
-    ModelContainer(ModelContainer* _parent = nullptr):parent(_parent){}
+    explicit ModelContainer(ModelContainer* _parent = nullptr):parent(_parent){}
     ModelContainer(QVector3D _relativePos, QVector3D _relativeRot, QString _model, QString _tex,  QOpenGLShaderProgram* _shader=nullptr, Type _t=Generic);
     ~ModelContainer();
 
     void addChild(ModelContainer & m);
     void addChild(ModelContainer * m);
-    QVector3D getPos();
-    QVector3D getRot();
-    float getScale();
+    inline void setScale(float factor) {scale.setX(factor); scale.setY(factor); scale.setZ(factor);}
+    inline void setScale(float x, float y, float z) {scale.setX(x); scale.setY(y); scale.setZ(z);}
+    QVector3D getPos() const;
+    QVector3D getRot() const;
+    QVector3D getScale() const;
+    QMatrix4x4 getModelMat() const;
 
     ModelContainer* parent;
-    QVector3D pos, rot;
+    QVector3D position, rotation;
     QString model;
     QString tex;
     QOpenGLShaderProgram* shader;
-    Type t;
-    GLfloat scale;
+    Type type;
+    QVector3D scale;
     QVector<ModelContainer*> children;
 
 };

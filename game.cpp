@@ -63,8 +63,6 @@ void Game::initializeGL()
     projectionMat.perspective(camFov, float(this->width()) / float(this->height()), camNear, camFar);
 //    projectionMat.frustum(0.0f, 800.0f, 0.0f, 600.0f, 0.1f, 100.0f); // orthographic projection mode
 
-    planetVbo.create();
-
     camPos   = QVector3D(0.0f, 0.0f,  4.5f);
     camFront = QVector3D(0.0f, 0.0f, -1.0f);
     camUp    = QVector3D(0.0f, 1.0f,  0.0f);
@@ -96,27 +94,29 @@ void Game::initializeGL()
     // make models
     obj.push_back(new ModelContainer(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 0.0f), "geosphere", "earth", planetsProgram, ModelContainer::Planet));
     ModelContainer* tmpM = new ModelContainer(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 0.0f), "geosphere", "atmosphere", planetsProgram, ModelContainer::Planet);
-    tmpM->scale=1.02f;
+    tmpM->setScale(1.02f);
     obj.back()->addChild(tmpM); // add atmosphere to earth
     tmpM = new ModelContainer(QVector3D(0.0f, 0.0f, 2.1f), QVector3D(360.0f, 0.0f, 0.0f), "geosphere", "moon", planetsProgram, ModelContainer::Moon);
-    tmpM->scale=0.250f;
+    tmpM->setScale(0.250f);
     obj.back()->addChild(tmpM); // add moon to earth
     obj.push_back(new ModelContainer(QVector3D(2.0f, 2.0f, 2.0f), QVector3D(0.0f, 0.0f, 0.0f), "titan", "earth", planetsProgram, ModelContainer::Titan));
     tmpM = new ModelContainer(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 0.0f), "titan", "atmosphere", planetsProgram, ModelContainer::Titan);
-    tmpM->scale=1.01f;
+    tmpM->setScale(1.01f);
     obj.back()->addChild(tmpM); // add atmosphere to titan
     obj.push_back(new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", planetsProgram, ModelContainer::Skybox));
-    obj.back()->scale=50.0f;
+    obj.back()->setScale(50.0f);
 
     // test
     std::mt19937 r(420);
-    for (int i = 0; i < 100; i++) {
-        obj.push_back(new ModelContainer(QVector3D((float)r()*8/r.max()-4, (float)r()*8/r.max()-4, (float)r()*8/r.max()-4), QVector3D((float)r(), (float)r(), (float)r()), "geosphere", "earth", planetsProgram, ModelContainer::Planet));
-        obj.back()->scale=0.25f;
+    for (int i = 0; i < 1000; i++) {
+        obj.push_back(new ModelContainer(QVector3D((float)r()*16/r.max()-8, (float)r()*8/r.max()-4, (float)r()*8/r.max()-4), QVector3D((float)r(), (float)r(), (float)r()), "geosphere", "earth", planetsProgram, ModelContainer::Planet));
+        obj.back()->setScale(0.25f);
     }
     obj.push_back(new ModelContainer(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 0.0f), "geosphere", "earth", planetsProgram, ModelContainer::Star));
-    obj.back()->scale = 0.1f;
+    obj.back()->setScale(0.1f);
     initComplete = true;
+
+    allocateVbos();
 }
 
 void Game::resizeGL(int w, int h)
@@ -125,38 +125,48 @@ void Game::resizeGL(int w, int h)
     projectionMat.perspective(camFov, w / float(h), camNear, camFar);
 }
 
-inline QVector<GLfloat>* Game::getModel(QString const & name, int detail)
+inline int Game::bindModel(ModelContainer* mod, int detail)
 {
-    auto ret = mGeometry.find(name + QString::number(detail));
-    Q_ASSERT_X(ret != mGeometry.end(), "Game::getModel()", (const char*)(name + QString::number(detail)).data());
-    return *ret;
+    return bindModel(mod->model, detail);
+}
+
+inline int Game::bindModel(QString const & name, int detail)
+{
+    auto it = mVbo.find(name + QString::number(detail));
+    Q_ASSERT_X(it != mVbo.end(), "Game::bindModel()", (const char*)(name + QString::number(detail)).data());
+    it.value().bind();
+    return it.value().size();
 }
 
 void Game::drawModel(ModelContainer* mod)
 {
-//    if (mod->t != ModelContainer::Planet and mod->t != ModelContainer::Star)
-//        return;
-
-    QMatrix4x4 modelMat;
-    modelMat.setToIdentity();
-    modelMat.translate(mod->getPos());
-    modelMat.rotate(23.0f,mod->getRot());
-    modelMat.scale(mod->getScale());
+    QMatrix4x4 modelMat = mod->getModelMat();
     QMatrix4x4 vp = projectionMat * viewMat;
-    planetVbo.bind();
     static auto distance = [](QVector3D const& camPos, QVector3D const& modPos) -> float {
         return (camPos-modPos).length();
     };
-    float d = distance(camPos, mod->getPos()) / mod->getScale();
-    int detailLevel = (d > 60.f)?1:(d > 30.f)?2:(d > 15.f)?3:4;
-    if (mod->t == ModelContainer::Skybox or mod->t == ModelContainer::Titan)
-        detailLevel = 3;
-    static auto allocated = false;
-    if (!allocated)
-        planetVbo.allocate(getModel(mod->model,detailLevel)->data(),getModel(mod->model,detailLevel)->size()*sizeof(GLfloat));
 
-    // git gud
-    if (mod->t == ModelContainer::Star) {
+    float d = distance(camPos, mod->getPos()) / mod->getScale().x();
+    int detailLevel = (d > 60.f)?1:(d > 30.f)?2:(d > 15.f)?3:4;
+    if (mod->type == ModelContainer::Skybox or mod->type == ModelContainer::Titan)
+        detailLevel = 3;
+    int geomSize = bindModel(mod, detailLevel);
+    // init variables
+    struct Light{
+        QVector3D ambient;
+        QVector3D diffuse;
+        QVector3D specular;
+        GLfloat shininess;
+    };
+    Light light = {QVector3D(0.1f, 0.1f, 0.1f),QVector3D(0.5f, 0.5f, 0.5f),QVector3D(0.7f, 0.7f, 0.7f),32.0f};
+
+    // set type specific data
+    if (mod->type == ModelContainer::Skybox) {
+        light.ambient = QVector3D(1.0f,1.0f,1.0f);
+        light.diffuse = QVector3D(0.0f,0.0f,0.0f);
+        light.specular = light.diffuse;
+    }
+    if (mod->type == ModelContainer::Star) {
         lightsProgram->bind();
         lightsProgram->setUniformValue("vp",vp);
         lightsProgram->setUniformValue("modelMat",modelMat);
@@ -167,10 +177,10 @@ void Game::drawModel(ModelContainer* mod)
         planetsProgram->setUniformValue("modelMat",modelMat);
         planetsProgram->setUniformValue("modelNorm",modelMat.inverted().transposed());
         planetsProgram->setUniformValue("light.position",lightPos);
-        planetsProgram->setUniformValue("light.ambient", QVector3D(0.1f, 0.1f, 0.1f)); //można zmieniac te wartosci i patrzec, co sie stanie
-        planetsProgram->setUniformValue("light.diffuse", QVector3D(0.3f, 0.3f, 0.3f)); //-||-
-        planetsProgram->setUniformValue("light.specular", QVector3D(0.7f, 0.7f, 0.7f)); //-||-
-        planetsProgram->setUniformValue("shininess", 32.0f);
+        planetsProgram->setUniformValue("light.ambient", light.ambient); //można zmieniac te wartosci i patrzec, co sie stanie
+        planetsProgram->setUniformValue("light.diffuse", light.diffuse); //-||-
+        planetsProgram->setUniformValue("light.specular", light.specular); //-||-
+        planetsProgram->setUniformValue("shininess", light.shininess);
         planetsProgram->setUniformValue("viewPos", camPos);
         planetsProgram->setUniformValue("diffuseMap", 0);
         planetsProgram->setUniformValue("specularMap", 1);
@@ -185,10 +195,7 @@ void Game::drawModel(ModelContainer* mod)
     this->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3*sizeof(GLfloat)));
     this->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6*sizeof(GLfloat)));
 
-    glDrawArrays(GL_TRIANGLES, 0, getModel(mod->model,detailLevel)->count());
-    planetVbo.release();
-    textures[mod->tex]->release();
-    textures[(mod->tex+"Spec")]->release();
+    glDrawArrays(GL_TRIANGLES, 0, geomSize);
     for (int i = 0; i < mod->children.size(); i++)
         drawModel(mod->children[i]);
 }
@@ -365,6 +372,17 @@ void Game::loadShaders()
     if (!noerror) {qDebug() << lightsProgram->log();}
 }
 
+void Game::allocateVbos() {
+    auto it = mGeometry.begin();
+    while (it != mGeometry.end()) {
+        auto it2 = mVbo.insert(it.key(), QOpenGLBuffer());
+        it2.value().create();
+        it2.value().bind();
+        it2.value().allocate(it.value()->data(),it.value()->size()*sizeof(GLfloat));
+        ++it;
+    }
+}
+
 void Game::parseInput(float dT)
 {
     float camV = camSpeed * dT;
@@ -416,7 +434,7 @@ void GameWorker::onTick()
     // gaym logic
     if (!g->initComplete)
         return;
-    g->obj[0]->pos.setZ(g->obj[0]->pos.z()+5e-3);
+    g->obj[0]->position.setZ(g->obj[0]->position.z()+5e-3);
 //    g->lightPos = g->camPos;
     emit frameReady();
 }
