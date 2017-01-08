@@ -295,9 +295,9 @@ void GeometryProvider::titan(QVector<GLfloat>& modelSurface, SubdivisionCount su
             QVector3D a(modelSurface[i], modelSurface[i+1], modelSurface[i+2]);
             QVector3D b(modelSurface[i+stride], modelSurface[i+1+stride], modelSurface[i+2+stride]);
             QVector3D c(modelSurface[i+2*stride], modelSurface[i+1+2*stride], modelSurface[i+2+2*stride]);
-            QVector3D d = a*=ratio;
-            QVector3D e = b*=ratio;
-            QVector3D f = c*=ratio;
+            QVector3D d = a*ratio;
+            QVector3D e = b*ratio;
+            QVector3D f = c*ratio;
             // !TODO align vectors d,e,f closer to each other
             //modify affected vertexes
             modVertex(modelSurface, d, i);
@@ -305,11 +305,11 @@ void GeometryProvider::titan(QVector<GLfloat>& modelSurface, SubdivisionCount su
             modVertex(modelSurface, f, i+2*stride);
             // construct pylons from triangles
             insertTriangle(d,a,b,modelPylons);
-            insertTriangle(d,e,a,modelPylons);
+            insertTriangle(d,b,e,modelPylons);
             insertTriangle(e,b,c,modelPylons);
-            insertTriangle(e,f,b,modelPylons);
+            insertTriangle(e,f,c,modelPylons);
             insertTriangle(f,c,a,modelPylons);
-            insertTriangle(f,d,c,modelPylons);
+            insertTriangle(f,d,a,modelPylons);
         }
     }
     // apply texture
@@ -320,7 +320,7 @@ void GeometryProvider::titan(QVector<GLfloat>& modelSurface, SubdivisionCount su
     // generate surface normals
     if (normalPos != -1) {
         genNormals(TitanSurface, modelSurface, stride, vertexPos, normalPos);
-        genNormals(TitanPylons, modelSurface, stride, vertexPos, normalPos); //!TODO
+        genNormals(TitanPylons, modelPylons, stride, vertexPos, normalPos); //!TODO
     }
     // merge model data
     modelSurface += modelPylons;
@@ -370,12 +370,21 @@ void GeometryProvider::texturize(Type T, QVector<GLfloat> &data, unsigned stride
     else if (T == Type::TitanPylons)
     {
         // !TODO
+        for(int seq=0; seq<data.size(); seq+=3*stride){
+            data[seq+texturePos] = 0.6f;
+            data[seq+texturePos + stride] = 0.6f;
+            data[seq+texturePos + 2*stride] = 0.6f;
+
+            data[seq+texturePos + 1] = 0.5f;
+            data[seq+texturePos + 1 + stride] = 0.5f;
+            data[seq+texturePos + 1 + 2*stride] = 0.5f;
+        }
     }
 }
 
 void GeometryProvider::genNormals(Type geometryType, QVector<GLfloat>& data, unsigned stride, unsigned vertexPos, unsigned normalPos)
 {
-    if (geometryType == Icosahedron or geometryType == Geosphere or geometryType == TitanSurface) {
+    if (geometryType == Icosahedron or geometryType == Geosphere or geometryType == TitanSurface or geometryType==TitanPylons) {
         auto saveNorm = [&data](int pos, float x, float y, float z) -> void { data[pos]=x; data[pos+1]=y; data[pos+2]=z;};
         for (int i = 0; i < data.size(); i+=stride*3)
         {
