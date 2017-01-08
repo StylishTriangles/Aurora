@@ -2,6 +2,7 @@
 #include "options.h"
 #include "game.h"
 #include "ui_mainwindow.h"
+#include <QDir>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -14,6 +15,11 @@ MainWindow::MainWindow(QWidget *parent) :
     // polaczenie sygnalu wyjscia submenuExit() klasy opt ze slotem show() klasy centralWidget
     QObject::connect(opt, SIGNAL(submenuExit(void)), this, SLOT(reload(void)));
     loadGameSettings();
+    // debug
+    QDir::setCurrent(qApp->applicationDirPath());
+    QDir::setCurrent("..");
+//    qDebug() << QDir::currentPath();
+    on_newGameButton_clicked(); // skip menu
 }
 
 MainWindow::~MainWindow()

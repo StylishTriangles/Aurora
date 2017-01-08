@@ -15,7 +15,7 @@ Game::Game(QWidget *parent) :
     format.setSamples(4);
     format.setAlphaBufferSize(8);
     setFormat(format);
-    this->setMinimumSize(100, 100);
+    //this->setMinimumSize(800, 450);
     this->resize(parent->size());
     this->setFocus();
     qDebug() << "ModelContainer:" << sizeof(ModelContainer) << "|" << "Game:" << sizeof(Game);
