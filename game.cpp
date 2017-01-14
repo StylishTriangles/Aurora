@@ -51,7 +51,7 @@ void Game::initializeGL()
 //    glEnable(GL_DITHER);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_MULTISAMPLE);
-//    glEnable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
     //glEnable(GL_POLYGON_SMOOTH);
     //glEnable(GL_TEXTURE_2D);
 
@@ -141,6 +141,8 @@ inline int Game::bindModel(QString const & name, int detail)
 
 void Game::drawModel(ModelContainer* mod)
 {
+    if(mod->type==ModelContainer::Skybox)
+        glDisable(GL_CULL_FACE);
     QMatrix4x4 modelMat = mod->getModelMat();
     QMatrix4x4 vp = projectionMat * viewMat;
     static auto distance = [](QVector3D const& camPos, QVector3D const& modPos) -> float {
@@ -149,7 +151,6 @@ void Game::drawModel(ModelContainer* mod)
 
     float d = distance(camPos, mod->getPos()) / mod->getScale().x();
     int detailLevel = (d > 60.f)?1:(d > 30.f)?2:(d > 15.f)?3:4;
-//    detailLevel = 1;
     if (mod->type == ModelContainer::Skybox or mod->type == ModelContainer::Titan)
         detailLevel = 3;
     int geomSize = bindModel(mod, detailLevel);
@@ -200,6 +201,8 @@ void Game::drawModel(ModelContainer* mod)
     glDrawArrays(GL_TRIANGLES, 0, geomSize);
     for (int i = 0; i < mod->children.size(); i++)
         drawModel(mod->children[i]);
+    if(mod->type==ModelContainer::Skybox)
+        glEnable(GL_CULL_FACE);
 }
 
 void Game::paintGL()

@@ -131,9 +131,9 @@ void GeometryProvider::geosphere(QVector<GLfloat>& outData, SubdivisionCount sub
             for (QVector3D &v:newVert)
                 v.normalize();
             itSaveTriangle(bufferOut, oldVert[0], newVert[0], newVert[2], delta); // top
-            itSaveTriangle(bufferOut, oldVert[1], newVert[0], newVert[1], delta); // bottom-left
+            itSaveTriangle(bufferOut, oldVert[1], newVert[1], newVert[0], delta); // bottom-left
             itSaveTriangle(bufferOut, newVert[0], newVert[1], newVert[2], delta); // middle
-            itSaveTriangle(bufferOut, oldVert[2], newVert[1], newVert[2], delta); // bottom-right
+            itSaveTriangle(bufferOut, oldVert[2], newVert[2], newVert[1], delta); // bottom-right
         }
     }
     outData = std::move(bufferLevel[subCount%2]);
@@ -307,9 +307,9 @@ void GeometryProvider::titan(QVector<GLfloat>& modelSurface, SubdivisionCount su
             insertTriangle(d,a,b,modelPylons);
             insertTriangle(d,b,e,modelPylons);
             insertTriangle(e,b,c,modelPylons);
-            insertTriangle(e,f,c,modelPylons);
+            insertTriangle(e,c,f,modelPylons);
             insertTriangle(f,c,a,modelPylons);
-            insertTriangle(f,d,a,modelPylons);
+            insertTriangle(f,a,d,modelPylons);
         }
     }
     // apply texture
