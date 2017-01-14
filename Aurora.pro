@@ -19,18 +19,18 @@ SOURCES += main.cpp\
     game.cpp \
     geometryprovider.cpp \
     modelcontainer.cpp \
-    interface/overlay.cpp
+    interface/hud.cpp
 
 HEADERS  += interface/mainwindow.h \
     interface/options.h \
     game.h \
     geometryprovider.h \
     modelcontainer.h \
-    interface/overlay.h
+    interface/hud.h
 
 FORMS    += interface/mainwindow.ui \
     interface/options.ui \
-    interface/overlay.ui
+    interface/hud.ui
 
 RESOURCES += \
     shaders.qrc \

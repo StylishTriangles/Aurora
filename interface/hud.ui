@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Overlay</class>
- <widget class="QWidget" name="Overlay">
+ <class>HUD</class>
+ <widget class="QWidget" name="HUD">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QPushButton" name="exitButton">
    <property name="geometry">
     <rect>
      <x>1250</x>
@@ -32,7 +32,17 @@ border-radius: 15px;
 }</string>
    </property>
    <property name="text">
-    <string/>
+    <string>X</string>
+   </property>
+  </widget>
+  <widget class="QLCDNumber" name="FPSCounter">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>64</width>
+     <height>23</height>
+    </rect>
    </property>
   </widget>
  </widget>

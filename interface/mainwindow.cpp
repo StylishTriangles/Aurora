@@ -7,7 +7,8 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    gameScr(nullptr)
+    gameScr(nullptr),
+    mHUD(nullptr)
 {
     ui->setupUi(this);
     opt = new Options(this);
@@ -16,10 +17,12 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(opt, SIGNAL(submenuExit(void)), this, SLOT(reload(void)));
     loadGameSettings();
     // debug
+#ifdef QT_DEBUG
     QDir::setCurrent(qApp->applicationDirPath());
     QDir::setCurrent("..");
 //    qDebug() << QDir::currentPath();
     on_newGameButton_clicked(); // skip menu
+#endif
 }
 
 MainWindow::~MainWindow()
@@ -50,6 +53,7 @@ void MainWindow::on_exitButton_clicked()
 void MainWindow::on_newGameButton_clicked()
 {
     gameScr = new Game(this);
+    mHUD = new HUD(gameScr);
     gameWorker = new GameWorker(gameScr);
     workerThread = new QThread;
     actionTimer = new QTimer;
@@ -59,6 +63,11 @@ void MainWindow::on_newGameButton_clicked()
     QObject::connect(gameWorker, SIGNAL(frameReady(void)), gameScr, SLOT(update(void)));
     // connect signals from Game widget
     QObject::connect(gameScr, SIGNAL(exitToMenu(void)), this, SLOT(reload(void)));
+    QObject::connect(gameScr, SIGNAL(paintCompleted(void)), gameWorker, SLOT(acceptFrame(void)));
+    QObject::connect(gameScr, SIGNAL(paintCompleted(void)), mHUD, SLOT(acceptFrame(void)));
+    // connect signals from HUD
+    QObject::connect(mHUD, SIGNAL(exit(void)), this, SLOT(reload(void)));
+
     actionTimer->start(tickDelayMs);
     actionTimer->moveToThread(workerThread);
     gameWorker->moveToThread(workerThread);

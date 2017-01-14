@@ -6,6 +6,7 @@
 #include <QTimer>
 #include "options.h"
 #include "game.h"
+#include "hud.h"
 
 namespace Ui {
 class MainWindow;
@@ -34,6 +35,7 @@ private:
     Ui::MainWindow *ui;
     Options* opt;
     Game* gameScr;
+    HUD* mHUD;
 
     // game related variables
     QThread* workerThread;

@@ -51,6 +51,7 @@ void Game::initializeGL()
 //    glEnable(GL_DITHER);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_MULTISAMPLE);
+//    glEnable(GL_CULL_FACE);
     //glEnable(GL_POLYGON_SMOOTH);
     //glEnable(GL_TEXTURE_2D);
 
@@ -108,7 +109,7 @@ void Game::initializeGL()
 
     // test
     std::mt19937 r(420);
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 200; i++) {
         obj.push_back(new ModelContainer(QVector3D((float)r()*16/r.max()-8, (float)r()*8/r.max()-4, (float)r()*8/r.max()-4), QVector3D((float)r(), (float)r(), (float)r()), "geosphere", "earth", planetsProgram, ModelContainer::Planet));
         obj.back()->setScale(0.25f);
     }
@@ -148,6 +149,7 @@ void Game::drawModel(ModelContainer* mod)
 
     float d = distance(camPos, mod->getPos()) / mod->getScale().x();
     int detailLevel = (d > 60.f)?1:(d > 30.f)?2:(d > 15.f)?3:4;
+//    detailLevel = 1;
     if (mod->type == ModelContainer::Skybox or mod->type == ModelContainer::Titan)
         detailLevel = 3;
     int geomSize = bindModel(mod, detailLevel);
@@ -215,7 +217,7 @@ void Game::paintGL()
     for(int i=0; i<obj.size(); i++){
         drawModel(obj[i]);
     }
-    cnt++;
+    emit paintCompleted();
 }
 
 void Game::mousePressEvent(QMouseEvent *event)
@@ -424,17 +426,19 @@ void Game::parseInput(float dT)
 void GameWorker::onTick()
 {
     qint64 nse = et.nsecsElapsed();
-    float dT = (float)(nse-lastTime)/1e9f;
-    if (nse%1000000000LL < 8100000LL){
-        qDebug()<< "FPS:"<< g->cnt;
-        g->cnt=0;
-    }
-    lastTime = nse;
+    float dT = (float)(nse-lastTick)/1e9f;
+    lastTick = nse;
     g->parseInput(dT*25.0f);
     // gaym logic
     if (!g->initComplete)
         return;
-    g->obj[0]->position.setZ(g->obj[0]->position.z()+5e-3);
+    g->obj[0]->position.setZ(g->obj[0]->position.z()+3e-3);
 //    g->lightPos = g->camPos;
     emit frameReady();
+}
+
+void GameWorker::acceptFrame() {
+//    qint64 nse = et.nsecsElapsed();
+//    float dT = (float)(nse-lastFrame)/1e9f;
+//    lastFrame = nse;
 }

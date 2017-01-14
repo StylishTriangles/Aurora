@@ -27,16 +27,18 @@ class GameWorker : public QObject // multithread
 {
     Q_OBJECT
 public:
-    GameWorker(Game* parent) : g(parent), lastTime(0)
+    GameWorker(Game* parent) : g(parent), lastTick(0), lastFrame(0)
     {et.start();}
 public slots:
     void onTick();
+    void acceptFrame();
 signals:
     void frameReady();
 private:
     Game* g;
     QElapsedTimer et;
-    qint64 lastTime;
+    qint64 lastTick;
+    qint64 lastFrame;
 };
 
 class Game : public QOpenGLWidget, protected QOpenGLFunctions_4_3_Core
@@ -95,6 +97,7 @@ private:
 
 signals:
     void exitToMenu();
+    void paintCompleted();
 };
 
 #endif // GAME_H
