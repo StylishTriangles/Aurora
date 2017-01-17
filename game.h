@@ -16,6 +16,7 @@
 #include <QMap>
 #include "geometryprovider.h"
 #include "modelcontainer.h"
+#include "interface/hud.h"
 
 namespace Ui {
 class Game;
@@ -35,6 +36,7 @@ public slots:
 signals:
     void frameReady();
 private:
+    void orbit(ModelContainer* m, qint64 nse);
     Game* g;
     QElapsedTimer et;
     qint64 lastTick;
@@ -82,8 +84,8 @@ private:
     QHash<QString, QOpenGLBuffer> mVbo;
 
     QHash<QString, QOpenGLTexture*> textures;
-    QVector<ModelContainer*> obj;
     QOpenGLTexture* skyboxTexture;
+    QVector<ModelContainer*> solarSystems;
     // current camera rotation and position
     float camXRot, camYRot, camZRot;
     float camSpeed, rotationSpeed;
@@ -92,6 +94,9 @@ private:
     QVector3D lightPos;
     // input handling
     QSet<qint32> keys;
+    // active scene
+    int stage;
+    int actSystem;
     // temp
     long long int cnt;
 

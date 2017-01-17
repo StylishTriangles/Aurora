@@ -9,14 +9,17 @@ Game::Game(QWidget *parent) :
     shadersCompiled(false), initComplete(false),
     camXRot(0), camYRot(-90.0f), camZRot(0),
     camFov(60.0f), camNear(0.01f), camFar(100.0f),
-    lightPos(0.0f, -0.0f, 0.0f), cnt(0)
+    lightPos(0.0f, -0.0f, 0.0f),
+    stage(2), actSystem(0),
+    cnt(0)
 {
+    this->resize(parent->size());
     QSurfaceFormat format;
     format.setSamples(4);
     format.setAlphaBufferSize(8);
     setFormat(format);
     //this->setMinimumSize(800, 450);
-    this->resize(parent->size());
+//    this->resize(parent->size());
     this->setFocus();
     qDebug() << "ModelContainer:" << sizeof(ModelContainer) << "|" << "Game:" << sizeof(Game);
 }
@@ -25,11 +28,12 @@ Game::~Game()
 {
     planetsProgram->release();
     for(auto p:mGeometry)
-    {
         delete p;
-    }
-    for(auto p:obj)
+    for(auto p:solarSystems)
         delete p;
+    for(auto p:textures)
+        delete p;
+    delete skyboxTexture;
     delete planetsProgram;
     delete lightsProgram;
 }
@@ -55,8 +59,8 @@ void Game::initializeGL()
     //glEnable(GL_POLYGON_SMOOTH);
     //glEnable(GL_TEXTURE_2D);
 
-    //Vao.create();
-    //QOpenGLVertexArrayObject::Binder vaoBinder(&Vao);
+    Vao.create();
+    QOpenGLVertexArrayObject::Binder vaoBinder(&Vao);
     planetsProgram = new QOpenGLShaderProgram;
     lightsProgram = new QOpenGLShaderProgram;
 
@@ -93,28 +97,22 @@ void Game::initializeGL()
     loadTextures();
 
     // make models
-    obj.push_back(new ModelContainer(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 0.0f), "geosphere", "earth", planetsProgram, ModelContainer::Planet));
-    ModelContainer* tmpM = new ModelContainer(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 0.0f), "geosphere", "atmosphere", planetsProgram, ModelContainer::Planet);
-    tmpM->setScale(1.02f);
-    obj.back()->addChild(tmpM); // add atmosphere to earth
-    tmpM = new ModelContainer(QVector3D(0.0f, 0.0f, 2.1f), QVector3D(360.0f, 0.0f, 0.0f), "geosphere", "moon", planetsProgram, ModelContainer::Moon);
-    tmpM->setScale(0.250f);
-    obj.back()->addChild(tmpM); // add moon to earth
-    obj.push_back(new ModelContainer(QVector3D(2.0f, 2.0f, 2.0f), QVector3D(0.0f, 0.0f, 0.0f), "titan", "earth", planetsProgram, ModelContainer::Titan));
-    tmpM = new ModelContainer(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 0.0f), "titan", "atmosphere", planetsProgram, ModelContainer::Titan);
-    tmpM->setScale(1.01f);
-    obj.back()->addChild(tmpM); // add atmosphere to titan
-    obj.push_back(new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", planetsProgram, ModelContainer::Skybox));
-    obj.back()->setScale(50.0f);
-
-    // test
-    std::mt19937 r(420);
-    for (int i = 0; i < 200; i++) {
-        obj.push_back(new ModelContainer(QVector3D((float)r()*16/r.max()-8, (float)r()*8/r.max()-4, (float)r()*8/r.max()-4), QVector3D((float)r(), (float)r(), (float)r()), "geosphere", "earth", planetsProgram, ModelContainer::Planet));
-        obj.back()->setScale(0.25f);
-    }
-    obj.push_back(new ModelContainer(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 0.0f), "geosphere", "earth", planetsProgram, ModelContainer::Star));
-    obj.back()->setScale(0.1f);
+    solarSystems.push_back(new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "earth", lightsProgram, ModelContainer::Star));
+    ModelContainer* tmpM = new ModelContainer({0,0,0}, {0,0,0}, "titan", "skybox", planetsProgram, ModelContainer::Skybox);
+    tmpM->setScale(50.0f);
+    solarSystems.back()->addChild(tmpM);
+    tmpM = new ModelContainer({3.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "earth", planetsProgram, ModelContainer::Planet);
+    tmpM->setScale(0.1f);
+    ModelContainer* tmpM2 = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "atmosphere", planetsProgram, ModelContainer::Planet);
+    tmpM2->setScale(1.01f);
+    tmpM->addChild(tmpM2);
+    tmpM2 = new ModelContainer({10.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "moon", planetsProgram, ModelContainer::Moon);
+    tmpM2->setScale(0.1f);
+    tmpM->addChild(tmpM2);
+    solarSystems.back()->addChild(tmpM);
+    tmpM = new ModelContainer({4.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "titan", "earth", planetsProgram, ModelContainer::Titan);
+    tmpM->setScale(0.1f);
+    solarSystems.back()->addChild(tmpM);
     initComplete = true;
 
     allocateVbos();
@@ -124,6 +122,7 @@ void Game::resizeGL(int w, int h)
 {
     projectionMat.setToIdentity();
     projectionMat.perspective(camFov, w / float(h), camNear, camFar);
+    findChild<HUD*>()->resize(w,h);
 }
 
 inline int Game::bindModel(ModelContainer* mod, int detail)
@@ -212,13 +211,22 @@ void Game::paintGL()
     viewMat.setToIdentity();
     viewMat.lookAt(camPos, camPos + camFront, camUp);
 
-    QOpenGLVertexArrayObject::Binder vaoBinder(&Vao);
+//    QOpenGLVertexArrayObject::Binder vaoBinder(&Vao);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 
-    for(int i=0; i<obj.size(); i++){
-        drawModel(obj[i]);
+
+    if(stage==0){ //mapa galaktyki
+
+    }
+    else{
+        if(stage==1){ //bitwa
+
+        }
+        else if(stage==2){
+            drawModel(solarSystems[actSystem]);
+        }
     }
     emit paintCompleted();
 }
@@ -435,9 +443,22 @@ void GameWorker::onTick()
     // gaym logic
     if (!g->initComplete)
         return;
-    g->obj[0]->position.setZ(g->obj[0]->position.z()+3e-3);
+    if(g->actSystem != -1){
+        orbit(g->solarSystems[g->actSystem], nse);
+    }
 //    g->lightPos = g->camPos;
     emit frameReady();
+}
+
+void GameWorker::orbit(ModelContainer* m, qint64 nse){
+    if(m->type==ModelContainer::Planet || m->type==ModelContainer::Titan || m->type==ModelContainer::Moon){
+        float rad=sqrt((m->position.x())*(m->position.x())+(m->position.y())*(m->position.y()));
+        m->position[0]=sinf(nse*0.0000000001f+rad)*rad;
+        m->position[1]=cosf(nse*0.0000000001f+rad)*rad;
+    }
+    for(auto p:(m->children)){
+        orbit(p, nse);
+    }
 }
 
 void GameWorker::acceptFrame() {

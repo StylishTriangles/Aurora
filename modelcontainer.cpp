@@ -58,13 +58,14 @@ QMatrix4x4 ModelContainer::getModelMat() const
     ret.rotate(rotation.x(),1.0f,0.0f);
     ret.rotate(rotation.y(),0.0f,1.0f);
     ret.rotate(rotation.z(),0.0f,0.0f,1.0f);
-    ret.scale(scale);
     if (type == Moon) {
         QMatrix4x4 base;
         base.translate(parent->getPos());
+        ret.scale(getScale());
         return base*ret;
     }
     else {
+        ret.scale(scale);
         if (parent == nullptr)
             return ret;
         else
