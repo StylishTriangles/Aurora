@@ -97,6 +97,7 @@ private:
 
 signals:
     void exitToMenu();
+    void escPressed();
     void paintCompleted();
 };
 

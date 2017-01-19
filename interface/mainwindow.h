@@ -32,6 +32,8 @@ private slots:
     void reload();
 
 private:
+    void unloadGame(); // free Game's memory
+
     Ui::MainWindow *ui;
     Options* opt;
     Game* gameScr;

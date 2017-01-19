@@ -271,7 +271,7 @@ void Game::keyPressEvent(QKeyEvent *event)
     if (event->key() == Qt::Key_Escape)
     {
         event->accept();
-        emit exitToMenu();
+        emit escPressed();
         return;
     }
     if (event->key() == Qt::Key_W)
