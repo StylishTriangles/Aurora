@@ -27,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    reload();
+    unloadGame();
     delete opt;
     delete gameScr;
     delete ui;
@@ -63,11 +63,12 @@ void MainWindow::on_newGameButton_clicked()
     QObject::connect(actionTimer, SIGNAL(timeout(void)), gameWorker, SLOT(onTick(void)));
     QObject::connect(gameWorker, SIGNAL(frameReady(void)), gameScr, SLOT(update(void)));
     // connect signals from Game widget
-    QObject::connect(gameScr, SIGNAL(exitToMenu(void)), this, SLOT(reload(void)));
+    QObject::connect(gameScr, SIGNAL(escPressed(void)), mHUD, SLOT(togglePauseMenu(void)));
     QObject::connect(gameScr, SIGNAL(paintCompleted(void)), gameWorker, SLOT(acceptFrame(void)));
     QObject::connect(gameScr, SIGNAL(paintCompleted(void)), mHUD, SLOT(acceptFrame(void)));
     // connect signals from HUD
-    QObject::connect(mHUD, SIGNAL(exit(void)), this, SLOT(reload(void)));
+    QObject::connect(mHUD, SIGNAL(quitAll(void)), this, SLOT(close(void)));
+    QObject::connect(mHUD, SIGNAL(quitGame(void)), this, SLOT(reload(void)));
 
     actionTimer->start(tickDelayMs);
     actionTimer->moveToThread(workerThread);
@@ -86,15 +87,21 @@ void MainWindow::on_optionsButton_clicked()
 
 void MainWindow::reload()
 {
+    unloadGame();
+    this->setFocus();
+    ui->centralWidget->show();
+}
+
+void MainWindow::unloadGame()
+{
     if (gameScr != nullptr) {
         actionTimer->deleteLater();
         workerThread->exit();
         workerThread->wait();
         delete gameWorker;
         delete workerThread;
-        delete gameScr;
+        delete gameScr; // also deletes mHUD
         gameScr = nullptr;
     }
-    this->setFocus();
-    ui->centralWidget->show();
+
 }
