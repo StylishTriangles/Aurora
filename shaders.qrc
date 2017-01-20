@@ -4,5 +4,7 @@
         <file>shaders/sphereshaderV.vert</file>
         <file>shaders/lightFragment.frag</file>
         <file>shaders/lightVertex.vert</file>
+        <file>shaders/planegeometry.frag</file>
+        <file>shaders/planegeometry.vert</file>
     </qresource>
 </RCC>

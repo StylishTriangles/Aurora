@@ -31,6 +31,13 @@ T mini(T a, T b, Args... args)
     return mini((a<b)?a:b, args...);
 }
 
+void GeometryProvider::circle(QVector<GLfloat>& outData){
+    for(float i=0.0f; i<2*M_PI; i+=(M_PI/360.0)){
+        outData.push_back(sinf(i));
+        outData.push_back(cosf(i));
+    }
+}
+
 void GeometryProvider::icosahedron(QVector<GLfloat> &outData, int stride, int vertexPos, int normalPos, int texturePos)
 {
     //    old papa mobile

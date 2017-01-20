@@ -63,6 +63,7 @@ protected:
     void keyPressEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
     void keyReleaseEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
     void drawModel(ModelContainer* mod);
+    void drawOrbit(ModelContainer* mod);
 
     void loadTextures();
     void loadShaders();
@@ -76,7 +77,7 @@ private:
     QMatrix4x4 projectionMat, viewMat;
     QOpenGLBuffer planetVbo;
     QOpenGLVertexArrayObject Vao;
-    QOpenGLShaderProgram *planetsProgram, *lightsProgram;
+    QOpenGLShaderProgram *planetsProgram, *lightsProgram, *planeGeoProgram;
     QPoint lastCursorPos;
     bool shadersCompiled, initComplete;
     // game world objects
@@ -84,8 +85,8 @@ private:
     QHash<QString, QOpenGLBuffer> mVbo;
 
     QHash<QString, QOpenGLTexture*> textures;
-    QOpenGLTexture* skyboxTexture;
     QVector<ModelContainer*> solarSystems;
+    ModelContainer* galaxyMap;
     // current camera rotation and position
     float camXRot, camYRot, camZRot;
     float camSpeed, rotationSpeed;

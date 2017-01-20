@@ -10,7 +10,7 @@ Game::Game(QWidget *parent) :
     camXRot(0), camYRot(-90.0f), camZRot(0),
     camFov(60.0f), camNear(0.01f), camFar(100.0f),
     lightPos(0.0f, -0.0f, 0.0f),
-    stage(2), actSystem(0),
+    stage(2), actSystem(1),
     cnt(0)
 {
     this->resize(parent->size());
@@ -33,9 +33,9 @@ Game::~Game()
         delete p;
     for(auto p:textures)
         delete p;
-    delete skyboxTexture;
     delete planetsProgram;
     delete lightsProgram;
+    delete planeGeoProgram;
 }
 
 inline void qNormalizeAngle(float& a)
@@ -61,8 +61,6 @@ void Game::initializeGL()
 
     Vao.create();
     QOpenGLVertexArrayObject::Binder vaoBinder(&Vao);
-    planetsProgram = new QOpenGLShaderProgram;
-    lightsProgram = new QOpenGLShaderProgram;
 
     projectionMat.setToIdentity();
     projectionMat.perspective(camFov, float(this->width()) / float(this->height()), camNear, camFar);
@@ -89,6 +87,9 @@ void Game::initializeGL()
         GeometryProvider::titan(*tmp, GeometryProvider::SubdivisionCount(i), 420);
         mGeometry[QStringLiteral("titan%1").arg(i)]=tmp;
     }
+    tmp = new QVector<GLfloat>;
+    GeometryProvider::circle(*tmp);
+    mGeometry["circle"]=tmp;
 
     // load and compile shaders
     loadShaders();
@@ -97,8 +98,10 @@ void Game::initializeGL()
     loadTextures();
 
     // make models
+    galaxyMap = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "skybox", planetsProgram, ModelContainer::Skybox);
+    galaxyMap->setScale(50.0f);
     solarSystems.push_back(new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "earth", lightsProgram, ModelContainer::Star));
-    ModelContainer* tmpM = new ModelContainer({0,0,0}, {0,0,0}, "titan", "skybox", planetsProgram, ModelContainer::Skybox);
+    ModelContainer* tmpM = new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", planetsProgram, ModelContainer::Skybox);
     tmpM->setScale(50.0f);
     solarSystems.back()->addChild(tmpM);
     tmpM = new ModelContainer({3.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "earth", planetsProgram, ModelContainer::Planet);
@@ -106,13 +109,28 @@ void Game::initializeGL()
     ModelContainer* tmpM2 = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "atmosphere", planetsProgram, ModelContainer::Planet);
     tmpM2->setScale(1.01f);
     tmpM->addChild(tmpM2);
-    tmpM2 = new ModelContainer({10.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "moon", planetsProgram, ModelContainer::Moon);
+    tmpM2 = new ModelContainer({0.2f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "moon", planetsProgram, ModelContainer::Moon);
     tmpM2->setScale(0.1f);
     tmpM->addChild(tmpM2);
     solarSystems.back()->addChild(tmpM);
     tmpM = new ModelContainer({4.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "titan", "earth", planetsProgram, ModelContainer::Titan);
     tmpM->setScale(0.1f);
     solarSystems.back()->addChild(tmpM);
+
+    solarSystems.push_back(new ModelContainer({3.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "earth", lightsProgram, ModelContainer::Star));
+    tmpM = new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", planetsProgram, ModelContainer::Skybox);
+    tmpM->setScale(50.0f);
+    solarSystems.back()->addChild(tmpM);
+    tmpM = new ModelContainer({3.5f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "earth", planetsProgram, ModelContainer::Planet);
+    tmpM->setScale(0.1f);
+    tmpM2 = new ModelContainer({0.3f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "moon", planetsProgram, ModelContainer::Moon);
+    tmpM2->setScale(0.1f);
+    tmpM->addChild(tmpM2);
+    tmpM2 = new ModelContainer({0.4f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "moon", planetsProgram, ModelContainer::Moon);
+    tmpM2->setScale(0.1f);
+    tmpM->addChild(tmpM2);
+    solarSystems.back()->addChild(tmpM);
+
     initComplete = true;
 
     allocateVbos();
@@ -142,6 +160,9 @@ void Game::drawModel(ModelContainer* mod)
 {
     if(mod->type==ModelContainer::Skybox)
         glDisable(GL_CULL_FACE);
+    if(mod->type==ModelContainer::Planet || mod->type==ModelContainer::Titan || mod->type==ModelContainer::Moon){
+        drawOrbit(mod);
+    }
     QMatrix4x4 modelMat = mod->getModelMat();
     QMatrix4x4 vp = projectionMat * viewMat;
     static auto distance = [](QVector3D const& camPos, QVector3D const& modPos) -> float {
@@ -198,10 +219,28 @@ void Game::drawModel(ModelContainer* mod)
     this->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6*sizeof(GLfloat)));
 
     glDrawArrays(GL_TRIANGLES, 0, geomSize);
-    for (int i = 0; i < mod->children.size(); i++)
-        drawModel(mod->children[i]);
+    if(stage!=0){
+        for (int i = 0; i < mod->children.size(); i++)
+            drawModel(mod->children[i]);
+    }
     if(mod->type==ModelContainer::Skybox)
         glEnable(GL_CULL_FACE);
+}
+
+void Game::drawOrbit(ModelContainer* mod) {
+    QMatrix4x4 modelMat = mod->parent->getModelMat();
+    modelMat.scale(QVector3D(1.0f, 1.0f, 1.0f)/mod->parent->getScale());
+    modelMat.scale(sqrt((mod->position.x())*(mod->position.x())+(mod->position.y())*(mod->position.y())));
+    QMatrix4x4 vp = projectionMat * viewMat;
+    planeGeoProgram->bind();
+    planeGeoProgram->setUniformValue("vp",vp);
+    planeGeoProgram->setUniformValue("modelMat",modelMat);
+
+    mVbo["circle"].bind();
+    this->glEnableVertexAttribArray(0);
+    this->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid*)0);
+
+    glDrawArrays(GL_LINE_LOOP, 0, 720);
 }
 
 void Game::paintGL()
@@ -211,22 +250,16 @@ void Game::paintGL()
     viewMat.setToIdentity();
     viewMat.lookAt(camPos, camPos + camFront, camUp);
 
-//    QOpenGLVertexArrayObject::Binder vaoBinder(&Vao);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-
-
-    if(stage==0){ //mapa galaktyki
+    if(stage==0) { //mapa galaktyki
+        drawModel(galaxyMap);
+        for(int i=0; i<solarSystems.size(); i++)
+            drawModel(solarSystems[i]);
+    }
+    else if(stage==1) { //bitwa
 
     }
-    else{
-        if(stage==1){ //bitwa
-
-        }
-        else if(stage==2){
+    else if(stage==2) {
             drawModel(solarSystems[actSystem]);
-        }
     }
     emit paintCompleted();
 }
@@ -358,6 +391,10 @@ void Game::loadTextures()
 
 void Game::loadShaders()
 {
+    planetsProgram = new QOpenGLShaderProgram;
+    lightsProgram = new QOpenGLShaderProgram;
+    planeGeoProgram = new QOpenGLShaderProgram;
+
     // planet shader
     bool noerror = true;
     noerror = planetsProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/sphereshaderV.vert");
@@ -369,8 +406,6 @@ void Game::loadShaders()
     planetsProgram->bindAttributeLocation("texCoord", 2);
     noerror = planetsProgram->link();
     if (!noerror) {qDebug() << planetsProgram->log();}
-    shadersCompiled = true;
-    if (!noerror) {qDebug() << planetsProgram->log();}
 
     // light source shader
     noerror = true;
@@ -381,8 +416,16 @@ void Game::loadShaders()
     lightsProgram->bindAttributeLocation("texCoord", 2);
     noerror |= lightsProgram->link();
     lightsProgram->setUniformValue("tex", 0);
-    shadersCompiled = true;
     if (!noerror) {qDebug() << lightsProgram->log();}
+
+    // plane source shader
+    noerror = true;
+    noerror |= planeGeoProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/planegeometry.vert");
+    noerror |= planeGeoProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/planegeometry.frag");
+    planeGeoProgram->bindAttributeLocation("position", 0);
+    noerror |= planeGeoProgram->link();
+    shadersCompiled = true;
+    if (!noerror) {qDebug() << planeGeoProgram->log();}
 }
 
 void Game::allocateVbos() {
@@ -399,14 +442,22 @@ void Game::allocateVbos() {
 void Game::parseInput(float dT)
 {
     float camV = camSpeed * dT;
-    if (keys.find(Qt::Key_W) != keys.end())
+    if (keys.find(Qt::Key_W) != keys.end()) {
+        if((camPos+camV*camFront).length()<49)
         camPos += camV * camFront;
-    if (keys.find(Qt::Key_S) != keys.end())
+    }
+    if (keys.find(Qt::Key_S) != keys.end()) {
+        if((camPos-camV*camFront).length()<49)
         camPos -= camV * camFront;
-    if (keys.find(Qt::Key_D) != keys.end())
+    }
+    if (keys.find(Qt::Key_D) != keys.end()) {
+        if((camPos+QVector3D::normal(camFront, camUp) * camV).length()<49)
         camPos += QVector3D::normal(camFront, camUp) * camV;
-    if (keys.find(Qt::Key_A) != keys.end())
+    }
+    if (keys.find(Qt::Key_A) != keys.end()) {
+        if((camPos-QVector3D::normal(camFront, camUp) * camV).length()<49)
         camPos -= QVector3D::normal(camFront, camUp) * camV;
+    }
     if (keys.find(Qt::Key_Shift) != keys.end())
         camSpeed = 0.1f;
     else
@@ -450,11 +501,11 @@ void GameWorker::onTick()
     emit frameReady();
 }
 
-void GameWorker::orbit(ModelContainer* m, qint64 nse){
+void GameWorker::orbit(ModelContainer* m, qint64 nse) {
     if(m->type==ModelContainer::Planet || m->type==ModelContainer::Titan || m->type==ModelContainer::Moon){
-        float rad=sqrt((m->position.x())*(m->position.x())+(m->position.y())*(m->position.y()));
-        m->position[0]=sinf(nse*0.0000000001f+rad)*rad;
-        m->position[1]=cosf(nse*0.0000000001f+rad)*rad;
+        float rad=m->position.length();
+        m->position[0]=sinf(nse*0.00000000001f+10*rad)*rad;
+        m->position[1]=cosf(nse*0.00000000001f+10*rad)*rad;
     }
     for(auto p:(m->children)){
         orbit(p, nse);

@@ -39,6 +39,7 @@ public:
 #define VPOS 0      // vertex pos in stride
 #define NPOS 3      // normal...
 #define TPOS 6      // texture...
+    static void circle(QVector<GLfloat>& outData);
     static void icosahedron(QVector<GLfloat>& outData,  int stride = STRIDE, int vertexPos = VPOS, int normalPos = NPOS, int texturePos = TPOS);
     static void geosphere(QVector<GLfloat>& outData, SubdivisionCount subCount = Four, int stride = STRIDE, int vertexPos = VPOS, int normalPos = NPOS, int texPos = TPOS);
     static void sphere(QVector<GLfloat>& outData, const int parallelsAmount = 24, const int meridiansAmount = 24); // stride = 5, vertices [0-2], texture [3-4]
