@@ -29,9 +29,7 @@ MainWindow::~MainWindow()
 {
     unloadGame();
     delete opt;
-    delete gameScr;
     delete ui;
-    delete mHUD;
 }
 // public
 void MainWindow::resizeEvent(QResizeEvent *)
