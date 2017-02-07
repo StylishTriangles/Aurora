@@ -169,6 +169,8 @@ void Game::drawModel(ModelContainer* mod)
         return (camPos-modPos).length();
     };
 
+    if(mod->type==ModelContainer::Star)
+    qDebug()<<modelMat*vp*QVector4D(mod->position, 1.0f);
     float d = distance(camPos, mod->getPos()) / mod->getScale().x();
     int detailLevel = (d > 60.f)?1:(d > 30.f)?2:(d > 15.f)?3:4;
     if (mod->type == ModelContainer::Skybox or mod->type == ModelContainer::Titan)
@@ -184,6 +186,11 @@ void Game::drawModel(ModelContainer* mod)
     Light light = {QVector3D(0.1f, 0.1f, 0.1f),QVector3D(0.5f, 0.5f, 0.5f),QVector3D(0.7f, 0.7f, 0.7f),32.0f};
 
     // set type specific data
+    if(stage==0){
+        light.ambient = QVector3D(1.0f,1.0f,1.0f);
+        light.diffuse = QVector3D(0.0f,0.0f,0.0f);
+        light.specular = light.diffuse;
+    }
     if (mod->type == ModelContainer::Skybox) {
         light.ambient = QVector3D(1.0f,1.0f,1.0f);
         light.diffuse = QVector3D(0.0f,0.0f,0.0f);
@@ -267,6 +274,11 @@ void Game::paintGL()
 void Game::mousePressEvent(QMouseEvent *event)
 {
     lastCursorPos = event->pos();
+    if(event->button() & Qt::RightButton) {
+        if(stage==2) {
+            stage=0;
+        }
+    }
 }
 
 void Game::mouseMoveEvent(QMouseEvent *event)
@@ -443,20 +455,44 @@ void Game::parseInput(float dT)
 {
     float camV = camSpeed * dT;
     if (keys.find(Qt::Key_W) != keys.end()) {
-        if((camPos+camV*camFront).length()<49)
-        camPos += camV * camFront;
+        if(stage==0) {
+            if((camPos+camV*camFront).length()<49)
+            camPos += camV * camFront;
+        }
+        else {
+            if((camPos+camV*camFront - solarSystems[actSystem]->position).length()<49)
+            camPos += camV * camFront;
+        }
     }
     if (keys.find(Qt::Key_S) != keys.end()) {
-        if((camPos-camV*camFront).length()<49)
-        camPos -= camV * camFront;
+        if(stage==0) {
+            if((camPos-camV*camFront).length()<49)
+            camPos -= camV * camFront;
+        }
+        else {
+            if((camPos-camV*camFront - solarSystems[actSystem]->position).length()<49)
+            camPos -= camV * camFront;
+        }
     }
     if (keys.find(Qt::Key_D) != keys.end()) {
-        if((camPos+QVector3D::normal(camFront, camUp) * camV).length()<49)
-        camPos += QVector3D::normal(camFront, camUp) * camV;
+        if(stage==0) {
+            if((camPos+QVector3D::normal(camFront, camUp) * camV).length()<49)
+            camPos += QVector3D::normal(camFront, camUp) * camV;
+        }
+        else {
+            if((camPos+QVector3D::normal(camFront, camUp) * camV - solarSystems[actSystem]->position).length()<49)
+            camPos += QVector3D::normal(camFront, camUp) * camV;
+        }
     }
     if (keys.find(Qt::Key_A) != keys.end()) {
-        if((camPos-QVector3D::normal(camFront, camUp) * camV).length()<49)
-        camPos -= QVector3D::normal(camFront, camUp) * camV;
+        if(stage==0) {
+            if((camPos-QVector3D::normal(camFront, camUp) * camV).length()<49)
+            camPos -= QVector3D::normal(camFront, camUp) * camV;
+        }
+        else {
+            if((camPos-QVector3D::normal(camFront, camUp) * camV - solarSystems[actSystem]->position).length()<49)
+            camPos -= QVector3D::normal(camFront, camUp) * camV;
+        }
     }
     if (keys.find(Qt::Key_Shift) != keys.end())
         camSpeed = 0.1f;
