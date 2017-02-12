@@ -17,6 +17,7 @@
 #include "geometryprovider.h"
 #include "modelcontainer.h"
 #include "interface/hud.h"
+#include "include/ray_intersect.h"
 
 namespace Ui {
 class Game;
@@ -88,10 +89,12 @@ private:
     QVector<ModelContainer*> solarSystems;
     ModelContainer* galaxyMap;
     // current camera rotation and position
-    float camXRot, camYRot, camZRot;
     float camSpeed, rotationSpeed;
     float camFov, camNear, camFar;
+    const QVector3D camPosDef = QVector3D(0.0f, 0.0f,  4.5f), camFrontDef = QVector3D(0.0f, 0.0f, -1.0f), camUpDef = QVector3D(0.0f, 1.0f,  0.0f);
     QVector3D camPos, camFront, camUp;
+    const QVector3D camRotDef = QVector3D(0.0f, -90.0f, 0.0f);
+    QVector3D camRot;
     QVector3D lightPos;
     // input handling
     QSet<qint32> keys;

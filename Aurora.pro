@@ -19,14 +19,16 @@ SOURCES += main.cpp\
     game.cpp \
     geometryprovider.cpp \
     modelcontainer.cpp \
-    interface/hud.cpp
+    interface/hud.cpp \
+    src/ray_intersect.cpp
 
 HEADERS  += interface/mainwindow.h \
     interface/options.h \
     game.h \
     geometryprovider.h \
     modelcontainer.h \
-    interface/hud.h
+    interface/hud.h \
+    include/ray_intersect.h
 
 FORMS    += interface/mainwindow.ui \
     interface/options.ui \

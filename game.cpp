@@ -7,10 +7,10 @@
 Game::Game(QWidget *parent) :
     QOpenGLWidget(parent),
     shadersCompiled(false), initComplete(false),
-    camXRot(0), camYRot(-90.0f), camZRot(0),
     camFov(60.0f), camNear(0.01f), camFar(100.0f),
+    camRot(camRotDef),
     lightPos(0.0f, -0.0f, 0.0f),
-    stage(2), actSystem(1),
+    stage(2), actSystem(0),
     cnt(0)
 {
     this->resize(parent->size());
@@ -66,9 +66,9 @@ void Game::initializeGL()
     projectionMat.perspective(camFov, float(this->width()) / float(this->height()), camNear, camFar);
 //    projectionMat.frustum(0.0f, 800.0f, 0.0f, 600.0f, 0.1f, 100.0f); // orthographic projection mode
 
-    camPos   = QVector3D(0.0f, 0.0f,  4.5f);
-    camFront = QVector3D(0.0f, 0.0f, -1.0f);
-    camUp    = QVector3D(0.0f, 1.0f,  0.0f);
+    camPos   = camPosDef;
+    camFront = camFrontDef;
+    camUp    = camUpDef;
     camSpeed = 0.05f;
     rotationSpeed = 0.1f;
 
@@ -169,8 +169,8 @@ void Game::drawModel(ModelContainer* mod)
         return (camPos-modPos).length();
     };
 
-    if(mod->type==ModelContainer::Star)
-    qDebug()<<modelMat*vp*QVector4D(mod->position, 1.0f);
+//    if(mod->type==ModelContainer::Star)
+//    qDebug()<<modelMat*vp*QVector4D(mod->position, 1.0f);
     float d = distance(camPos, mod->getPos()) / mod->getScale().x();
     int detailLevel = (d > 60.f)?1:(d > 30.f)?2:(d > 15.f)?3:4;
     if (mod->type == ModelContainer::Skybox or mod->type == ModelContainer::Titan)
@@ -276,7 +276,30 @@ void Game::mousePressEvent(QMouseEvent *event)
     lastCursorPos = event->pos();
     if(event->button() & Qt::RightButton) {
         if(stage==2) {
+            camPos = camPosDef + solarSystems[actSystem]->position;
+            camFront = camFrontDef;
+            camUp = camUpDef;
+            camRot = camRotDef;
             stage=0;
+        }
+    }
+    if(event->button() & Qt::LeftButton) {
+        if(stage==0) {
+            QVector3D ray_begin, ray_end, xyz_min, xyz_max;
+            float d;
+            screenPosToWorldRay(lastCursorPos.x(), this->height()-lastCursorPos.y(), this->width(), this->height(), viewMat, projectionMat, ray_begin, ray_end);
+            for(int i=0; i<solarSystems.size(); i++){
+                xyz_min=QVector3D(-1.0f, -1.0f, -1.0f)*solarSystems[i]->getScale();
+                xyz_max=QVector3D(1.0f, 1.0f, 1.0f)*solarSystems[i]->getScale();
+                if(testRayOBBIntersection(ray_begin, ray_end, xyz_min, xyz_max, solarSystems[i]->getModelMat(), d)) {
+                    camPos = camPosDef + solarSystems[i]->position;
+                    camFront = camFrontDef;
+                    camUp = camUpDef;
+                    camRot = camRotDef;
+                    actSystem=i;
+                    stage=2;
+                }
+            }
         }
     }
 }
@@ -287,13 +310,13 @@ void Game::mouseMoveEvent(QMouseEvent *event)
     int dy = event->y() - lastCursorPos.y();
 
     if (event->buttons() & Qt::LeftButton) {
-        camXRot = camXRot + rotationSpeed * dy;
-        camYRot = camYRot + rotationSpeed * dx;
-        qNormalizeAngle(camYRot);
-        if (camXRot > 89.8f)
-            camXRot = 89.8f;
-        else if (camXRot < -89.8f)
-            camXRot = -89.8f;
+        camRot[0] = camRot.x() + rotationSpeed * dy;
+        camRot[1] = camRot.y() + rotationSpeed * dx;
+        qNormalizeAngle(camRot[1]);
+        if (camRot.x() > 89.8f)
+            camRot[0] = 89.8f;
+        else if (camRot.x() < -89.8f)
+            camRot[0] = -89.8f;
     }
 //    else if (event->buttons() & Qt::RightButton) { // Hey I just met you
 //        setXRotation(m_xRot + 8 * dy);                and this is crazy
@@ -301,9 +324,9 @@ void Game::mouseMoveEvent(QMouseEvent *event)
 //    }                                                 so fix it maybe
     lastCursorPos = event->pos();
     QVector3D front;
-    front.setX(cosf(qDegreesToRadians(camYRot)) * cosf(qDegreesToRadians(camXRot)));
-    front.setY(sinf(qDegreesToRadians(camXRot)));
-    front.setZ(sinf(qDegreesToRadians(camYRot)) * cosf(qDegreesToRadians(camXRot)));
+    front.setX(cosf(qDegreesToRadians(camRot.y())) * cosf(qDegreesToRadians(camRot.x())));
+    front.setY(sinf(qDegreesToRadians(camRot.x())));
+    front.setZ(sinf(qDegreesToRadians(camRot.y())) * cosf(qDegreesToRadians(camRot.x())));
     camFront = front.normalized();
 }
 
@@ -346,12 +369,10 @@ void Game::keyPressEvent(QKeyEvent *event)
         keys += Qt::Key_Shift;
     if (event->key() == Qt::Key_R)
     {
-        camPos   = QVector3D(0.0f, 0.0f,  4.5f);
-        camFront = QVector3D(0.0f, 0.0f, -1.0f);
-        camUp    = QVector3D(0.0f, 1.0f,  0.0f);
-        camXRot=0;
-        camYRot=-90.0f;
-        camZRot=0;
+        camPos   = camPosDef;
+        camFront = camFrontDef;
+        camUp    = camUpDef;
+        camRot = camRotDef;
     }
 }
 
@@ -506,16 +527,16 @@ void Game::parseInput(float dT)
         dx += dT*rotationSpeed*100.0f;
     if (dx != 0.0f)
     {
-        camYRot = camYRot + rotationSpeed * dx;
-        qNormalizeAngle(camYRot);
-        if (camXRot > 89.8f)
-            camXRot = 89.8f;
-        else if (camXRot < -89.8f)
-            camXRot = -89.8f;
+        camRot[1] = camRot.y() + rotationSpeed * dx;
+        qNormalizeAngle(camRot[1]);
+        if (camRot.x() > 89.8f)
+            camRot[0] = 89.8f;
+        else if (camRot.x() < -89.8f)
+            camRot[0] = -89.8f;
         QVector3D front;
-        front.setX(cosf(qDegreesToRadians(camYRot)) * cosf(qDegreesToRadians(camXRot)));
-        front.setY(sinf(qDegreesToRadians(camXRot)));
-        front.setZ(sinf(qDegreesToRadians(camYRot)) * cosf(qDegreesToRadians(camXRot)));
+        front.setX(cosf(qDegreesToRadians(camRot.y())) * cosf(qDegreesToRadians(camRot.x())));
+        front.setY(sinf(qDegreesToRadians(camRot.x())));
+        front.setZ(sinf(qDegreesToRadians(camRot.y())) * cosf(qDegreesToRadians(camRot.x())));
         camFront = front.normalized();
     }
 }
