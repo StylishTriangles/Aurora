@@ -464,8 +464,8 @@
     <rect>
      <x>1240</x>
      <y>10</y>
-     <width>31</width>
-     <height>31</height>
+     <width>32</width>
+     <height>32</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -493,16 +493,45 @@ border-image: url(:/interface/icons/quit2.png);
    <property name="geometry">
     <rect>
      <x>530</x>
-     <y>180</y>
-     <width>220</width>
-     <height>340</height>
+     <y>210</y>
+     <width>240</width>
+     <height>350</height>
     </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
    </property>
    <property name="font">
     <font>
      <family>Leelawadee UI</family>
-     <pointsize>12</pointsize>
+     <pointsize>20</pointsize>
     </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QObject{
+border: 2px solid gray;
+background:  rgb(0,0,0,180);
+border-radius: 8px;
+}
+
+QFrame{
+background-color: rgb(0,0,0,32);
+}
+
+QPushButton{
+font: 18px &quot;Leelawadee UI&quot;;
+text-align:center;
+color: white;
+}
+QPushButton:hover{
+border-color: LightCoral;
+}
+QPushButton:pressed{
+border-color: Black;
+}</string>
    </property>
    <property name="frameShape">
     <enum>QFrame::StyledPanel</enum>
@@ -511,35 +540,6 @@ border-image: url(:/interface/icons/quit2.png);
     <enum>QFrame::Raised</enum>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <item row="4" column="0">
-     <spacer name="verticalSpacer">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeType">
-       <enum>QSizePolicy::Minimum</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>40</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="5" column="0">
-     <widget class="QPushButton" name="exitToMenuButton">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="text">
-       <string>Wyjdź do menu</string>
-      </property>
-     </widget>
-    </item>
     <item row="0" column="0">
      <widget class="QPushButton" name="resumeButton">
       <property name="sizePolicy">
@@ -565,8 +565,30 @@ border-image: url(:/interface/icons/quit2.png);
       </property>
      </widget>
     </item>
-    <item row="1" column="0">
-     <widget class="QPushButton" name="saveButton">
+    <item row="6" column="0">
+     <widget class="QPushButton" name="exitToSystemButton">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="font">
+       <font>
+        <family>Leelawadee UI</family>
+        <pointsize>-1</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Wyjdź do systemu</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="0">
+     <widget class="QPushButton" name="exitToMenuButton">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
         <horstretch>0</horstretch>
@@ -574,9 +596,25 @@ border-image: url(:/interface/icons/quit2.png);
        </sizepolicy>
       </property>
       <property name="text">
-       <string>Zapisz</string>
+       <string>Wyjdź do menu</string>
       </property>
      </widget>
+    </item>
+    <item row="4" column="0">
+     <spacer name="verticalSpacer">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeType">
+       <enum>QSizePolicy::Minimum</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>40</height>
+       </size>
+      </property>
+     </spacer>
     </item>
     <item row="2" column="0">
      <widget class="QPushButton" name="loadButton">
@@ -604,22 +642,16 @@ border-image: url(:/interface/icons/quit2.png);
       </property>
      </widget>
     </item>
-    <item row="6" column="0">
-     <widget class="QPushButton" name="exitToSystemButton">
+    <item row="1" column="0">
+     <widget class="QPushButton" name="saveButton">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
-      <property name="font">
-       <font>
-        <underline>false</underline>
-        <kerning>true</kerning>
-       </font>
-      </property>
       <property name="text">
-       <string>Wyjdź do systemu</string>
+       <string>Zapisz</string>
       </property>
      </widget>
     </item>

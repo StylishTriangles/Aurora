@@ -21,7 +21,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QDir::setCurrent(qApp->applicationDirPath());
     QDir::setCurrent("..");
 //    qDebug() << QDir::currentPath();
-    on_newGameButton_clicked(); // skip menu
+    //on_newGameButton_clicked(); // skip menu
 #endif
 }
 

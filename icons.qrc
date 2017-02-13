@@ -4,5 +4,7 @@
         <file>interface/icons/quit0.png</file>
         <file>interface/icons/quit1.png</file>
         <file>interface/icons/quit2.png</file>
+        <file>interface/icons/controls0.png</file>
+        <file>interface/icons/quit_alt0.png</file>
     </qresource>
 </RCC>

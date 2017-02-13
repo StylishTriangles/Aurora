@@ -1,7 +1,7 @@
 #include "game.h"
 #include <QDebug>
-#include <QtMath>
 #include <QResource>
+#include <QtMath>
 #include <random>
 
 Game::Game(QWidget *parent) :
