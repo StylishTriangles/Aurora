@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     geometryprovider.cpp \
     modelcontainer.cpp \
     interface/hud.cpp \
-    src/ray_intersect.cpp
+    src/ray_intersect.cpp \
+    src/fileops.cpp
 
 HEADERS  += interface/mainwindow.h \
     interface/options.h \
@@ -28,7 +29,8 @@ HEADERS  += interface/mainwindow.h \
     geometryprovider.h \
     modelcontainer.h \
     interface/hud.h \
-    include/ray_intersect.h
+    include/ray_intersect.h \
+    include/fileops.h
 
 FORMS    += interface/mainwindow.ui \
     interface/options.ui \

@@ -1,6 +1,11 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include <QElapsedTimer>
+#include <QHash>
+#include <QKeyEvent>
+#include <QMap>
+#include <QMatrix4x4>
 #include <QOpenGLWidget>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLBuffer>
@@ -8,16 +13,13 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 #include <QResizeEvent>
-#include <QMatrix4x4>
-#include <QVector>
-#include <QKeyEvent>
-#include <QElapsedTimer>
 #include <QSet>
-#include <QMap>
+#include <QVector>
 #include "geometryprovider.h"
 #include "modelcontainer.h"
-#include "interface/hud.h"
+#include "include/fileops.h"
 #include "include/ray_intersect.h"
+#include "interface/hud.h"
 
 namespace Ui {
 class Game;
@@ -68,6 +70,7 @@ protected:
 
     void loadTextures();
     void loadShaders();
+    void loadSettings();
     void allocateVbos();
     void parseInput(float dT);
 
@@ -98,6 +101,8 @@ private:
     QVector3D lightPos;
     // input handling
     QSet<qint32> keys;
+    // settings
+    QHash<QString, QString> mSettings;
     // active scene
     int stage;
     int actSystem;

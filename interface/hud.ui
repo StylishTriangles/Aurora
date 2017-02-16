@@ -45,10 +45,10 @@
      <active>
       <colorrole role="WindowText">
        <brush brushstyle="SolidPattern">
-        <color alpha="200">
-         <red>0</red>
-         <green>227</green>
-         <blue>7</blue>
+        <color alpha="255">
+         <red>255</red>
+         <green>99</green>
+         <blue>71</blue>
         </color>
        </brush>
       </colorrole>
@@ -100,9 +100,9 @@
       <colorrole role="Text">
        <brush brushstyle="SolidPattern">
         <color alpha="255">
-         <red>0</red>
-         <green>0</green>
-         <blue>0</blue>
+         <red>255</red>
+         <green>99</green>
+         <blue>71</blue>
         </color>
        </brush>
       </colorrole>
@@ -118,9 +118,9 @@
       <colorrole role="ButtonText">
        <brush brushstyle="SolidPattern">
         <color alpha="255">
-         <red>0</red>
-         <green>0</green>
-         <blue>0</blue>
+         <red>255</red>
+         <green>99</green>
+         <blue>71</blue>
         </color>
        </brush>
       </colorrole>
@@ -182,10 +182,10 @@
      <inactive>
       <colorrole role="WindowText">
        <brush brushstyle="SolidPattern">
-        <color alpha="200">
-         <red>0</red>
-         <green>227</green>
-         <blue>7</blue>
+        <color alpha="255">
+         <red>255</red>
+         <green>99</green>
+         <blue>71</blue>
         </color>
        </brush>
       </colorrole>
@@ -237,9 +237,9 @@
       <colorrole role="Text">
        <brush brushstyle="SolidPattern">
         <color alpha="255">
-         <red>0</red>
-         <green>0</green>
-         <blue>0</blue>
+         <red>255</red>
+         <green>99</green>
+         <blue>71</blue>
         </color>
        </brush>
       </colorrole>
@@ -255,9 +255,9 @@
       <colorrole role="ButtonText">
        <brush brushstyle="SolidPattern">
         <color alpha="255">
-         <red>0</red>
-         <green>0</green>
-         <blue>0</blue>
+         <red>255</red>
+         <green>99</green>
+         <blue>71</blue>
         </color>
        </brush>
       </colorrole>
@@ -319,10 +319,10 @@
      <disabled>
       <colorrole role="WindowText">
        <brush brushstyle="SolidPattern">
-        <color alpha="0">
-         <red>127</red>
-         <green>0</green>
-         <blue>0</blue>
+        <color alpha="255">
+         <red>255</red>
+         <green>99</green>
+         <blue>71</blue>
         </color>
        </brush>
       </colorrole>
@@ -373,10 +373,10 @@
       </colorrole>
       <colorrole role="Text">
        <brush brushstyle="SolidPattern">
-        <color alpha="0">
-         <red>127</red>
-         <green>0</green>
-         <blue>0</blue>
+        <color alpha="255">
+         <red>255</red>
+         <green>99</green>
+         <blue>71</blue>
         </color>
        </brush>
       </colorrole>
@@ -391,10 +391,10 @@
       </colorrole>
       <colorrole role="ButtonText">
        <brush brushstyle="SolidPattern">
-        <color alpha="0">
-         <red>127</red>
-         <green>0</green>
-         <blue>0</blue>
+        <color alpha="255">
+         <red>255</red>
+         <green>99</green>
+         <blue>71</blue>
         </color>
        </brush>
       </colorrole>
@@ -454,6 +454,9 @@
       </colorrole>
      </disabled>
     </palette>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: Tomato;</string>
    </property>
    <property name="digitCount">
     <number>3</number>
@@ -527,7 +530,7 @@ text-align:center;
 color: white;
 }
 QPushButton:hover{
-border-color: LightCoral;
+border-color: Tomato;
 }
 QPushButton:pressed{
 border-color: Black;
@@ -552,7 +555,7 @@ border-color: Black;
        <bool>false</bool>
       </property>
       <property name="text">
-       <string>Wznów</string>
+       <string>Resume</string>
       </property>
       <property name="checkable">
        <bool>false</bool>
@@ -583,7 +586,7 @@ border-color: Black;
        </font>
       </property>
       <property name="text">
-       <string>Wyjdź do systemu</string>
+       <string>Quit to system</string>
       </property>
      </widget>
     </item>
@@ -596,7 +599,7 @@ border-color: Black;
        </sizepolicy>
       </property>
       <property name="text">
-       <string>Wyjdź do menu</string>
+       <string>Quit to menu</string>
       </property>
      </widget>
     </item>
@@ -625,7 +628,7 @@ border-color: Black;
        </sizepolicy>
       </property>
       <property name="text">
-       <string>Wczytaj</string>
+       <string>Load</string>
       </property>
      </widget>
     </item>
@@ -638,7 +641,7 @@ border-color: Black;
        </sizepolicy>
       </property>
       <property name="text">
-       <string>Opcje</string>
+       <string>Options</string>
       </property>
      </widget>
     </item>
@@ -651,7 +654,7 @@ border-color: Black;
        </sizepolicy>
       </property>
       <property name="text">
-       <string>Zapisz</string>
+       <string>Save</string>
       </property>
      </widget>
     </item>

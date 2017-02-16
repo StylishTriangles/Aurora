@@ -13,13 +13,11 @@ Game::Game(QWidget *parent) :
     stage(2), actSystem(0),
     cnt(0)
 {
+    // load settings
+    loadSettings();
+
     this->resize(parent->size());
-    QSurfaceFormat format;
-    format.setSamples(4);
-    format.setAlphaBufferSize(8);
-    setFormat(format);
     //this->setMinimumSize(800, 450);
-//    this->resize(parent->size());
     this->setFocus();
     qDebug() << "ModelContainer:" << sizeof(ModelContainer) << "|" << "Game:" << sizeof(Game);
 }
@@ -459,6 +457,33 @@ void Game::loadShaders()
     noerror |= planeGeoProgram->link();
     shadersCompiled = true;
     if (!noerror) {qDebug() << planeGeoProgram->log();}
+}
+
+void Game::loadSettings() {
+    Aurora::loadDefaultSettings(mSettings);
+    Aurora::readSettings(mSettings);
+    QString str;
+    QSurfaceFormat qsf;
+    // configure anti-aliasing
+    str = mSettings[Aurora::SETTING_GRAPHICS_AA];
+    if (str == "No AA") qsf.setSamples(0);
+    else if (str == "2x MSAA") qsf.setSamples(2);
+    else if (str == "4x MSAA") qsf.setSamples(4);
+    else if (str == "8x MSAA") qsf.setSamples(8);
+    // configure v-sync
+    str = mSettings[Aurora::SETTING_GRAPHICS_VSYNC];
+    if (str == "No Vsync")
+    {qsf.setSwapInterval(0); qsf.setSwapBehavior(QSurfaceFormat::SingleBuffer);}
+    else if (str == "Double Buffering")
+    {qsf.setSwapInterval(1); qsf.setSwapBehavior(QSurfaceFormat::DoubleBuffer);}
+    else if (str == "Triple Buffering")
+    {qsf.setSwapInterval(1); qsf.setSwapBehavior(QSurfaceFormat::TripleBuffer);}
+    // configure alpha buffer
+    str = mSettings[Aurora::SETTING_ALPHA_BUFFER_SIZE];
+    qsf.setAlphaBufferSize(str.toInt());
+
+    // apply settings
+    setFormat(qsf);
 }
 
 void Game::allocateVbos() {

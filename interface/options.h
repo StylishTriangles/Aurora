@@ -18,16 +18,10 @@ class Options : public QWidget
 public:
     explicit Options(QWidget *parent = 0);
     ~Options();
-    // constants
-    static const QString SETTING_GRAPHICS_AA;
 
 protected:
     void showEvent(QShowEvent*) Q_DECL_OVERRIDE;
     void hideEvent(QHideEvent*) Q_DECL_OVERRIDE;
-
-public slots:
-    void loadDefaultSettings();
-    void readSettings(QFile& file);
 
 private slots:
     void on_pushButton_clicked();
@@ -36,11 +30,11 @@ private slots:
     void on_pushButton_4_clicked();
 
     void on_AAbox_currentTextChanged(const QString &arg1);
+    void on_VSbox_currentTextChanged(const QString &arg1);
 
 protected:
     QFile fOpt;
     QHash<QString,QString> mData;
-    //void writeCurrentSettings(QFile& file);
 
 private:
     void changePage(int laPage);

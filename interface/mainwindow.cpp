@@ -8,17 +8,21 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     gameScr(nullptr),
-    mHUD(nullptr)
+    mHUD(nullptr),
+    paintCounter(9000)
 {
     ui->setupUi(this);
     opt = new Options(this);
     opt->hide();
+    wololoTimer.start(10);
     // polaczenie sygnalu wyjscia submenuExit() klasy opt ze slotem show() klasy centralWidget
     QObject::connect(opt, SIGNAL(submenuExit(void)), this, SLOT(reload(void)));
+    QObject::connect(&wololoTimer, SIGNAL(timeout()), this, SLOT(update()));
+
     loadGameSettings();
+    QDir::setCurrent(qApp->applicationDirPath());
     // debug
 #ifdef QT_DEBUG
-    QDir::setCurrent(qApp->applicationDirPath());
     QDir::setCurrent("..");
 //    qDebug() << QDir::currentPath();
     //on_newGameButton_clicked(); // skip menu
@@ -41,6 +45,17 @@ void MainWindow::resizeEvent(QResizeEvent *)
 void MainWindow::loadGameSettings()
 {
     tickDelayMs = 8;
+}
+
+// protected slots
+void MainWindow::paintEvent(QPaintEvent *)
+{
+    paintCounter++;
+    paintCounter%=2513;
+    this->setStyleSheet(QString("MainWindow {background-color:rgb(%1,%2,%3);}").arg(
+                            QString::number(36+abs(12+cosf(paintCounter/400.0f)* 45)),
+                            QString::number(abs(42+sinf(paintCounter/400.0f)*40)),
+                            QString::number(60+abs(sinf(-paintCounter/400.0f)*50))));
 }
 
 // private slots

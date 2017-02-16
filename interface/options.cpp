@@ -3,98 +3,70 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QTextStream>
+#include "include/fileops.h"
 
-const QString Options::SETTING_GRAPHICS_AA = QString("ANTI_ALIASING");
 
 Options::Options(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::Options)
 {
     ui->setupUi(this);
-    loadDefaultSettings();
-}
 
-Options::~Options()
-{
-    delete ui;
-}
-
-void Options::showEvent(QShowEvent *)
-{
-    if (!fOpt.isOpen()) {
-        fOpt.setFileName("settings.cfg");
-        if (!fOpt.exists()) {
-            qDebug() << "File settings.cfg doesn't exist, attemting to create one...";
-            if (!fOpt.open(QIODevice::WriteOnly)) {
-                QMessageBox err;
-                err.critical(0, "Error","Could not create settings.cfg!");
-                err.setFixedSize(640, 480);
-                err.show();
-            }
-            else {
-                qDebug() << "File settings.cfg created successfully!";
-                // settings will be saved when hideEvent is called
-            }
-        }
-        else {
-            fOpt.open(QIODevice::ReadOnly);
-            readSettings(fOpt);
-        }
-    }
-    else // fOpt already opened
-        qDebug() << "This wasn't supposed to happen... @Options::showEvent()";
-    updateUI();
-}
-
-void Options::hideEvent(QHideEvent *)
-{
-    if (!fOpt.isOpen()) {
-        qDebug() << "Could not save settings, file settings.cfg is not open.";
-    }
-    else {
-        fOpt.close();
+    Aurora::loadDefaultSettings(mData);
+    // read settings
+    fOpt.setFileName("settings.cfg");
+    if (!fOpt.exists()) {
+        qDebug() << "[INFO] File settings.cfg doesn't exist, attemting to create one...";
         if (!fOpt.open(QIODevice::WriteOnly)) {
             QMessageBox err;
-            err.critical(0, "Error","Could not write to settings.cfg!");
+            err.critical(0, "Error","Could not create settings.cfg!");
             err.setFixedSize(640, 480);
             err.show();
         }
         else {
-            QTextStream out(&fOpt);
-            auto it = mData.begin();
-            while (it != mData.end()) {
-                out << it.key() << '=' << it.value() << '\n';
-                ++it;
-            }
+            qDebug() << "[INFO] File settings.cfg created successfully!";
+            fOpt.close();
+            // settings will be saved in destructor
+        }
+    }
+    else {
+        if (!fOpt.open(QIODevice::ReadOnly))
+            qDebug() << "[WARNING] Could not open settings file for reading";
+        else {
+            Aurora::readSettings(fOpt, mData);
             fOpt.close();
         }
     }
 }
 
-void Options::loadDefaultSettings()
+Options::~Options()
 {
-    mData[SETTING_GRAPHICS_AA] = "No AA";
+    if (fOpt.exists()) {
+        if (!fOpt.open(QIODevice::WriteOnly))
+            qDebug() << "[WARNING] Could not open settings file for writing";
+        else {
+            Aurora::writeSettings(fOpt, mData);
+            fOpt.close();
+        }
+    }
+
+    delete ui;
 }
 
-void Options::readSettings(QFile &file) {
-    QTextStream in(&file);
-    while (!file.atEnd()) {
-        QString line = in.readLine();
-        if (line[0] == '#' or line.size() < 3)
-            continue;
-        bool eq = false;
-        QString left, right;
-        for (QChar c: line) {
-            if (eq)
-                right += c;
-            else {
-                if (c == '=')
-                    eq = true;
-                else
-                    left += c;
-            }
+void Options::showEvent(QShowEvent *)
+{
+    updateUI();
+}
+
+void Options::hideEvent(QHideEvent *)
+{
+    if (fOpt.exists()) {
+        if (!fOpt.open(QIODevice::WriteOnly))
+            qDebug() << "[WARNING] Could not open settings file for writing";
+        else {
+            Aurora::writeSettings(fOpt, mData);
+            fOpt.close();
         }
-        mData[left] = right;
     }
 }
 
@@ -126,7 +98,12 @@ void Options::on_pushButton_4_clicked()
 
 void Options::on_AAbox_currentTextChanged(const QString &arg1)
 {
-    mData[SETTING_GRAPHICS_AA] = arg1;
+    mData[Aurora::SETTING_GRAPHICS_AA] = arg1;
+}
+
+void Options::on_VSbox_currentTextChanged(const QString &arg1)
+{
+    mData[Aurora::SETTING_GRAPHICS_VSYNC] = arg1;
 }
 
 void Options::changePage(int laPage)
@@ -136,5 +113,6 @@ void Options::changePage(int laPage)
 
 void Options::updateUI()
 {
-    ui->AAbox->setCurrentText(mData[SETTING_GRAPHICS_AA]);
+    ui->AAbox->setCurrentText(mData[Aurora::SETTING_GRAPHICS_AA]);
+    ui->VSbox->setCurrentText(mData[Aurora::SETTING_GRAPHICS_VSYNC]);
 }

@@ -24,6 +24,9 @@ public:
 
     void loadGameSettings();
 
+protected slots:
+    void paintEvent(QPaintEvent* ) Q_DECL_OVERRIDE;
+
 private slots:
     void on_newGameButton_clicked();
     void on_optionsButton_clicked();
@@ -43,7 +46,9 @@ private:
     QThread* workerThread;
     GameWorker* gameWorker;
     QTimer* actionTimer;
+    QTimer wololoTimer;
     int tickDelayMs;
+    int paintCounter;
 };
 
 #endif // MAINWINDOW_H
