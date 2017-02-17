@@ -77,3 +77,8 @@ void HUD::togglePauseMenu()
     else
         ui->pauseMenu->hide();
 }
+
+void HUD::on_optionsButton_clicked()
+{
+    emit enterSettings();
+}

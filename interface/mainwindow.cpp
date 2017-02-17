@@ -52,7 +52,7 @@ void MainWindow::paintEvent(QPaintEvent *)
 {
     paintCounter++;
     paintCounter%=2513;
-    this->setStyleSheet(QString("MainWindow {background-color:rgb(%1,%2,%3);}").arg(
+    this->setStyleSheet(QString("MainWindow:enabled {background-color:rgb(%1,%2,%3);}").arg(
                             QString::number(36+abs(12+cosf(paintCounter/400.0f)* 45)),
                             QString::number(abs(42+sinf(paintCounter/400.0f)*40)),
                             QString::number(60+abs(sinf(-paintCounter/400.0f)*50))));
@@ -82,11 +82,13 @@ void MainWindow::on_newGameButton_clicked()
     // connect signals from HUD
     QObject::connect(mHUD, SIGNAL(quitAll(void)), this, SLOT(close(void)));
     QObject::connect(mHUD, SIGNAL(quitGame(void)), this, SLOT(reload(void)));
+    QObject::connect(mHUD, SIGNAL(enterSettings(void)), opt, SLOT(show()));
 
     actionTimer->start(tickDelayMs);
     actionTimer->moveToThread(workerThread);
     gameWorker->moveToThread(workerThread);
     workerThread->start();
+    wololoTimer.stop();
 
     ui->centralWidget->hide();
     gameScr->show();
@@ -96,13 +98,16 @@ void MainWindow::on_optionsButton_clicked()
 {
     ui->centralWidget->hide();
     opt->show();
+    opt->setFocus();
 }
 
 void MainWindow::reload()
 {
     unloadGame();
-    this->setFocus();
+    wololoTimer.start();
     ui->centralWidget->show();
+    opt->hide();
+    this->setFocus();
 }
 
 void MainWindow::unloadGame()

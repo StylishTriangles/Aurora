@@ -30,6 +30,8 @@ private slots:
     void on_exitToMenuButton_clicked();
     void on_exitToSystemButton_clicked();
 
+    void on_optionsButton_clicked();
+
 public slots:
     void acceptFrame();
     void showPauseMenu();
@@ -37,6 +39,7 @@ public slots:
     void togglePauseMenu();
 
 signals:
+    void enterSettings();
     void quitGame();
     void quitAll();
     void unpause();

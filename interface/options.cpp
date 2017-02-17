@@ -87,7 +87,7 @@ void Options::on_pushButton_3_clicked()
 
 void Options::on_pushButton_4_clicked()
 {
-    this->hide();
+    //this->hide();
     emit submenuExit();
 }
 
