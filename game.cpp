@@ -273,32 +273,10 @@ void Game::mousePressEvent(QMouseEvent *event)
 {
     lastCursorPos = event->pos();
     if(event->button() & Qt::RightButton) {
-        if(stage==2) {
-            camPos = camPosDef + solarSystems[actSystem]->position;
-            camFront = camFrontDef;
-            camUp = camUpDef;
-            camRot = camRotDef;
-            stage=0;
-        }
+        keys+=(Qt::RightButton^mouseXor);
     }
     if(event->button() & Qt::LeftButton) {
-        if(stage==0) {
-            QVector3D ray_begin, ray_end, xyz_min, xyz_max;
-            float d;
-            screenPosToWorldRay(lastCursorPos.x(), this->height()-lastCursorPos.y(), this->width(), this->height(), viewMat, projectionMat, ray_begin, ray_end);
-            for(int i=0; i<solarSystems.size(); i++){
-                xyz_min=QVector3D(-1.0f, -1.0f, -1.0f)*solarSystems[i]->getScale();
-                xyz_max=QVector3D(1.0f, 1.0f, 1.0f)*solarSystems[i]->getScale();
-                if(testRayOBBIntersection(ray_begin, ray_end, xyz_min, xyz_max, solarSystems[i]->getModelMat(), d)) {
-                    camPos = camPosDef + solarSystems[i]->position;
-                    camFront = camFrontDef;
-                    camUp = camUpDef;
-                    camRot = camRotDef;
-                    actSystem=i;
-                    stage=2;
-                }
-            }
-        }
+        keys+=(Qt::LeftButton^mouseXor);
     }
 }
 
@@ -544,6 +522,39 @@ void Game::parseInput(float dT)
         camSpeed = 0.1f;
     else
         camSpeed = 0.05f; // default
+    if(keys.find(Qt::LeftButton^mouseXor) != keys.end()) {
+        if(stage==0) {
+            QVector3D ray_begin, ray_dir, xyz_min, xyz_max;
+            float d;
+            screenPosToWorldRay(lastCursorPos.x(), this->height()-lastCursorPos.y(), this->width(), this->height(), viewMat, projectionMat, ray_begin, ray_dir);
+            for(int i=0; i<solarSystems.size(); i++){
+                xyz_min=QVector3D(-1.0f, -1.0f, -1.0f)*solarSystems[i]->getScale();
+                xyz_max=QVector3D(1.0f, 1.0f, 1.0f)*solarSystems[i]->getScale();
+                if(testRayOBBIntersection(ray_begin, ray_dir, xyz_min, xyz_max, solarSystems[i]->getModelMat(), d)) {
+                    if(testRayPreciselyIntersection(*(mGeometry[solarSystems[i]->model+"1"]), ray_begin, ray_dir, solarSystems[i]->getModelMat(), 8, 0)){
+                        camPos = camPosDef + solarSystems[i]->position;
+                        camFront = camFrontDef;
+                        camUp = camUpDef;
+                        camRot = camRotDef;
+                        actSystem=i;
+                        stage=2;
+                    }
+                }
+            }
+        }
+        keys-=(Qt::LeftButton^mouseXor);
+    }
+    if(keys.find(Qt::RightButton^mouseXor) != keys.end()) {
+        if(stage==2) {
+            camPos = camPosDef + solarSystems[actSystem]->position;
+            camFront = camFrontDef;
+            camUp = camUpDef;
+            camRot = camRotDef;
+            stage=0;
+            actSystem=-1;
+        }
+        keys-=(Qt::RightButton^mouseXor);
+    }
     // roll
     float dx = 0.0f;
     if (keys.find(Qt::Key_Q) != keys.end())

@@ -120,3 +120,42 @@ bool testRayOBBIntersection(QVector3D ray_origin, QVector3D ray_direction, QVect
 	intersection_distance = tMin;
 	return true;
 }
+
+bool testRayPreciselyIntersection(const QVector<GLfloat> &geometry, QVector3D ray_origin,
+                                  QVector3D ray_direction, QMatrix4x4 ModelMatrix, int stride, int vertexPos)
+{
+    QVector3D a, b, p1, p2, p3, p4;
+    float t;
+    for(int i=vertexPos; i<geometry.size(); i+=3*stride) {
+        p1=QVector3D(geometry[i], geometry[i+1], geometry[i+2]);
+        p2=QVector3D(geometry[i+stride], geometry[i+1+stride], geometry[i+2+stride]);
+        p3=QVector3D(geometry[i+2*stride], geometry[i+1+2*stride], geometry[i+2+2*stride]);
+        p1=QVector3D(ModelMatrix*QVector4D(p1, 1.0f));
+        p2=QVector3D(ModelMatrix*QVector4D(p2, 1.0f));
+        p3=QVector3D(ModelMatrix*QVector4D(p3, 1.0f));
+        a=p2-p1;
+        b=p3-p1;
+        p4=QVector3D::crossProduct(a, b);
+        if((p4.x()*ray_direction.x()+p4.y()*ray_direction.y()+p4.z()*ray_direction.z())>0.001f ||
+                (p4.x()*ray_direction.x()+p4.y()*ray_direction.y()+p4.z()*ray_direction.z())<-0.001f) {
+            t=-(p4.x()*(ray_origin.x()-p1.x())+p4.y()*(ray_origin.y()-p1.y())+p4.z()*(ray_origin.z()-p1.z()))
+                    /(p4.x()*ray_direction.x()+p4.y()*ray_direction.y()+p4.z()*ray_direction.z());
+        }
+        else {
+            continue;
+        }
+        p4=ray_origin+t*ray_direction;
+        p4-=p1;
+        p2[0]=a.x()*b.y();
+        p2[1]=a.y()*b.x();
+        p2[2]=p2.x()-p2.y();
+        if(p2.z()>0.001f || p2.z()<-0.001f){
+            if((p4.x()*b.y()-b.x()*p4.y())/p2.z()>=0.0f && (p4.x()*b.y()-b.x()*p4.y())/p2.z()<=1.0f &&
+               (p4.y()*a.x()-a.y()*p4.x())/p2.z()>=0.0f && (p4.y()*a.x()-a.y()*p4.x())/p2.z()<=1.0f &&
+               (p4.y()*(a.x()-b.x())+p4.x()*(b.y()-a.y()))/p2.z()<=1.0f){
+               return true;
+            }
+        }
+    }
+    return false;
+}

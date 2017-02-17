@@ -100,6 +100,7 @@ private:
     QVector3D camRot;
     QVector3D lightPos;
     // input handling
+    const qint32 mouseXor = -1;
     QSet<qint32> keys;
     // settings
     QHash<QString, QString> mSettings;

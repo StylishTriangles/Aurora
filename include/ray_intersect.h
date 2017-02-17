@@ -2,6 +2,7 @@
 #define RAY_INTERSECT
 #include <QMatrix4x4>
 #include <QVector>
+#include <GL/gl.h>
 
 
 void screenPosToWorldRay(
@@ -20,6 +21,15 @@ bool testRayOBBIntersection(
     QVector3D aabb_max,          // Maximum X,Y,Z coords. Often aabb_min*-1 if your mesh is centered, but it's not always the case.
     QMatrix4x4 ModelMatrix,       // Transformation applied to the mesh (which will thus be also applied to its bounding box)
     float& intersection_distance // Output : distance between ray_origin and the intersection with the OBB
+);
+
+bool testRayPreciselyIntersection(
+    const QVector<GLfloat>& geometry,
+    QVector3D ray_origin,
+    QVector3D ray_direction,
+    QMatrix4x4 ModelMatrix,
+    int stride,
+    int vertexPos
 );
 
 #endif
