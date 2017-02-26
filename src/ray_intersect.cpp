@@ -121,7 +121,7 @@ bool testRayOBBIntersection(QVector3D ray_origin, QVector3D ray_direction, QVect
 	return true;
 }
 
-bool testRayPreciselyIntersection(const QVector<GLfloat> &geometry, QVector3D ray_origin,
+GLfloat testRayPreciselyIntersection(const QVector<GLfloat> &geometry, QVector3D ray_origin,
                                   QVector3D ray_direction, QMatrix4x4 ModelMatrix, int stride, int vertexPos)
 {
     QVector3D a, b, p1, p2, p3, p4;
@@ -153,9 +153,9 @@ bool testRayPreciselyIntersection(const QVector<GLfloat> &geometry, QVector3D ra
             if((p4.x()*b.y()-b.x()*p4.y())/p2.z()>=0.0f && (p4.x()*b.y()-b.x()*p4.y())/p2.z()<=1.0f &&
                (p4.y()*a.x()-a.y()*p4.x())/p2.z()>=0.0f && (p4.y()*a.x()-a.y()*p4.x())/p2.z()<=1.0f &&
                (p4.y()*(a.x()-b.x())+p4.x()*(b.y()-a.y()))/p2.z()<=1.0f){
-               return true;
+                return t;
             }
         }
     }
-    return false;
+    return -10e6;
 }

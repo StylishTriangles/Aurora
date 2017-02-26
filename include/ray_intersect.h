@@ -23,7 +23,7 @@ bool testRayOBBIntersection(
     float& intersection_distance // Output : distance between ray_origin and the intersection with the OBB
 );
 
-bool testRayPreciselyIntersection(
+GLfloat testRayPreciselyIntersection(
     const QVector<GLfloat>& geometry,
     QVector3D ray_origin,
     QVector3D ray_direction,

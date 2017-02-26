@@ -15,9 +15,12 @@
 #include <QResizeEvent>
 #include <QSet>
 #include <QVector>
+#include <QPair>
+#include <QtAlgorithms>
 #include "geometryprovider.h"
 #include "modelcontainer.h"
 #include "include/fileops.h"
+#include "include/mapgenerator.h"
 #include "include/ray_intersect.h"
 #include "interface/hud.h"
 

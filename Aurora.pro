@@ -21,7 +21,8 @@ SOURCES += main.cpp\
     modelcontainer.cpp \
     interface/hud.cpp \
     src/ray_intersect.cpp \
-    src/fileops.cpp
+    src/fileops.cpp \
+    src/mapgenerator.cpp
 
 HEADERS  += interface/mainwindow.h \
     interface/options.h \
@@ -30,7 +31,8 @@ HEADERS  += interface/mainwindow.h \
     modelcontainer.h \
     interface/hud.h \
     include/ray_intersect.h \
-    include/fileops.h
+    include/fileops.h \
+    include/mapgenerator.h
 
 FORMS    += interface/mainwindow.ui \
     interface/options.ui \
