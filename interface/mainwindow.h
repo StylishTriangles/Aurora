@@ -7,6 +7,9 @@
 #include "options.h"
 #include "game.h"
 #include "hud.h"
+#include "levels/arkanoid.h"
+
+using Aurora::ArkanoidWidget;
 
 namespace Ui {
 class MainWindow;
@@ -15,7 +18,6 @@ class MainWindow;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
@@ -34,13 +36,16 @@ private slots:
 
     void reload();
 
+    void on_minigameButton_clicked();
+
 private:
     void unloadGame(); // free Game's memory
 
     Ui::MainWindow *ui;
     Options* opt;
     Game* gameScr;
-    HUD* mHUD;
+    HUD* wHUD;
+    ArkanoidWidget* wArkanoid;
 
     // game related variables
     QThread* workerThread;

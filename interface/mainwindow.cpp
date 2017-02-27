@@ -8,8 +8,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     gameScr(nullptr),
-    mHUD(nullptr),
-    paintCounter(9000)
+    wHUD(nullptr),
+    paintCounter((long long)this)
 {
     ui->setupUi(this);
     opt = new Options(this);
@@ -50,6 +50,8 @@ void MainWindow::loadGameSettings()
 // protected slots
 void MainWindow::paintEvent(QPaintEvent *)
 {
+    if (ui->centralWidget->isHidden())
+        return;
     paintCounter++;
     paintCounter%=2513;
     this->setStyleSheet(QString("MainWindow:enabled {background-color:rgb(%1,%2,%3);}").arg(
@@ -67,7 +69,7 @@ void MainWindow::on_exitButton_clicked()
 void MainWindow::on_newGameButton_clicked()
 {
     gameScr = new Game(this);
-    mHUD = new HUD(gameScr);
+    wHUD = new HUD(gameScr);
     gameWorker = new GameWorker(gameScr);
     workerThread = new QThread;
     actionTimer = new QTimer;
@@ -76,13 +78,13 @@ void MainWindow::on_newGameButton_clicked()
     QObject::connect(actionTimer, SIGNAL(timeout(void)), gameWorker, SLOT(onTick(void)));
     QObject::connect(gameWorker, SIGNAL(frameReady(void)), gameScr, SLOT(update(void)));
     // connect signals from Game widget
-    QObject::connect(gameScr, SIGNAL(escPressed(void)), mHUD, SLOT(togglePauseMenu(void)));
+    QObject::connect(gameScr, SIGNAL(escPressed(void)), wHUD, SLOT(togglePauseMenu(void)));
     QObject::connect(gameScr, SIGNAL(paintCompleted(void)), gameWorker, SLOT(acceptFrame(void)));
-    QObject::connect(gameScr, SIGNAL(paintCompleted(void)), mHUD, SLOT(acceptFrame(void)));
+    QObject::connect(gameScr, SIGNAL(paintCompleted(void)), wHUD, SLOT(acceptFrame(void)));
     // connect signals from HUD
-    QObject::connect(mHUD, SIGNAL(quitAll(void)), this, SLOT(close(void)));
-    QObject::connect(mHUD, SIGNAL(quitGame(void)), this, SLOT(reload(void)));
-    QObject::connect(mHUD, SIGNAL(enterSettings(void)), opt, SLOT(show()));
+    QObject::connect(wHUD, SIGNAL(quitAll(void)), this, SLOT(close(void)));
+    QObject::connect(wHUD, SIGNAL(quitGame(void)), this, SLOT(reload(void)));
+    QObject::connect(wHUD, SIGNAL(enterSettings(void)), opt, SLOT(show()));
 
     actionTimer->start(tickDelayMs);
     actionTimer->moveToThread(workerThread);
@@ -122,4 +124,13 @@ void MainWindow::unloadGame()
         gameScr = nullptr;
     }
 
+}
+
+void MainWindow::on_minigameButton_clicked()
+{
+    wArkanoid = new ArkanoidWidget(this);
+    wololoTimer.stop();
+    wArkanoid->show();
+    ui->centralWidget->hide();
+    wArkanoid->start();
 }

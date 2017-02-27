@@ -469,10 +469,10 @@ text-align: center;</string>
    <widget class="QFrame" name="frame">
     <property name="geometry">
      <rect>
-      <x>570</x>
-      <y>230</y>
-      <width>161</width>
-      <height>221</height>
+      <x>540</x>
+      <y>220</y>
+      <width>201</width>
+      <height>261</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -511,6 +511,34 @@ border-color: Black;
      <enum>QFrame::Raised</enum>
     </property>
     <layout class="QGridLayout" name="gridLayout">
+     <item row="1" column="0">
+      <widget class="QPushButton" name="minigameButton">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font">
+        <font>
+         <family>Leelawadee UI</family>
+         <pointsize>-1</pointsize>
+         <weight>50</weight>
+         <italic>false</italic>
+         <bold>false</bold>
+        </font>
+       </property>
+       <property name="focusPolicy">
+        <enum>Qt::NoFocus</enum>
+       </property>
+       <property name="text">
+        <string>Minigame</string>
+       </property>
+      </widget>
+     </item>
      <item row="0" column="0">
       <widget class="QPushButton" name="newGameButton">
        <property name="enabled">
@@ -539,7 +567,7 @@ border-color: Black;
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
+     <item row="4" column="0">
       <widget class="QPushButton" name="optionsButton">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
@@ -564,7 +592,7 @@ border-color: Black;
        </property>
       </widget>
      </item>
-     <item row="3" column="0">
+     <item row="5" column="0">
       <widget class="QPushButton" name="exitButton">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
@@ -589,7 +617,7 @@ border-color: Black;
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
+     <item row="2" column="0">
       <spacer name="verticalSpacer">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
