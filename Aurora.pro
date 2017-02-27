@@ -23,7 +23,8 @@ SOURCES += main.cpp\
     src/ray_intersect.cpp \
     src/fileops.cpp \
     src/neural.cpp \
-    levels/arkanoid.cpp
+    levels/arkanoid.cpp \
+    src/mapgenerator.cpp
 
 HEADERS  += interface/mainwindow.h \
     interface/options.h \
@@ -34,7 +35,8 @@ HEADERS  += interface/mainwindow.h \
     include/ray_intersect.h \
     include/fileops.h \
     include/neural.h \
-    levels/arkanoid.h
+    levels/arkanoid.h \
+    include/mapgenerator.h
 
 FORMS    += interface/mainwindow.ui \
     interface/options.ui \

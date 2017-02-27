@@ -20,7 +20,7 @@ public:
     };
 
     explicit ModelContainer(ModelContainer* _parent = nullptr):parent(_parent){}
-    ModelContainer(QVector3D _relativePos, QVector3D _relativeRot, QString _model, QString _tex,  QOpenGLShaderProgram* _shader=nullptr, Type _t=Generic);
+    ModelContainer(QVector3D _relativePos, QVector3D _relativeRot, QString _model, QString _tex, Type _t=Generic);
     ~ModelContainer();
 
     void addChild(ModelContainer & m);
@@ -36,7 +36,6 @@ public:
     QVector3D position, rotation;
     QString model;
     QString tex;
-    QOpenGLShaderProgram* shader;
     Type type;
     QVector3D scale;
     QVector<ModelContainer*> children;

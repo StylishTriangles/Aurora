@@ -10,7 +10,7 @@ Game::Game(QWidget *parent) :
     camFov(60.0f), camNear(0.01f), camFar(100.0f),
     camRot(camRotDef),
     lightPos(0.0f, -0.0f, 0.0f),
-    stage(2), actSystem(0),
+    stage(0), actSystem(-1),
     cnt(0)
 {
     // load settings
@@ -96,38 +96,9 @@ void Game::initializeGL()
     loadTextures();
 
     // make models
-    galaxyMap = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "skybox", planetsProgram, ModelContainer::Skybox);
+    galaxyMap = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "skybox", ModelContainer::Skybox);
     galaxyMap->setScale(50.0f);
-    solarSystems.push_back(new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "earth", lightsProgram, ModelContainer::Star));
-    ModelContainer* tmpM = new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", planetsProgram, ModelContainer::Skybox);
-    tmpM->setScale(50.0f);
-    solarSystems.back()->addChild(tmpM);
-    tmpM = new ModelContainer({3.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "earth", planetsProgram, ModelContainer::Planet);
-    tmpM->setScale(0.1f);
-    ModelContainer* tmpM2 = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "atmosphere", planetsProgram, ModelContainer::Planet);
-    tmpM2->setScale(1.01f);
-    tmpM->addChild(tmpM2);
-    tmpM2 = new ModelContainer({0.2f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "moon", planetsProgram, ModelContainer::Moon);
-    tmpM2->setScale(0.1f);
-    tmpM->addChild(tmpM2);
-    solarSystems.back()->addChild(tmpM);
-    tmpM = new ModelContainer({4.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "titan", "earth", planetsProgram, ModelContainer::Titan);
-    tmpM->setScale(0.1f);
-    solarSystems.back()->addChild(tmpM);
-
-    solarSystems.push_back(new ModelContainer({3.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "earth", lightsProgram, ModelContainer::Star));
-    tmpM = new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", planetsProgram, ModelContainer::Skybox);
-    tmpM->setScale(50.0f);
-    solarSystems.back()->addChild(tmpM);
-    tmpM = new ModelContainer({3.5f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "earth", planetsProgram, ModelContainer::Planet);
-    tmpM->setScale(0.1f);
-    tmpM2 = new ModelContainer({0.3f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "moon", planetsProgram, ModelContainer::Moon);
-    tmpM2->setScale(0.1f);
-    tmpM->addChild(tmpM2);
-    tmpM2 = new ModelContainer({0.4f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "moon", planetsProgram, ModelContainer::Moon);
-    tmpM2->setScale(0.1f);
-    tmpM->addChild(tmpM2);
-    solarSystems.back()->addChild(tmpM);
+    generateSolarSystems(solarSystems);
 
     initComplete = true;
 
@@ -312,11 +283,25 @@ void Game::wheelEvent(QWheelEvent *event)
     QPoint numDegrees = event->angleDelta();
     if (!numPixels.isNull())
     {
-        camPos += camSpeed*float(numPixels.y()) * camFront;
+        if(stage==0) {
+            if((camPos+camSpeed*float(numPixels.y()) * camFront).length()<49)
+            camPos += camSpeed*float(numPixels.y()) * camFront;
+        }
+        else {
+            if((camPos+camSpeed*float(numPixels.y()) * camFront - solarSystems[actSystem]->position).length()<49)
+            camPos += camSpeed*float(numPixels.y()) * camFront;
+        }
     }
     else
     {
-        camPos += camSpeed*float(numDegrees.y())/100.0f * camFront;
+        if(stage==0) {
+            if((camPos+camSpeed*float(numDegrees.y())/100.0f * camFront).length()<49)
+            camPos += camSpeed*float(numDegrees.y())/100.0f * camFront;
+        }
+        else {
+            if((camPos+camSpeed*float(numDegrees.y())/100.0f * camFront - solarSystems[actSystem]->position).length()<49)
+            camPos += camSpeed*float(numDegrees.y())/100.0f * camFront;
+        }
     }
     event->accept();
 }
@@ -524,6 +509,7 @@ void Game::parseInput(float dT)
         camSpeed = 0.05f; // default
     if(keys.find(Qt::LeftButton^mouseXor) != keys.end()) {
         if(stage==0) {
+            QVector<QPair<GLfloat, int> > collisions;
             QVector3D ray_begin, ray_dir, xyz_min, xyz_max;
             float d;
             screenPosToWorldRay(lastCursorPos.x(), this->height()-lastCursorPos.y(), this->width(), this->height(), viewMat, projectionMat, ray_begin, ray_dir);
@@ -531,15 +517,19 @@ void Game::parseInput(float dT)
                 xyz_min=QVector3D(-1.0f, -1.0f, -1.0f)*solarSystems[i]->getScale();
                 xyz_max=QVector3D(1.0f, 1.0f, 1.0f)*solarSystems[i]->getScale();
                 if(testRayOBBIntersection(ray_begin, ray_dir, xyz_min, xyz_max, solarSystems[i]->getModelMat(), d)) {
-                    if(testRayPreciselyIntersection(*(mGeometry[solarSystems[i]->model+"1"]), ray_begin, ray_dir, solarSystems[i]->getModelMat(), 8, 0)){
-                        camPos = camPosDef + solarSystems[i]->position;
-                        camFront = camFrontDef;
-                        camUp = camUpDef;
-                        camRot = camRotDef;
-                        actSystem=i;
-                        stage=2;
-                    }
+                    collisions.push_back({testRayPreciselyIntersection(*(mGeometry[solarSystems[i]->model+"1"]), ray_begin, ray_dir, solarSystems[i]->getModelMat(), 8, 0), i});
+                    if(collisions[collisions.size()-1].first<=-10e6+0.0001 && collisions[collisions.size()-1].first>=-10e6-0.0001)
+                        collisions.pop_back();
                 }
+            }
+            if(collisions.size()!=0){
+                qSort(collisions.begin(), collisions.end());
+                camPos = camPosDef + solarSystems[collisions[0].second]->position;
+                camFront = camFrontDef;
+                camUp = camUpDef;
+                camRot = camRotDef;
+                actSystem=collisions[0].second;
+                stage=2;
             }
         }
         keys-=(Qt::LeftButton^mouseXor);

@@ -1,10 +1,10 @@
 #include "modelcontainer.h"
 
-ModelContainer::ModelContainer(QVector3D _pos, QVector3D _rot, QString _model, QString _tex, QOpenGLShaderProgram* _shader, Type _t) :
+ModelContainer::ModelContainer(QVector3D _pos, QVector3D _rot, QString _model, QString _tex, Type _t) :
     parent(nullptr),
     scale(1.0f,1.0f,1.0f)
 {
-    position=_pos;rotation=_rot;tex=_tex;shader=_shader;model=_model;type=_t;
+    position=_pos;rotation=_rot;tex=_tex;model=_model;type=_t;
 }
 
 ModelContainer::~ModelContainer()
