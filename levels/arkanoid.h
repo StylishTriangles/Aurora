@@ -44,7 +44,9 @@ public:
     const int DEF_HEIGHT = 720;
     const int BUCKET_WIDTH = (DEF_WIDTH+4)/8;
     const int BUCKET_HEIGHT = (DEF_HEIGHT+4)/8;
+    const int NEURAL_NET_INPUT_RADIUS = 40;
     void start();
+    void runAsNeuralNetwork();
 
 protected:
     void paintEvent(QPaintEvent *) Q_DECL_OVERRIDE;
@@ -71,9 +73,19 @@ private:
     int lives;
     int vx;
     int ballVy, ballVx;
+    int maxVx, maxVy;
+    int score;
+    int scoreMult;
+    int totalBricks;
+    int msTimeLimit;
+    int constTickTime; // only used in neural mode used to simulate 10 ms frames
+    int tickCount;
+    int tickCountLimit;
+    bool neuralMode;
     bool keyLT, keyRT;
     bool gameOver;
-
+    bool userTerminate;
+    bool debugNeuralInputs;
 };
 
 } // Aurora

@@ -33,8 +33,21 @@ void ArkanoidWidget::paintEvent(QPaintEvent *)
             p.drawRect(QRect(ab->pos+deltaPos,ab->size-deltaSz));
         }
     }
-    p.drawRect(QRect(vausPos,vausSize));
+    p.drawRoundedRect(QRect(vausPos,vausSize),9,9);
     p.drawEllipse(ballPos,ballRadius,ballRadius);
+    if (debugNeuralInputs) {
+        QPen pen(QColor(255,0,0));
+        pen.setWidth(1);
+        p.setPen(pen);
+        p.setBrush(QColor(0,0,0,0));
+        for (int i = 0; i < DEF_WIDTH; i += NEURAL_NET_INPUT_RADIUS)
+        {
+            for (int j = 0; j < DEF_HEIGHT; j+= NEURAL_NET_INPUT_RADIUS)
+            {
+                p.drawRect(i,j,NEURAL_NET_INPUT_RADIUS,NEURAL_NET_INPUT_RADIUS);
+            }
+        }
+    }
 }
 
 void ArkanoidWidget::keyPressEvent(QKeyEvent *qke)
@@ -43,6 +56,8 @@ void ArkanoidWidget::keyPressEvent(QKeyEvent *qke)
         keyLT = true;
     if (qke->key() == Qt::Key_Right)
         keyRT = true;
+    if (qke->key() == Qt::Key_Escape)
+        userTerminate = true;
 }
 
 void ArkanoidWidget::keyReleaseEvent(QKeyEvent *qke)
@@ -83,25 +98,73 @@ void ArkanoidWidget::levelGen(int id)
                 vec.push_back(new ArkanoidBrick(
                                   brush, pen,
                                   QSize(80,40), QPoint(j,hbegin+i*40), 1));
+                totalBricks++;
             }
         }
     }
+
+
 }
 
-void ArkanoidWidget::onTick()
+void ArkanoidWidget::onTick() // 10 msec ticks for best gameplay
 {
+    tickCount++;
     qint64 tempT = elt.elapsed();
     int dt = (tempT - tx);
+    if (neuralMode)
+        dt = constTickTime;
     tx = tempT;
+    int actualVx = 0;
     if (keyLT)
-        vausPos.rx() -= dt*vx/1000;
+        actualVx -= dt*vx/1000;
     if (keyRT)
-        vausPos.rx() += dt*vx/1000;
+        actualVx += dt*vx/1000;
+    vausPos.rx() += actualVx;
+
+    int ballTop = ballPos.y()-ballRadius;
+    int ballLeft = ballPos.x()-ballRadius;
+    int ballRight = ballPos.x()+ballRadius;
+    int ballBottom = ballPos.y()+ballRadius;
+    for (ArkanoidBrick* b: vec) {
+        if (!b->destroyed) {
+            if(ballPos.x() > b->pos.x() and ballPos.x() < b->pos.x()+b->size.width() and
+                    ((ballTop < b->pos.y()+b->size.height() and ballTop > b->pos.y()) or
+                        (ballBottom > b->pos.y() and ballBottom < b->pos.y()+b->size.height()))){
+                ballVy *= -1;
+                if (--(b->tgh) == 0)
+                    b->destroyed = true;
+                score+=scoreMult;
+            }
+            if (ballPos.y() > b->pos.y() and ballPos.y() < b->pos.y()+b->size.height() and
+                    ((ballRight > b->pos.x() and ballRight < b->pos.x()+b->size.width()) or
+                     (ballLeft > b->pos.x() and ballLeft < b->pos.x()+b->size.width()))) {
+                ballVx *= -1;
+                if (--(b->tgh) == 0)
+                    b->destroyed = true;
+                score+=scoreMult;
+            }
+        }
+    }
+    // game ending conditions
+    if (ballPos.y() > vausPos.y() or score == totalBricks*scoreMult or elt.elapsed() > msTimeLimit or (tickCount >= tickCountLimit and neuralMode))
+        gameOver = true;
+
+    if (ballVy > 0 and ballBottom > vausPos.y() and ballRight > vausPos.x() and ballLeft < vausPos.x()+vausSize.width()) {
+        ballVy*=-1;
+        ballVx += (ballPos.x()-(vausPos.x()+vausSize.width()/2))*5;
+    }
+    if (ballVx > maxVx)
+        ballVx = maxVx;
+    if (ballVx < -maxVx)
+        ballVx = -maxVx;
 
     ballPos.rx() += dt*ballVx/1000;
     ballPos.ry() += dt*ballVy/1000;
-    if (ballPos.y() > DEF_HEIGHT)
-        gameOver = true;
+
+    if (vausPos.x() > DEF_WIDTH-40-vausSize.width())
+        vausPos.setX(DEF_WIDTH-40-vausSize.width());
+    if (vausPos.x() < 40)
+        vausPos.setX(40);
 }
 
 void ArkanoidWidget::reset()
@@ -115,11 +178,23 @@ void ArkanoidWidget::reset()
     ballPos.ry() -= ballRadius;
     ballPos.rx() += vausSize.width()/2;
     vx = 360;
-    levelGen(0);
+    maxVx = 240;
+    maxVy = 240;
     lives = 1;
     keyLT = false;
     keyRT = false;
     gameOver = false;
+    neuralMode = false;
+    userTerminate = false;
+    debugNeuralInputs = true;
+    score = 0;
+    scoreMult = 10000;
+    totalBricks = 0;
+    msTimeLimit = 420000; // 7 minutes
+    constTickTime = 10;
+    tickCount = 0;
+    tickCountLimit = msTimeLimit/constTickTime;
+    levelGen(0);
     tx = elt.elapsed();
 }
 
@@ -132,8 +207,27 @@ void ArkanoidWidget::start()
     QObject::connect(&tle, SIGNAL(timeout()), this, SLOT(update()));
     tle.start(10);
     elt.restart();
-    ballVx = (rng()%5-2)*200;
-    ballVy = -120;
+    ballVx = rng()%maxVx-maxVx/2;
+    ballVy = -maxVy;
+}
+
+void ArkanoidWidget::runAsNeuralNetwork()
+{
+    this->setFocus();
+    std::mt19937 rng(elt.nsecsElapsed());
+    tle.start(10); // now only used for refreshing the window
+    //QObject::connect(&tle, SIGNAL(timeout()), this, SLOT(onTick()));
+    QObject::connect(&tle, SIGNAL(timeout()), this, SLOT(update()));
+    neuralMode = true;
+    // le loop
+    while (!userTerminate) {
+        reset();
+        ballVx = rng()%maxVx-maxVx/2;
+        ballVy = -maxVy;
+        elt.restart();
+        while (!gameOver) {
+        }
+    }
 }
 
 }
