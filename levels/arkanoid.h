@@ -5,6 +5,7 @@
 #include <QElapsedTimer>
 #include <QHash>
 #include <QKeyEvent>
+#include <QLabel>
 #include <QPainter>
 #include <QPaintEvent>
 #include <QPair>
@@ -13,6 +14,7 @@
 #include <QTimer>
 #include <QVector>
 #include <QWidget>
+#include "include/neural.h"
 
 namespace Aurora {
 struct ArkanoidBrick
@@ -52,18 +54,30 @@ protected:
     void paintEvent(QPaintEvent *) Q_DECL_OVERRIDE;
     void keyPressEvent(QKeyEvent *qke) Q_DECL_OVERRIDE;
     void keyReleaseEvent(QKeyEvent *qke) Q_DECL_OVERRIDE;
-
 private:
+    void setNeuralInputs();
     void levelGen(int id = 0);
 
 private slots:
     void onTick();
+    void neuroTick();
     void reset();
 
 private:
+    struct NeuralState {
+        NeuralState() :
+            generation(0), population(defPopulation), index(0) {}
+        int generation;
+        int population;
+        int index;
+        static const int defPopulation = 500;
+    };
+    NeuralState nst;
     QVector<ArkanoidBrick*> vec;
+    QVector<QVector<double>> neuralInputs;
+    QVector<Aurora::NeuralNetwork> vnn;
     QElapsedTimer elt;
-    QTimer tle;
+    QTimer tle, vft; // VeryFastTimer
     qint64 tx;
     QPoint ballPos;
     QPoint vausPos;
@@ -86,6 +100,9 @@ private:
     bool gameOver;
     bool userTerminate;
     bool debugNeuralInputs;
+    bool normalSpeed;
+    bool initialized;
+    bool resetting;
 };
 
 } // Aurora

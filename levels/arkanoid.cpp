@@ -1,6 +1,7 @@
 #include <random>
 #include <QDebug>
 #include <QPainter>
+#include <QtAlgorithms>
 #include "arkanoid.h"
 
 namespace Aurora {
@@ -39,12 +40,18 @@ void ArkanoidWidget::paintEvent(QPaintEvent *)
         QPen pen(QColor(255,0,0));
         pen.setWidth(1);
         p.setPen(pen);
-        p.setBrush(QColor(0,0,0,0));
-        for (int i = 0; i < DEF_WIDTH; i += NEURAL_NET_INPUT_RADIUS)
+        for (int i = 0; i < DEF_HEIGHT; i += NEURAL_NET_INPUT_RADIUS)
         {
-            for (int j = 0; j < DEF_HEIGHT; j+= NEURAL_NET_INPUT_RADIUS)
+            for (int j = 0; j < DEF_WIDTH; j+= NEURAL_NET_INPUT_RADIUS)
             {
-                p.drawRect(i,j,NEURAL_NET_INPUT_RADIUS,NEURAL_NET_INPUT_RADIUS);
+                const int &NNIR = NEURAL_NET_INPUT_RADIUS;
+                if (neuralInputs[i/NNIR][j/NNIR] == 2.0)
+                    p.setBrush(QColor(0,0,0));
+                else if (neuralInputs[i/NNIR][j/NNIR] == 1.0)
+                    p.setBrush(QColor(255,255,255));
+                else
+                    p.setBrush(QColor(0,0,0,0));
+                p.drawRect(j,i,NEURAL_NET_INPUT_RADIUS,NEURAL_NET_INPUT_RADIUS);
             }
         }
     }
@@ -52,12 +59,25 @@ void ArkanoidWidget::paintEvent(QPaintEvent *)
 
 void ArkanoidWidget::keyPressEvent(QKeyEvent *qke)
 {
-    if (qke->key() == Qt::Key_Left)
+    if (qke->key() == Qt::Key_Left and !neuralMode)
         keyLT = true;
-    if (qke->key() == Qt::Key_Right)
+    if (qke->key() == Qt::Key_Right and !neuralMode)
         keyRT = true;
     if (qke->key() == Qt::Key_Escape)
         userTerminate = true;
+    if (qke->key() == Qt::Key_N and neuralMode) {
+        if (normalSpeed) {
+            QObject::disconnect(&tle, SIGNAL(timeout()), this, SLOT(neuroTick()));
+            QObject::connect(&vft, SIGNAL(timeout()), this, SLOT(neuroTick()));
+        }
+        else {
+            QObject::disconnect(&vft, SIGNAL(timeout()), this, SLOT(neuroTick()));
+            QObject::connect(&tle, SIGNAL(timeout()), this, SLOT(neuroTick()));
+        }
+        normalSpeed ^= 1;
+    }
+    if (qke->key() == Qt::Key_D)
+        debugNeuralInputs ^= 1;
 }
 
 void ArkanoidWidget::keyReleaseEvent(QKeyEvent *qke)
@@ -66,6 +86,24 @@ void ArkanoidWidget::keyReleaseEvent(QKeyEvent *qke)
         keyLT^=keyLT;
     if (qke->key() == Qt::Key_Right)
         keyRT^=keyRT;
+}
+
+void ArkanoidWidget::setNeuralInputs()
+{
+    for (auto& vtop: neuralInputs)
+        for (double& rval: vtop)
+            rval = 0.0;
+    for (ArkanoidBrick* b: vec) {
+        if (!b->destroyed) {
+            for (int i = 0; i < b->size.height(); i+= NEURAL_NET_INPUT_RADIUS)
+                for (int j = 0; j < b->size.width(); j+= NEURAL_NET_INPUT_RADIUS)
+                    neuralInputs[(b->pos.y()+i)/NEURAL_NET_INPUT_RADIUS][(b->pos.x()+j)/NEURAL_NET_INPUT_RADIUS] = (b->tgh<0)?2.0:1.0;
+        }
+    }
+    neuralInputs[ballPos.y()/NEURAL_NET_INPUT_RADIUS][ballPos.x()/NEURAL_NET_INPUT_RADIUS] = 2.0;
+    for (int i = 0; i < vausSize.width(); i+=NEURAL_NET_INPUT_RADIUS) {
+        neuralInputs[vausPos.y()/NEURAL_NET_INPUT_RADIUS][(vausPos.x()+i+NEURAL_NET_INPUT_RADIUS/2)/NEURAL_NET_INPUT_RADIUS] = 2.0;
+    }
 }
 
 void ArkanoidWidget::levelGen(int id)
@@ -165,10 +203,37 @@ void ArkanoidWidget::onTick() // 10 msec ticks for best gameplay
         vausPos.setX(DEF_WIDTH-40-vausSize.width());
     if (vausPos.x() < 40)
         vausPos.setX(40);
+    if (neuralMode or true)
+        setNeuralInputs();
+}
+
+void ArkanoidWidget::neuroTick()
+{
+    std::mt19937 rng(elt.nsecsElapsed());
+    if (gameOver) {
+        reset();
+        setNeuralInputs();
+        ballVx = rng()%maxVx-maxVx/2;
+        ballVy = -maxVy;
+        nst.index++;
+    }
+    if (nst.index >= nst.population)
+    {
+        /// REPRODUCE NEURAL NETS ETC
+        ///
+        ///
+        /// ******
+        nst.index = 0;
+        nst.generation++;
+    }
+
+    onTick();
 }
 
 void ArkanoidWidget::reset()
 {
+    Q_ASSERT(!(DEF_WIDTH%NEURAL_NET_INPUT_RADIUS));
+    Q_ASSERT(!(DEF_HEIGHT%NEURAL_NET_INPUT_RADIUS));
     vausPos.setY(this->height()-100);
     vausPos.setX(this->width()/2);
     vausPos = QPoint(DEF_WIDTH/2-40, DEF_HEIGHT-120);
@@ -181,12 +246,6 @@ void ArkanoidWidget::reset()
     maxVx = 240;
     maxVy = 240;
     lives = 1;
-    keyLT = false;
-    keyRT = false;
-    gameOver = false;
-    neuralMode = false;
-    userTerminate = false;
-    debugNeuralInputs = true;
     score = 0;
     scoreMult = 10000;
     totalBricks = 0;
@@ -194,8 +253,22 @@ void ArkanoidWidget::reset()
     constTickTime = 10;
     tickCount = 0;
     tickCountLimit = msTimeLimit/constTickTime;
+    keyLT = false;
+    keyRT = false;
+    gameOver = false;
+    if (!initialized) {
+        neuralMode = false;
+        userTerminate = false;
+        debugNeuralInputs = true;
+        normalSpeed = false;
+        neuralInputs.resize(DEF_HEIGHT/NEURAL_NET_INPUT_RADIUS);
+        for (auto& vtop: neuralInputs)
+            vtop.resize(DEF_WIDTH/NEURAL_NET_INPUT_RADIUS);
+    }
     levelGen(0);
+    elt.restart();
     tx = elt.elapsed();
+    initialized = true;
 }
 
 void ArkanoidWidget::start()
@@ -213,21 +286,13 @@ void ArkanoidWidget::start()
 
 void ArkanoidWidget::runAsNeuralNetwork()
 {
+    neuralMode = true;
     this->setFocus();
-    std::mt19937 rng(elt.nsecsElapsed());
     tle.start(10); // now only used for refreshing the window
+    vft.start(0);
     //QObject::connect(&tle, SIGNAL(timeout()), this, SLOT(onTick()));
     QObject::connect(&tle, SIGNAL(timeout()), this, SLOT(update()));
-    neuralMode = true;
-    // le loop
-    while (!userTerminate) {
-        reset();
-        ballVx = rng()%maxVx-maxVx/2;
-        ballVy = -maxVy;
-        elt.restart();
-        while (!gameOver) {
-        }
-    }
+    QObject::connect(&tle, SIGNAL(timeout()), this, SLOT(neuroTick()));
 }
 
 }
