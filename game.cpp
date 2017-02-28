@@ -99,6 +99,8 @@ void Game::initializeGL()
     galaxyMap = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "skybox", ModelContainer::Skybox);
     galaxyMap->setScale(50.0f);
     generateSolarSystems(solarSystems);
+    mGeometry["edges"] = new QVector<float>();
+    generateEdges(solarSystems, edges, *mGeometry["edges"], *mGeometry["geosphere1"], 2*solarSystems.size());
 
     initComplete = true;
 
@@ -219,6 +221,17 @@ void Game::drawOrbit(ModelContainer* mod) {
     glDrawArrays(GL_LINE_LOOP, 0, 720);
 }
 
+void Game::drawEdges() {
+    planeGeoProgram->bind();
+    planeGeoProgram->setUniformValue("vp", projectionMat*viewMat);
+    planeGeoProgram->setUniformValue("modelMat", QMatrix4x4());
+    mVbo["edges"].bind();
+    this->glEnableVertexAttribArray(0);
+    this->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid*)0);
+
+    glDrawArrays(GL_LINES, 0, mGeometry["edges"]->size());
+}
+
 void Game::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -230,6 +243,7 @@ void Game::paintGL()
         drawModel(galaxyMap);
         for(int i=0; i<solarSystems.size(); i++)
             drawModel(solarSystems[i]);
+        drawEdges();
     }
     else if(stage==1) { //bitwa
 
@@ -523,7 +537,7 @@ void Game::parseInput(float dT)
                 }
             }
             if(collisions.size()!=0){
-                qSort(collisions.begin(), collisions.end());
+                std::sort(collisions.begin(), collisions.end());
                 camPos = camPosDef + solarSystems[collisions[0].second]->position;
                 camFront = camFrontDef;
                 camUp = camUpDef;

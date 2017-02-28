@@ -16,7 +16,9 @@
 #include <QSet>
 #include <QVector>
 #include <QPair>
-#include <QtAlgorithms>
+
+#include <algorithm>
+
 #include "geometryprovider.h"
 #include "modelcontainer.h"
 #include "include/fileops.h"
@@ -70,6 +72,7 @@ protected:
     void keyReleaseEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
     void drawModel(ModelContainer* mod);
     void drawOrbit(ModelContainer* mod);
+    void drawEdges();
 
     void loadTextures();
     void loadShaders();
@@ -93,6 +96,7 @@ private:
 
     QHash<QString, QOpenGLTexture*> textures;
     QVector<ModelContainer*> solarSystems;
+    QVector<QVector<int> > edges;
     ModelContainer* galaxyMap;
     // current camera rotation and position
     float camSpeed, rotationSpeed;
