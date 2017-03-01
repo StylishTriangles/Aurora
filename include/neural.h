@@ -50,6 +50,8 @@ public:
     void clone(const NeuralNetwork& source);
     int size() {return vn.size();}
     void run();
+
+    void setInput(int index, double val) {inData[index] = val;}
 protected:
     void mutateWeights(Neuron& n);
 protected:
@@ -57,6 +59,7 @@ protected:
     vec<Neuron> vn;
     vec<int> input;
     vec<int> out;
+    vec<double> inData;
     vec<double> outData;
     vec<vec<int>> lvls;
     int uniqueID;

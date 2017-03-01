@@ -104,6 +104,11 @@ void ArkanoidWidget::setNeuralInputs()
     for (int i = 0; i < vausSize.width(); i+=NEURAL_NET_INPUT_RADIUS) {
         neuralInputs[vausPos.y()/NEURAL_NET_INPUT_RADIUS][(vausPos.x()+i+NEURAL_NET_INPUT_RADIUS/2)/NEURAL_NET_INPUT_RADIUS] = 2.0;
     }
+    for (int i = 0; i < neuralInputs.size(); i++) {
+        for (int j = 0; j < neuralInputs[i].size(); j++) {
+           vnn[nst.index].setInput(i*neuralInputs.size()+j, neuralInputs[i][j]);
+        }
+    }
 }
 
 void ArkanoidWidget::levelGen(int id)
@@ -264,6 +269,9 @@ void ArkanoidWidget::reset()
         neuralInputs.resize(DEF_HEIGHT/NEURAL_NET_INPUT_RADIUS);
         for (auto& vtop: neuralInputs)
             vtop.resize(DEF_WIDTH/NEURAL_NET_INPUT_RADIUS);
+        vnn.resize(nst.population);
+        for (auto& rnn: vnn)
+            rnn.create(neuralInputs.size()*DEF_WIDTH/NEURAL_NET_INPUT_RADIUS,2,1,42);
     }
     levelGen(0);
     elt.restart();
