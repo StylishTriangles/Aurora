@@ -70,15 +70,17 @@ private:
         int generation;
         int population;
         int index;
-        static const int defPopulation = 500;
+        static const int defPopulation = 800;
     };
+    std::mt19937 rng;
     NeuralState nst;
     QVector<ArkanoidBrick*> vec;
     QVector<QVector<double>> neuralInputs;
-    QVector<Aurora::NeuralNetwork> vnn;
+    QVector<Aurora::NeuralNetwork*> vnn;
     QElapsedTimer elt;
     QTimer tle, vft; // VeryFastTimer
     qint64 tx;
+    QLabel qlGen, qlIndex, qlScore;
     QPoint ballPos;
     QPoint vausPos;
     QSize vausSize;

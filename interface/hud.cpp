@@ -20,7 +20,7 @@ HUD::~HUD()
 }
 
 // protected
-void HUD::resizeEvent(QResizeEvent *r)
+void HUD::resizeEvent(QResizeEvent *)
 {
     // !TODO resize all ui elements
 }
