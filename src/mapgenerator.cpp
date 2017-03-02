@@ -5,9 +5,9 @@
 void generateSolarSystems(QVector<ModelContainer *> &solarSystems){
     std::mt19937 rng((long long int)(new int(75192)));
     std::uniform_real_distribution<float> ufd(-20.0f, 20.0f), eps(-0.1f, 0.1f), alfa(0.0f, 2*M_PI);
-    std::uniform_int_distribution<int> uid(1, 6);
+    std::uniform_int_distribution<int> uid(1, 6), luid(1, 1000);
     GLfloat x, y;
-    int planetsInSystem;
+    int planetsInSystem, p;
     ModelContainer* tmpM, *tmpM2;
     for(int i=0; i<10; i++){ //generate stars
         x=ufd(rng);
@@ -28,7 +28,11 @@ void generateSolarSystems(QVector<ModelContainer *> &solarSystems){
     for(int i=0; i<10; i++){ //generate planets in systems
         planetsInSystem=uid(rng);
         for(int j=0; j<planetsInSystem; j++){
+            p=luid(rng);
+            if(p>=500)
             addTerranPlanet(solarSystems[i], rng, eps, alfa, j);
+            else
+            addTitan(solarSystems[i], rng, eps, alfa, j);
         }
     }
     /*solarSystems.push_back(new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "earth", ModelContainer::Star));
@@ -132,28 +136,59 @@ void generateEdges(QVector<ModelContainer *> &solarSystems, QVector<QVector<int>
     }
 }
 
-void addTerranPlanet(ModelContainer* mod, std::mt19937& rng, std::uniform_real_distribution<float> &eps, std::uniform_real_distribution<float> &alfa, int idx){
-    ModelContainer *tmpM2, * tmp= new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "earth", ModelContainer::Planet);
-    std::uniform_int_distribution<int> uid(1, 10);
+void addMoon(ModelContainer* mod, std::mt19937& rng, std::uniform_real_distribution<float> &eps, std::uniform_real_distribution<float> &alfa){
     float d, x, y;
-    int p=uid(rng);
+    d=2.0f+eps(rng);
+    x=alfa(rng);
+    ModelContainer* tmp= new ModelContainer({d*sinf(x), d*cosf(x), 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "moon", ModelContainer::Moon);
+    y=eps(rng)+0.2f;
+    tmp->setScale(y);
+    mod->addChild(tmp);
+}
+
+void addAtmo(ModelContainer* mod){
+    ModelContainer* tmp= new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "atmosphere", ModelContainer::Planet);
+    tmp->setScale(1.01f);
+    mod->addChild(tmp);
+}
+
+void addTitan(ModelContainer* mod, std::mt19937& rng, std::uniform_real_distribution<float> &eps, std::uniform_real_distribution<float> &alfa, int idx){
+    ModelContainer* tmp= new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "earth", ModelContainer::Titan);
+    std::uniform_int_distribution<int> uid(1, 10);
+    float d, x;
     d=2*idx+3.0f+eps(rng);
     x=alfa(rng);
-    y=eps(rng)+0.2f;
     tmp->position[0]=d*sinf(x);
     tmp->position[1]=d*cosf(x);
-    tmp->setScale(y);
-    tmpM2= new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "atmosphere", ModelContainer::Planet);
-    tmpM2->setScale(1.01f);
-    tmp->addChild(tmpM2);
+    x=alfa(rng);
+    tmp->rotation[0]=x;
+    x=alfa(rng);
+    tmp->rotation[1]=x;
+    tmp->setScale(eps(rng)+0.2f);
+    int p=uid(rng);
     if(p>=8){
-        d=2.0f+eps(rng);
-        x=alfa(rng);
-        y*=mod->getScale().x();
-        tmpM2= new ModelContainer({y*d*sinf(x), y*d*cosf(x), 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "moon", ModelContainer::Moon);
-        y=eps(rng)+0.2f;
-        tmpM2->setScale(y);
-        tmp->addChild(tmpM2);
+        addMoon(tmp, rng, eps, alfa);
+    }
+    mod->addChild(tmp);
+}
+
+void addTerranPlanet(ModelContainer* mod, std::mt19937& rng, std::uniform_real_distribution<float> &eps, std::uniform_real_distribution<float> &alfa, int idx){
+    ModelContainer* tmp= new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "earth", ModelContainer::Planet);
+    std::uniform_int_distribution<int> uid(1, 10);
+    float d, x;
+    d=2*idx+3.0f+eps(rng);
+    x=alfa(rng);
+    tmp->position[0]=d*sinf(x);
+    tmp->position[1]=d*cosf(x);
+    x=alfa(rng);
+    tmp->rotation[0]=x;
+    x=alfa(rng);
+    tmp->rotation[1]=x;
+    tmp->setScale(eps(rng)+0.2f);
+    addAtmo(tmp);
+    int p=uid(rng);
+    if(p>=8){
+        addMoon(tmp, rng, eps, alfa);
     }
     mod->addChild(tmp);
 }

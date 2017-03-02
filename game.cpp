@@ -142,7 +142,8 @@ void Game::drawModel(ModelContainer* mod)
 
 //    if(mod->type==ModelContainer::Star)
 //    qDebug()<<modelMat*vp*QVector4D(mod->position, 1.0f);
-    float d = distance(camPos, mod->getPos()) / mod->getScale().x();
+//    float d = distance(camPos, mod->getPos()) / mod->getScale().x();
+    float d=distance(camPos, mod->getPos());
     int detailLevel = (d > 60.f)?1:(d > 30.f)?2:(d > 15.f)?3:4;
     if (mod->type == ModelContainer::Skybox or mod->type == ModelContainer::Titan)
         detailLevel = 3;
@@ -207,8 +208,8 @@ void Game::drawModel(ModelContainer* mod)
 
 void Game::drawOrbit(ModelContainer* mod) {
     QMatrix4x4 modelMat = mod->parent->getModelMat();
-    modelMat.scale(QVector3D(1.0f, 1.0f, 1.0f)/mod->parent->getScale());
-    modelMat.scale(sqrt((mod->position.x())*(mod->position.x())+(mod->position.y())*(mod->position.y())));
+//    modelMat.scale(QVector3D(1.0f, 1.0f, 1.0f)/mod->parent->getScale());
+    modelMat.scale(mod->position.length());
     QMatrix4x4 vp = projectionMat * viewMat;
     planeGeoProgram->bind();
     planeGeoProgram->setUniformValue("vp",vp);
@@ -544,6 +545,7 @@ void Game::parseInput(float dT)
                 camRot = camRotDef;
                 actSystem=collisions[0].second;
                 stage=2;
+                lightPos=solarSystems[collisions[0].second]->position;
             }
         }
         keys-=(Qt::LeftButton^mouseXor);
@@ -556,6 +558,7 @@ void Game::parseInput(float dT)
             camRot = camRotDef;
             stage=0;
             actSystem=-1;
+            lightPos=QVector3D(0.0f, -0.0f, 0.0f);
         }
         keys-=(Qt::RightButton^mouseXor);
     }
