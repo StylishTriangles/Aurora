@@ -7,6 +7,7 @@
 QT       += core gui
 CONFIG   += c++17
 QMAKE_LFLAGS += -Wl,--large-address-aware
+QMAKE_LFLAGS_RELEASE = --static
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 

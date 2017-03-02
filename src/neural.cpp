@@ -82,12 +82,17 @@ void NeuralNetwork::initialize()
 NeuralNetwork NeuralNetwork::breedS(const NeuralNetwork &rnn)
 {
     NeuralNetwork ret(rnn);
-    for (int i = 0; i < (int)ret.vn.size(); i++)
-    {
-        ret.vn[i].mergeS(vn[i]);
-        mutateWeights(ret.vn[i]);
-    }
+    ret.breedWithS(*this);
     return ret;
+}
+
+void NeuralNetwork::breedWithS(NeuralNetwork const& sameSpecies)
+{
+    for (int i = 0; i < (int)vn.size(); i++)
+    {
+        vn[i].mergeS(sameSpecies.vn[i]);
+        mutateWeights(vn[i]);
+    }
 }
 
 void NeuralNetwork::cleanup()

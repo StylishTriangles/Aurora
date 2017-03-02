@@ -49,6 +49,7 @@ public:
     void connect(int neuronIdSrc, int neuronIdDest, double weight);
     void initialize();
     NeuralNetwork breedS(NeuralNetwork const& sameSpecies);
+    void breedWithS(NeuralNetwork const& sameSpecies);
     void cleanup();
     void clone(const NeuralNetwork& source);
     double getOutput(int index) {return outData[index];}
@@ -62,7 +63,7 @@ public:
     static bool fitnessComparePtr(NeuralNetwork* lhs, NeuralNetwork *rhs)
     {return lhs->fitness < rhs->fitness;}
 
-    NeuralNetwork& operator = (NeuralNetwork& op) {clone(op); return *this;}
+    NeuralNetwork& operator = (const NeuralNetwork& op) {clone(op); return *this;}
 protected:
     void mutateWeights(Neuron& n);
 protected:
