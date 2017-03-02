@@ -132,5 +132,6 @@ void MainWindow::on_minigameButton_clicked()
     wololoTimer.stop();
     wArkanoid->show();
     ui->centralWidget->hide();
-    wArkanoid->start();
+    wArkanoid->setThreadCount(4);
+    wArkanoid->runAsNeuralNetwork();
 }

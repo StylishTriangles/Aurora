@@ -11,12 +11,62 @@
 #include <QPair>
 #include <QPoint>
 #include <QSize>
+#include <QThread>
 #include <QTimer>
 #include <QVector>
 #include <QWidget>
 #include "include/neural.h"
 
 namespace Aurora {
+
+class ArkanoidWorker;
+class ArkanoidBrick;
+class ArkanoidWidget;
+
+class ArkanoidWorker : public QObject
+{
+    Q_OBJECT
+public:
+    ArkanoidWorker(ArkanoidWidget* parent, int threadID) :
+        p(parent), myThreadID(threadID), initialized(false) {}
+    friend class ArkanoidWidget;
+public slots:
+    void onTick();
+    void restart();
+private:
+    void onTick(int threadID);
+    void reset();
+
+    ArkanoidWidget* p;
+    int myThreadID;
+    QVector<ArkanoidBrick> levelData;
+    QVector<QVector<double>> neuralInputs;
+    QLabel qlGen, qlIndex, qlScore;
+    QPoint ballPos;
+    QPoint vausPos;
+    QSize vausSize;
+    QSize defBrickSize;
+    int ballRadius;
+    int lives;
+    int vx;
+    int ballVy, ballVx;
+    int maxVx, maxVy;
+    int score;
+    int scoreMult;
+    int totalBricks;
+    int msTimeLimit;
+    int constTickTime; // only used in neural mode used to simulate 10 ms frames
+    int tickCount;
+    int tickCountLimit;
+    bool keyLT, keyRT;
+    bool gameOver;
+    bool userTerminate;
+    bool debugNeuralInputs;
+    bool normalSpeed;
+    bool initialized;
+    int iter;
+};
+
 struct ArkanoidBrick
 {
     ArkanoidBrick() = default;
@@ -49,6 +99,9 @@ public:
     const int NEURAL_NET_INPUT_RADIUS = 40;
     void start();
     void runAsNeuralNetwork();
+    void setThreadCount(int count) {threadCount = count;}
+    QVector<QVector<int>> workerData;
+    friend class ArkanoidWorker;
 
 protected:
     void paintEvent(QPaintEvent *) Q_DECL_OVERRIDE;
@@ -70,19 +123,22 @@ private:
         int generation;
         int population;
         int index;
-        static const int defPopulation = 500;
+        static const int defPopulation = 400;
     };
+    std::mt19937 rng;
     NeuralState nst;
-    QVector<ArkanoidBrick*> vec;
+    QVector<ArkanoidBrick*> levelData;
     QVector<QVector<double>> neuralInputs;
     QVector<Aurora::NeuralNetwork> vnn;
     QElapsedTimer elt;
     QTimer tle, vft; // VeryFastTimer
     qint64 tx;
+    QLabel qlGen, qlIndex, qlScore;
     QPoint ballPos;
     QPoint vausPos;
     QSize vausSize;
     QSize defBrickSize;
+    int threadCount;
     int ballRadius;
     int lives;
     int vx;

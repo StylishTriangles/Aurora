@@ -10,33 +10,33 @@ Neuron& NeuralNetwork::getNeuron(int id)
 void NeuralNetwork::construct(int inputs, int outs, int levels, int perLevelCount)
 {
     cleanup();
-    std::uniform_real_distribution<double> urd(0.0, 0.2);
+    std::uniform_real_distribution<double> urd(0.0, 0.1);
     for (int i = 0; i < inputs; i++) {
-        vn.push_back(Neuron(this,uniqueID++));
-        input.push_back(i);
+        vn.push_back(Neuron(this,uniqueID));
+        input.push_back(uniqueID++);
     }
-    for (int i = inputs; i < inputs+outs; i++) {
-        vn.push_back(Neuron(this,uniqueID++));
-        out.push_back(i);
+    for (int i = 0; i < outs; i++) {
+        vn.push_back(Neuron(this,uniqueID));
+        out.push_back(uniqueID++);
     }
     // outData setup
     outData.resize(out.size());
     lvls.resize(levels);
-    for (int i = 1; i <= levels; i++) {
+    for (int i = 0; i < levels; i++) {
         for (int j = 0; j < perLevelCount; j++) {
             vn.push_back(Neuron(this, uniqueID));
             lvls[i].push_back(uniqueID);
-            if (i == 1) {
+            if (i == 0) {
                 for (int k = 0; k < (int)input.size(); k++) {
                     connect(input[k],uniqueID,urd(rng));
                 }
             }
-            if (i==levels) {
+            if (i==levels-1) {
                 for (int k = 0; k < (int)out.size(); k++) {
                     connect(uniqueID,out[k],urd(rng));
                 }
             }
-            if (i > 1 and i < levels) {
+            if (i > 0 and i < levels-1) {
                 for (int k = 0; k < (int)lvls[i-1].size(); k++) {
                     connect(lvls[i-1][k], uniqueID, urd(rng));
                 }
@@ -53,6 +53,10 @@ void NeuralNetwork::construct(int inputs, int outs, int levels, int perLevelCoun
     for (int i : out)
         connect(uniqueID,i,urd(rng));
     uniqueID++;
+    for (Neuron& n: vn) {
+        n.in.rehash(n.in.size());
+        n.out.rehash(n.out.size());
+    }
 }
 
 void NeuralNetwork::connect(int idA, int idB, double weight)
@@ -67,7 +71,7 @@ void NeuralNetwork::initialize()
     rng = std::mt19937_64((long long)this);
     biasEnabled = true;
     outTreshold = 0.5;
-    weightMutationChance = 0.02;
+    weightMutationChance = 0.05;
     weightMutationMin = -0.01;
     weightMutationMax = 0.01;
     minWeight = 0.0;
@@ -78,17 +82,28 @@ void NeuralNetwork::initialize()
 NeuralNetwork NeuralNetwork::breedS(const NeuralNetwork &rnn)
 {
     NeuralNetwork ret(rnn);
+    ret.breedWithS(*this);
+    return ret;
+}
+
+void NeuralNetwork::breedWithS(NeuralNetwork const& sameSpecies)
+{
     for (int i = 0; i < (int)vn.size(); i++)
     {
-        vn[i].mergeS(rnn.vn[i]);
+        vn[i].mergeS(sameSpecies.vn[i]);
         mutateWeights(vn[i]);
     }
-    return ret;
 }
 
 void NeuralNetwork::cleanup()
 {
     // placeholder
+}
+
+void NeuralNetwork::setInput(int index, double val)
+{
+    vn[input[index]].setInput(val);
+    //qDebug() << "Setting input" << index << "to" << val;
 }
 
 void NeuralNetwork::clone(const NeuralNetwork &source)
@@ -115,8 +130,10 @@ void NeuralNetwork::clone(const NeuralNetwork &source)
 
 void NeuralNetwork::run()
 {
-    if (biasEnabled)
+    if (biasEnabled) {
+        vn[biasID].sum = 1.0;
         vn[biasID].sendSignals();
+    }
     for (int i: input)
         vn[i].sendSignals();
     for (vec<int>& vTop: lvls)
@@ -152,6 +169,9 @@ void NeuralNetwork::mutateWeights(Neuron &n)
 void Neuron::sendSignals()
 {
     double eval = tanh(sum);
+//    qDebug() << eval;
+//    if (eval == 0)
+//        qDebug() << id << in.size();
     lastEval = eval;
     for (int dst: out) {
         p->getNeuron(dst).receiveSignal(eval, id);
@@ -161,6 +181,8 @@ void Neuron::sendSignals()
 
 void Neuron::receiveSignal(double val, int senderId) {
     sum += val*in[senderId];
+//    if (val != 0.0)
+//        qDebug() << "Received" << val << "from" << senderId;
 }
 
 void Neuron::addSource(int srcID, double weight)  {
