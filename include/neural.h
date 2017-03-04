@@ -48,8 +48,9 @@ public:
     void construct(int inputs, int outs, int levels, int count);
     void connect(int neuronIdSrc, int neuronIdDest, double weight);
     void initialize();
-    NeuralNetwork breedS(NeuralNetwork const& sameSpecies);
+    std::pair<NeuralNetwork,NeuralNetwork> breedS(NeuralNetwork const& sameSpecies);
     void breedWithS(NeuralNetwork const& sameSpecies);
+    void breedWithS(NeuralNetwork const& sameSpecies, int splitPoint);
     void cleanup();
     void clone(const NeuralNetwork& source);
     double getOutput(int index) {return outData[index];}

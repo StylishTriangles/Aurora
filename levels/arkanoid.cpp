@@ -455,10 +455,12 @@ void ArkanoidWidget::neuroTick()
                 git.push_back(i);
             }
         }
-        for (int j = 0; j < toKill.size(); j++) {
-            Aurora::NeuralNetwork ntmp = vnn[git[rng()%git.size()]];
-            ntmp.breedWithS(vnn[git[rng()%git.size()]]);
-            vnn[toKill[j]] = ntmp;
+        for (int j = 0; j < toKill.size(); j+=2) {
+            std::pair<Aurora::NeuralNetwork,Aurora::NeuralNetwork> ntmp = vnn[git[rng()%git.size()]].breedS(vnn[git[rng()%git.size()]]);
+            vnn[toKill[j]] = ntmp.first;
+            if (j+1 < toKill.size()) {
+                vnn[toKill[j]] = ntmp.second;
+            }
         }
         /// ******
         nst.index = 0;
@@ -469,15 +471,22 @@ void ArkanoidWidget::neuroTick()
     }
     onTick();
     vnn[nst.index].run();
-    qDebug() << vnn[nst.index].getOutput(0) << vnn[nst.index].getOutput(1);
-    if (vnn[nst.index].binaryOutput(0) and vnn[nst.index].getOutput(0) > vnn[nst.index].getOutput(1))
-        keyLT = true;
-    else
-        keyLT = false;
-    if (vnn[nst.index].binaryOutput(1) and vnn[nst.index].getOutput(0) < vnn[nst.index].getOutput(1))
-        keyRT = true;
-    else
-        keyRT = false;
+//    qDebug() << vnn[nst.index].getOutput(0) << vnn[nst.index].getOutput(1);
+    double keyEps = 0.01;
+    auto abs = [](double d) -> double {return d<0?-d:d;};
+    if (abs(vnn[nst.index].getOutput(0) - vnn[nst.index].getOutput(1)) < keyEps) {
+        keyRT = false; keyLT = false;
+    }
+    else {
+        if (/*vnn[nst.index].binaryOutput(0) and*/ vnn[nst.index].getOutput(0) > vnn[nst.index].getOutput(1))
+            keyLT = true;
+        else
+            keyLT = false;
+        if (/*vnn[nst.index].binaryOutput(1) and*/ vnn[nst.index].getOutput(0) < vnn[nst.index].getOutput(1))
+            keyRT = true;
+        else
+            keyRT = false;
+    }
     //qDebug()  << vnn[nst.index].getOutput(0) << vnn[nst.index].getOutput(1);
 }
 
@@ -519,7 +528,7 @@ void ArkanoidWidget::reset()
 //        for (int i = 0; i < nst.population; i++)
 //            vnn.push_back(new Aurora::NeuralNetwork);
         for (auto& rnn: vnn)
-            rnn.construct(neuralInputs.size()*DEF_WIDTH/NEURAL_NET_INPUT_RADIUS,2,1,100);
+            rnn.construct(neuralInputs.size()*DEF_WIDTH/NEURAL_NET_INPUT_RADIUS,2,1,80);
     }
     std::uniform_int_distribution<int> uid(maxVx/2,maxVx);
     ballVx = -180;//uid(rng)*(rng()%2?-1:1);

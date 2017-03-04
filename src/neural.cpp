@@ -79,19 +79,38 @@ void NeuralNetwork::initialize()
     fitness = 0.0;
 }
 
-NeuralNetwork NeuralNetwork::breedS(const NeuralNetwork &rnn)
+std::pair<NeuralNetwork,NeuralNetwork> NeuralNetwork::breedS(const NeuralNetwork &rnn)
 {
-    NeuralNetwork ret(rnn);
-    ret.breedWithS(*this);
+    std::pair<NeuralNetwork,NeuralNetwork> ret{rnn,rnn};
+    int cut = (int)(rng()%(vn.size()-input.size()) + input.size());
+    ret.first.breedWithS(*this, cut);
+    ret.second.breedWithS(*this, -cut);
     return ret;
 }
 
 void NeuralNetwork::breedWithS(NeuralNetwork const& sameSpecies)
 {
-    for (int i = 0; i < (int)vn.size(); i++)
-    {
-        vn[i].mergeS(sameSpecies.vn[i]);
-        mutateWeights(vn[i]);
+    int cut = (int)(rng()%(vn.size()-input.size()) + input.size());
+    breedWithS(sameSpecies, cut);
+//    for (int i = 0; i < (int)vn.size(); i++)
+//    {
+//        vn[i].mergeS(sameSpecies.vn[i]);
+//        mutateWeights(vn[i]);
+//    }
+}
+
+void NeuralNetwork::breedWithS(NeuralNetwork const& sameSpecies, int splitPoint)
+{
+    if (splitPoint < 0) {
+        splitPoint *= -1;
+        for (int i = input.size(); i < splitPoint; i++) {
+            vn[i] = sameSpecies.vn[i];
+        }
+    }
+    else {
+        for (int i = splitPoint; i < (int)vn.size(); i++) {
+            vn[i] = sameSpecies.vn[i];
+        }
     }
 }
 
