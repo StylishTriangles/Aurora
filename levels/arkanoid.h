@@ -123,7 +123,7 @@ private:
         int generation;
         int population;
         int index;
-        static const int defPopulation = 400;
+        static const int defPopulation = 500;
     };
     std::mt19937 rng;
     NeuralState nst;

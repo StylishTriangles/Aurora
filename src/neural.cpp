@@ -85,6 +85,10 @@ std::pair<NeuralNetwork,NeuralNetwork> NeuralNetwork::breedS(const NeuralNetwork
     int cut = (int)(rng()%(vn.size()-input.size()) + input.size());
     ret.first.breedWithS(*this, cut);
     ret.second.breedWithS(*this, -cut);
+    for (Neuron& n: ret.first.vn)
+        mutateWeights(n);
+    for (Neuron& n: ret.second.vn)
+        mutateWeights(n);
     return ret;
 }
 

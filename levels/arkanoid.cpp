@@ -189,9 +189,11 @@ void ArkanoidWidget::paintEvent(QPaintEvent *)
             {
                 const int &NNIR = NEURAL_NET_INPUT_RADIUS;
                 if (neuralInputs[i/NNIR][j/NNIR] == 2.0)
-                    p.setBrush(QColor(0,0,0));
+                    p.setBrush(QColor(128,0,0));
                 else if (neuralInputs[i/NNIR][j/NNIR] == 1.0)
                     p.setBrush(QColor(255,255,255));
+                else if (neuralInputs[i/NNIR][j/NNIR] == 0.08)
+                    p.setBrush(QColor(0,0,0,255));
                 else
                     p.setBrush(QColor(0,0,0,0));
                 p.drawRect(j,i,NEURAL_NET_INPUT_RADIUS,NEURAL_NET_INPUT_RADIUS);
@@ -251,10 +253,10 @@ void ArkanoidWidget::setNeuralInputs()
         if (!b->destroyed) {
             for (int i = 0; i < b->size.height(); i+= NEURAL_NET_INPUT_RADIUS)
                 for (int j = 0; j < b->size.width(); j+= NEURAL_NET_INPUT_RADIUS)
-                    neuralInputs[(b->pos.y()+i)/NEURAL_NET_INPUT_RADIUS][(b->pos.x()+j)/NEURAL_NET_INPUT_RADIUS] = (b->tgh<0)?0.0:.01;
+                    neuralInputs[(b->pos.y()+i)/NEURAL_NET_INPUT_RADIUS][(b->pos.x()+j)/NEURAL_NET_INPUT_RADIUS] = (b->tgh<0)?0.0:.08;
         }
     }
-    neuralInputs[ballPos.y()/NEURAL_NET_INPUT_RADIUS][ballPos.x()/NEURAL_NET_INPUT_RADIUS] = 1.0;
+    neuralInputs[ballPos.y()/NEURAL_NET_INPUT_RADIUS][ballPos.x()/NEURAL_NET_INPUT_RADIUS] = 2.0;
     for (int i = 0; i < vausSize.width(); i+=NEURAL_NET_INPUT_RADIUS) {
         neuralInputs[vausPos.y()/NEURAL_NET_INPUT_RADIUS][(vausPos.x()+i+NEURAL_NET_INPUT_RADIUS/2)/NEURAL_NET_INPUT_RADIUS] = 1.0;
     }
@@ -385,11 +387,11 @@ void ArkanoidWidget::neuroTick()
     if (!initialized)
         return;
     if (gameOver) {
-        vnn[nst.index].setFitness(score-tickCount*constTickTime);
+        vnn[nst.index].setFitness(score/*-tickCount*constTickTime*/);
         reset();
         //setNeuralInputs();
-        std::uniform_int_distribution<int> uid(maxVx/2,maxVx);
-        //ballVx = uid(rng)*(rng()%2?-1:1);
+        std::uniform_int_distribution<int> uid(vausSize.width(),maxVx*3/4);
+        ballVx = uid(rng)*(rng()%2?-1:1);
         //ballVy = -maxVy;
         nst.index++;
         qlIndex.setText(QString::number(nst.index));
@@ -446,7 +448,7 @@ void ArkanoidWidget::neuroTick()
         std::uniform_real_distribution<double> urd(0.0,1.0);
         QVector<int> toKill;
         QVector<int> git;
-        for (; i < vnn.size() and killed < killLim; i++) {
+        for (; i < vnn.size() and killed < killLim and i < (int)(0.9*nst.population); i++) {
             if (tanh((double)(nst.population-i)/(nst.population/2)) > urd(rng)) {
                 killed++;
                 toKill.push_back(i);
@@ -455,11 +457,13 @@ void ArkanoidWidget::neuroTick()
                 git.push_back(i);
             }
         }
+        for (; i < vnn.size(); i++)
+            git.push_back(i);
         for (int j = 0; j < toKill.size(); j+=2) {
             std::pair<Aurora::NeuralNetwork,Aurora::NeuralNetwork> ntmp = vnn[git[rng()%git.size()]].breedS(vnn[git[rng()%git.size()]]);
             vnn[toKill[j]] = ntmp.first;
             if (j+1 < toKill.size()) {
-                vnn[toKill[j]] = ntmp.second;
+                vnn[toKill[j+1]] = ntmp.second;
             }
         }
         /// ******
@@ -467,12 +471,12 @@ void ArkanoidWidget::neuroTick()
         nst.generation++;
         qlGen.setText(QString::number(nst.generation));
         qlIndex.setText(QString::number(nst.index));
-        return;
+        //return;
     }
     onTick();
     vnn[nst.index].run();
 //    qDebug() << vnn[nst.index].getOutput(0) << vnn[nst.index].getOutput(1);
-    double keyEps = 0.01;
+    double keyEps = 0.0001;
     auto abs = [](double d) -> double {return d<0?-d:d;};
     if (abs(vnn[nst.index].getOutput(0) - vnn[nst.index].getOutput(1)) < keyEps) {
         keyRT = false; keyLT = false;
@@ -528,7 +532,7 @@ void ArkanoidWidget::reset()
 //        for (int i = 0; i < nst.population; i++)
 //            vnn.push_back(new Aurora::NeuralNetwork);
         for (auto& rnn: vnn)
-            rnn.construct(neuralInputs.size()*DEF_WIDTH/NEURAL_NET_INPUT_RADIUS,2,1,80);
+            rnn.construct(neuralInputs.size()*DEF_WIDTH/NEURAL_NET_INPUT_RADIUS,2,1,150);
     }
     std::uniform_int_distribution<int> uid(maxVx/2,maxVx);
     ballVx = -180;//uid(rng)*(rng()%2?-1:1);
