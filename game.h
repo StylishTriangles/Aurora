@@ -97,11 +97,11 @@ private:
     QHash<QString, QOpenGLTexture*> textures;
     QVector<ModelContainer*> solarSystems;
     QVector<QVector<int> > edges;
-    ModelContainer* galaxyMap;
+    ModelContainer* galaxyMap, *spaceShip;
     // current camera rotation and position
     float camSpeed, rotationSpeed;
     float camFov, camNear, camFar;
-    const QVector3D camPosDef = QVector3D(0.0f, 0.0f,  4.5f), camFrontDef = QVector3D(0.0f, 0.0f, -1.0f), camUpDef = QVector3D(0.0f, 1.0f,  0.0f);
+    const QVector3D camPosDef = QVector3D(0.0f, 0.0f,  15.0f), camFrontDef = QVector3D(0.0f, 0.0f, -1.0f), camUpDef = QVector3D(0.0f, 1.0f,  0.0f);
     QVector3D camPos, camFront, camUp;
     const QVector3D camRotDef = QVector3D(0.0f, -90.0f, 0.0f);
     QVector3D camRot;

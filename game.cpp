@@ -88,6 +88,9 @@ void Game::initializeGL()
     tmp = new QVector<GLfloat>;
     GeometryProvider::circle(*tmp);
     mGeometry["circle"]=tmp;
+    mGeometry["spacecruiser3"]= new QVector<GLfloat>;
+    QString s("../Aurora/obj_files/starcruiser_scaled.obj");
+    Aurora::parseObj(s, *mGeometry["spacecruiser3"]);
 
     // load and compile shaders
     loadShaders();
@@ -96,6 +99,7 @@ void Game::initializeGL()
     loadTextures();
 
     // make models
+    spaceShip= new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "spacecruiser", "spacecruiser", ModelContainer::Spaceship);
     galaxyMap = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "skybox", ModelContainer::Skybox);
     galaxyMap->setScale(50.0f);
     generateSolarSystems(solarSystems);
@@ -145,7 +149,7 @@ void Game::drawModel(ModelContainer* mod)
 //    float d = distance(camPos, mod->getPos()) / mod->getScale().x();
     float d=distance(camPos, mod->getPos());
     int detailLevel = (d > 60.f)?1:(d > 30.f)?2:(d > 15.f)?3:4;
-    if (mod->type == ModelContainer::Skybox or mod->type == ModelContainer::Titan)
+    if (mod->type == ModelContainer::Skybox or mod->type == ModelContainer::Titan || mod->type==ModelContainer::Spaceship)
         detailLevel = 3;
     int geomSize = bindModel(mod, detailLevel);
     // init variables
@@ -245,6 +249,7 @@ void Game::paintGL()
         for(int i=0; i<solarSystems.size(); i++)
             drawModel(solarSystems[i]);
         drawEdges();
+        drawModel(spaceShip);
     }
     else if(stage==1) { //bitwa
 
@@ -391,6 +396,14 @@ void Game::loadTextures()
     textures.insert("skyboxSpec", tex);
     tex =  new QOpenGLTexture(QImage(QString("../Aurora/textures/earthSpec.png")));
     textures.insert("earthSpec", tex);
+    tex =  new QOpenGLTexture(QImage(QString("../Aurora/textures/venus.png")));
+    textures.insert("venus", tex);
+    tex =  new QOpenGLTexture(QImage(QString("../Aurora/textures/venus.png")));
+    textures.insert("venusSpec", tex);
+    tex =  new QOpenGLTexture(QImage(QString("../Aurora/textures/spacecruiser.png")));
+    textures.insert("spacecruiser", tex);
+    tex =  new QOpenGLTexture(QImage(QString("../Aurora/textures/spacecruiser.png")));
+    textures.insert("spacecruiserSpec", tex);
 #else
     QResource::registerResource("textures/textures.rcc");
     tex = new QOpenGLTexture(QImage(QString(":/planets/atmosphere.png")));
@@ -467,6 +480,8 @@ void Game::loadSettings() {
 void Game::allocateVbos() {
     auto it = mGeometry.begin();
     while (it != mGeometry.end()) {
+        if(it.key()=="spacecruiser3")
+            qDebug()<<it.value()->size();
         auto it2 = mVbo.insert(it.key(), QOpenGLBuffer());
         it2.value().create();
         it2.value().bind();

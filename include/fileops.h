@@ -3,6 +3,10 @@
 #include <QFile>
 #include <QHash>
 #include <QString>
+#include <QVector>
+#include <QVector2D>
+#include <QVector3D>
+#include <GL/gl.h>
 
 namespace Aurora {
 const QString DEFAULT_CONFIG_FILENAME = QString("settings.cfg");
@@ -14,6 +18,7 @@ bool readSettings(QFile &file, QHash<QString, QString> &mData);
 bool readSettings(QHash<QString, QString> &mData);
 bool writeSettings(QFile &file, const QHash<QString,QString> &mData);
 void loadDefaultSettings(QHash<QString,QString> &mData);
+bool parseObj(const QString &filepath, QVector<GLfloat> &mData);
 }
 
 #endif // AURORA_FILE_OPS
