@@ -135,7 +135,7 @@ inline int Game::bindModel(QString const & name, int detail)
 void Game::drawModel(ModelContainer* mod)
 {
     if(mod->type==ModelContainer::Skybox)
-        glDisable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
     if(mod->type==ModelContainer::Planet || mod->type==ModelContainer::Titan || mod->type==ModelContainer::Moon){
         drawOrbit(mod);
     }
@@ -208,7 +208,7 @@ void Game::drawModel(ModelContainer* mod)
             drawModel(mod->children[i]);
     }
     if(mod->type==ModelContainer::Skybox)
-        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
 }
 
 void Game::drawOrbit(ModelContainer* mod) {
@@ -456,10 +456,6 @@ void Game::loadSettings() {
     Aurora::readSettings(mSettings);
     QString str;
     QSurfaceFormat qsf;
-    // set OpenGL related settings
-//    qsf.setProfile(QSurfaceFormat::OpenGLContextProfile::NoProfile);
-//    qsf.setVersion(4,3);
-//    qsf.setRenderableType(QSurfaceFormat::RenderableType::OpenGL);
     // configure anti-aliasing
     str = mSettings[Aurora::SETTING_GRAPHICS_AA];
     if (str == "No AA") qsf.setSamples(0);
