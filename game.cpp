@@ -1,5 +1,6 @@
 #include "game.h"
 #include <QDebug>
+#include <QOpenGLContext>
 #include <QResource>
 #include <QtMath>
 #include <random>
@@ -47,7 +48,7 @@ inline void qNormalizeAngle(float& a)
 void Game::initializeGL()
 {
     initializeOpenGLFunctions();
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
 //    glEnable(GL_DITHER);
@@ -455,6 +456,10 @@ void Game::loadSettings() {
     Aurora::readSettings(mSettings);
     QString str;
     QSurfaceFormat qsf;
+    // set OpenGL related settings
+//    qsf.setProfile(QSurfaceFormat::OpenGLContextProfile::NoProfile);
+//    qsf.setVersion(4,3);
+//    qsf.setRenderableType(QSurfaceFormat::RenderableType::OpenGL);
     // configure anti-aliasing
     str = mSettings[Aurora::SETTING_GRAPHICS_AA];
     if (str == "No AA") qsf.setSamples(0);
