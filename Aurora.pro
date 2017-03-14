@@ -26,7 +26,8 @@ SOURCES += main.cpp\
     src/fileops.cpp \
     src/neural.cpp \
     levels/arkanoid.cpp \
-    src/mapgenerator.cpp
+    src/mapgenerator.cpp \
+    src/helper_classes.cpp
 
 HEADERS  += interface/mainwindow.h \
     interface/options.h \
@@ -38,7 +39,8 @@ HEADERS  += interface/mainwindow.h \
     include/fileops.h \
     include/neural.h \
     levels/arkanoid.h \
-    include/mapgenerator.h
+    include/mapgenerator.h \
+    include/helper_classes.h
 
 FORMS    += interface/mainwindow.ui \
     interface/options.ui \

@@ -8,7 +8,6 @@ void generateSolarSystems(QVector<ModelContainer *> &solarSystems){
     std::uniform_int_distribution<int> uid(1, 6), luid(1, 1000);
     GLfloat x, y;
     int planetsInSystem, p;
-    ModelContainer* tmpM, *tmpM2;
     for(int i=0; i<10; i++){ //generate stars
         x=ufd(rng);
         y=ufd(rng);
@@ -19,11 +18,35 @@ void generateSolarSystems(QVector<ModelContainer *> &solarSystems){
                 j=0;
             }
         }
-        tmpM = new ModelContainer({x, y, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "earth", ModelContainer::Star);
-        solarSystems.push_back(tmpM);
-        tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
-        tmpM2->setScale(50.0f);
-        solarSystems.back()->addChild(tmpM2);
+        p=luid(rng);
+        if(p<=800){
+            if(p<=400){
+                if(p<=200)
+                    addWhiteDwarf(solarSystems, rng, eps, x, y);
+                else
+                    addYellowDwarf(solarSystems, rng, eps, x, y);
+            }
+            else{
+                if(p<=600)
+                    addBlueDwarf(solarSystems, rng, eps, x, y);
+                else
+                    addRedDwarf(solarSystems, rng, eps, x, y);
+            }
+        }
+        else{
+            if(p<=950){
+                if(p<=875)
+                    addRedGiant(solarSystems, rng, eps, x, y);
+                else
+                    addBlueGiant(solarSystems, rng, eps, x, y);
+            }
+            else{
+                if(p<=975)
+                    addRedSuperGiant(solarSystems, rng, eps, x, y);
+                else
+                    addBlueSuperGiant(solarSystems, rng, eps, x, y);
+            }
+        }
     }
     for(int i=0; i<10; i++){ //generate planets in systems
         planetsInSystem=uid(rng);
@@ -69,6 +92,86 @@ void generateSolarSystems(QVector<ModelContainer *> &solarSystems){
     tmpM2->setScale(0.1f);
     tmpM->addChild(tmpM2);
     solarSystems.back()->addChild(tmpM);*/
+}
+
+void addYellowDwarf(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
+    ModelContainer* tmpM, *tmpM2;
+    tmpM = new ModelContainer({x, y, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "yellow_dwarf", ModelContainer::Star);
+    tmpM->setScale(eps(rng)+0.3f);
+    solarSystems.push_back(tmpM);
+    tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
+    tmpM2->setScale(50.0f);
+    solarSystems.back()->addChild(tmpM2);
+}
+
+void addWhiteDwarf(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
+    ModelContainer* tmpM, *tmpM2;
+    tmpM = new ModelContainer({x, y, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "white_dwarf", ModelContainer::Star);
+    tmpM->setScale(eps(rng)+0.3f);
+    solarSystems.push_back(tmpM);
+    tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
+    tmpM2->setScale(50.0f);
+    solarSystems.back()->addChild(tmpM2);
+}
+
+void addBlueDwarf(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
+    ModelContainer* tmpM, *tmpM2;
+    tmpM = new ModelContainer({x, y, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "blue_dwarf", ModelContainer::Star);
+    tmpM->setScale(eps(rng)+0.3f);
+    solarSystems.push_back(tmpM);
+    tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
+    tmpM2->setScale(50.0f);
+    solarSystems.back()->addChild(tmpM2);
+}
+
+void addRedDwarf(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
+    ModelContainer* tmpM, *tmpM2;
+    tmpM = new ModelContainer({x, y, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "red_dwarf", ModelContainer::Star);
+    tmpM->setScale(eps(rng)+0.3f);
+    solarSystems.push_back(tmpM);
+    tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
+    tmpM2->setScale(50.0f);
+    solarSystems.back()->addChild(tmpM2);
+}
+
+void addRedGiant(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
+    ModelContainer* tmpM, *tmpM2;
+    tmpM = new ModelContainer({x, y, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "red_giant", ModelContainer::Star);
+    tmpM->setScale(eps(rng)+0.6f);
+    solarSystems.push_back(tmpM);
+    tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
+    tmpM2->setScale(50.0f);
+    solarSystems.back()->addChild(tmpM2);
+}
+
+void addBlueGiant(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
+    ModelContainer* tmpM, *tmpM2;
+    tmpM = new ModelContainer({x, y, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "blue_giant", ModelContainer::Star);
+    tmpM->setScale(eps(rng)+0.6f);
+    solarSystems.push_back(tmpM);
+    tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
+    tmpM2->setScale(50.0f);
+    solarSystems.back()->addChild(tmpM2);
+}
+
+void addRedSuperGiant(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
+    ModelContainer* tmpM, *tmpM2;
+    tmpM = new ModelContainer({x, y, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "red_super_giant", ModelContainer::Star);
+    tmpM->setScale(eps(rng)+1.0f);
+    solarSystems.push_back(tmpM);
+    tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
+    tmpM2->setScale(50.0f);
+    solarSystems.back()->addChild(tmpM2);
+}
+
+void addBlueSuperGiant(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
+    ModelContainer* tmpM, *tmpM2;
+    tmpM = new ModelContainer({x, y, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "blue_super_giant", ModelContainer::Star);
+    tmpM->setScale(eps(rng)+1.0f);
+    solarSystems.push_back(tmpM);
+    tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
+    tmpM2->setScale(50.0f);
+    solarSystems.back()->addChild(tmpM2);
 }
 
 bool comp(QVector3D a, QVector3D b){

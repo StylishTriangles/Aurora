@@ -30,7 +30,7 @@ Game::~Game()
         delete p;
     for(auto p:solarSystems)
         delete p;
-    for(auto p:textures)
+    for(auto p:mTextures)
         delete p;
     delete planetsProgram;
     delete lightsProgram;
@@ -100,16 +100,19 @@ void Game::initializeGL()
     loadTextures();
 
     // make models
-    spaceShip= new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "spacecruiser", "spacecruiser", ModelContainer::Spaceship);
+    //spaceShip= new ModelContainer({0.0f, 0.0f, 3.0f}, {0.0f, 0.0f, 0.0f}, "spacecruiser", "spacecruiser", ModelContainer::Spaceship);
     galaxyMap = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "skybox", ModelContainer::Skybox);
     galaxyMap->setScale(50.0f);
     generateSolarSystems(solarSystems);
     mGeometry["edges"] = new QVector<float>();
     generateEdges(solarSystems, edges, *mGeometry["edges"], *mGeometry["geosphere1"], 2*solarSystems.size());
 
-    initComplete = true;
+    //set light types
+    setLightTypes();
 
     allocateVbos();
+
+    initComplete = true;
 }
 
 void Game::resizeGL(int w, int h)
@@ -154,20 +157,16 @@ void Game::drawModel(ModelContainer* mod)
         detailLevel = 3;
     int geomSize = bindModel(mod, detailLevel);
     // init variables
-    struct Light{
-        QVector3D ambient;
-        QVector3D diffuse;
-        QVector3D specular;
-        GLfloat shininess;
-    };
-    Light light = {QVector3D(0.1f, 0.1f, 0.1f),QVector3D(0.5f, 0.5f, 0.5f),QVector3D(0.7f, 0.7f, 0.7f),32.0f};
+    Light light;
 
     // set type specific data
-    if(stage==0){
-        light.ambient = QVector3D(1.0f,1.0f,1.0f);
-        light.diffuse = QVector3D(0.0f,0.0f,0.0f);
-        light.specular = light.diffuse;
-    }
+    if(stage==2)
+    light = mLights.find(solarSystems[actSystem]->tex).value();
+//    if(stage==0){
+//        light.ambient = QVector3D(1.0f,1.0f,1.0f);
+//        light.diffuse = QVector3D(0.0f,0.0f,0.0f);
+//        light.specular = light.diffuse;
+//    }
     if (mod->type == ModelContainer::Skybox) {
         light.ambient = QVector3D(1.0f,1.0f,1.0f);
         light.diffuse = QVector3D(0.0f,0.0f,0.0f);
@@ -176,6 +175,7 @@ void Game::drawModel(ModelContainer* mod)
     if (mod->type == ModelContainer::Star) {
         lightsProgram->bind();
         lightsProgram->setUniformValue("vp",vp);
+        lightsProgram->setUniformValue("mColor", mLights.find(mod->tex).value().diffuse);
         lightsProgram->setUniformValue("modelMat",modelMat);
     }
     else {
@@ -192,8 +192,10 @@ void Game::drawModel(ModelContainer* mod)
         planetsProgram->setUniformValue("diffuseMap", 0);
         planetsProgram->setUniformValue("specularMap", 1);
     }
-    textures[mod->tex]->bind(0);
-    textures[(mod->tex+"Spec")]->bind(1);
+    if(mod->type!=ModelContainer::Star){
+        mTextures[mod->tex]->bind(0);
+        mTextures[(mod->tex+"Spec")]->bind(1);
+    }
 
     this->glEnableVertexAttribArray(0);
     this->glEnableVertexAttribArray(1);
@@ -250,13 +252,13 @@ void Game::paintGL()
         for(int i=0; i<solarSystems.size(); i++)
             drawModel(solarSystems[i]);
         drawEdges();
-        drawModel(spaceShip);
     }
     else if(stage==1) { //bitwa
 
     }
     else if(stage==2) {
             drawModel(solarSystems[actSystem]);
+            //drawModel(spaceShip);
     }
     emit paintCompleted();
 }
@@ -380,31 +382,31 @@ void Game::loadTextures()
 {
     QOpenGLTexture* tex;
     tex = new QOpenGLTexture(QImage(QString(":/planets/earth.png")));
-    textures.insert("earth", tex);
+    mTextures.insert("earth", tex);
 
 #ifdef QT_DEBUG
     tex = new QOpenGLTexture(QImage(QString("../Aurora/atmosphere.png")));
-    textures.insert("atmosphere", tex);
+    mTextures.insert("atmosphere", tex);
     tex = new QOpenGLTexture(QImage(QString("../Aurora/atmosphere.png")));
-    textures.insert("atmosphereSpec", tex);
+    mTextures.insert("atmosphereSpec", tex);
     tex = new QOpenGLTexture(QImage(QString("../Aurora/moon.png")));
-    textures.insert("moon", tex);
+    mTextures.insert("moon", tex);
     tex = new QOpenGLTexture(QImage(QString("../Aurora/moon.png")));
-    textures.insert("moonSpec", tex);
+    mTextures.insert("moonSpec", tex);
     tex = new QOpenGLTexture(QImage(QString(":/misc/skybox.png")));
-    textures.insert("skybox", tex);
+    mTextures.insert("skybox", tex);
     tex = new QOpenGLTexture(QImage(QString(":/misc/skybox.png")));
-    textures.insert("skyboxSpec", tex);
+    mTextures.insert("skyboxSpec", tex);
     tex =  new QOpenGLTexture(QImage(QString("../Aurora/textures/earthSpec.png")));
-    textures.insert("earthSpec", tex);
+    mTextures.insert("earthSpec", tex);
     tex =  new QOpenGLTexture(QImage(QString("../Aurora/textures/venus.png")));
-    textures.insert("venus", tex);
+    mTextures.insert("venus", tex);
     tex =  new QOpenGLTexture(QImage(QString("../Aurora/textures/venus.png")));
-    textures.insert("venusSpec", tex);
+    mTextures.insert("venusSpec", tex);
     tex =  new QOpenGLTexture(QImage(QString("../Aurora/textures/spacecruiser.png")));
-    textures.insert("spacecruiser", tex);
+    mTextures.insert("spacecruiser", tex);
     tex =  new QOpenGLTexture(QImage(QString("../Aurora/textures/spacecruiser.png")));
-    textures.insert("spacecruiserSpec", tex);
+    mTextures.insert("spacecruiserSpec", tex);
 #else
     QResource::registerResource("textures/textures.rcc");
     tex = new QOpenGLTexture(QImage(QString(":/planets/atmosphere.png")));
@@ -478,11 +480,22 @@ void Game::loadSettings() {
     setFormat(qsf);
 }
 
+void Game::setLightTypes(){
+    mLights.insert("white_dwarf", Light({0.1f, 0.1f, 0.1f},{0.5f, 0.5f, 0.5f},{1.0f, 1.0f, 1.0f},32.0f));
+    mLights.insert("yellow_dwarf", Light({0.1f, 0.1f, 0.1f},{0.5f, 0.5f, 0.35f},{1.0f, 1.0f, 0.7f},32.0f));
+    mLights.insert("blue_dwarf", Light({0.1f, 0.1f, 0.1f},{0.35f, 0.35f, 0.5f},{0.7f, 0.7f, 1.0f},32.0f));
+    mLights.insert("red_dwarf", Light({0.1f, 0.1f, 0.1f},{0.5f, 0.35f, 0.35f},{1.0f, 0.7f, 0.7f},32.0f));
+
+    mLights.insert("red_giant", Light({0.1f, 0.1f, 0.1f},{0.7f, 0.5f, 0.5f},{1.0f, 0.7f, 0.7f},32.0f));
+    mLights.insert("blue_giant", Light({0.1f, 0.1f, 0.1f},{0.5f, 0.5f, 0.7f},{0.7f, 0.7f, 1.0f},32.0f));
+
+    mLights.insert("red_super_giant", Light({0.1f, 0.1f, 0.1f},{1.0f, 0.7f, 0.7f},{1.0f, 0.7f, 0.7f},32.0f));
+    mLights.insert("blue_super_giant", Light({0.1f, 0.1f, 0.1f},{0.7f, 0.7f, 1.0f},{0.7f, 0.7f, 1.0f},32.0f));
+}
+
 void Game::allocateVbos() {
     auto it = mGeometry.begin();
     while (it != mGeometry.end()) {
-        if(it.key()=="spacecruiser3")
-            qDebug()<<it.value()->size();
         auto it2 = mVbo.insert(it.key(), QOpenGLBuffer());
         it2.value().create();
         it2.value().bind();

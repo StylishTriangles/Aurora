@@ -25,6 +25,7 @@
 #include "include/mapgenerator.h"
 #include "include/ray_intersect.h"
 #include "interface/hud.h"
+#include "include/helper_classes.h"
 
 namespace Ui {
 class Game;
@@ -77,6 +78,7 @@ protected:
     void loadTextures();
     void loadShaders();
     void loadSettings();
+    void setLightTypes();
     void allocateVbos();
     void parseInput(float dT);
 
@@ -94,7 +96,8 @@ private:
     QHash<QString, QVector<GLfloat>*> mGeometry;
     QHash<QString, QOpenGLBuffer> mVbo;
 
-    QHash<QString, QOpenGLTexture*> textures;
+    QHash<QString, QOpenGLTexture*> mTextures;
+    QHash<QString, Light> mLights;
     QVector<ModelContainer*> solarSystems;
     QVector<QVector<int> > edges;
     ModelContainer* galaxyMap, *spaceShip;

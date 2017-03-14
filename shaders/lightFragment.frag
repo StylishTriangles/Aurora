@@ -4,9 +4,10 @@ in vec2 TexCoord;
 out vec4 color;
 
 uniform sampler2D tex;
+uniform vec3 mColor;
 
 void main()
 {
 //    color = texture2D(tex, TexCoord);
-    color = vec4(1.0f,1.0f,1.0f,1.0f);
+    color = vec4(mColor,1.0f);
 }
