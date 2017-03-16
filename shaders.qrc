@@ -6,5 +6,9 @@
         <file>shaders/lightVertex.vert</file>
         <file>shaders/planegeometry.frag</file>
         <file>shaders/planegeometry.vert</file>
+        <file>shaders/starfield.frag</file>
+        <file>shaders/starfield.vert</file>
+        <file>shaders/loadingScreen.frag</file>
+        <file>shaders/loadingScreen.vert</file>
     </qresource>
 </RCC>

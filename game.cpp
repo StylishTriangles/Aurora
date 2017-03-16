@@ -11,7 +11,7 @@ Game::Game(QWidget *parent) :
     camFov(60.0f), camNear(0.01f), camFar(100.0f),
     camRot(camRotDef),
     lightPos(0.0f, -0.0f, 0.0f),
-    stage(0), actSystem(-1),
+    stage(0), actSystem(-1), loadingMain(true),
     cnt(0)
 {
     // load settings
@@ -89,6 +89,9 @@ void Game::initializeGL()
     tmp = new QVector<GLfloat>;
     GeometryProvider::circle(*tmp);
     mGeometry["circle"]=tmp;
+    tmp = new QVector<GLfloat>;
+    GeometryProvider::rectangle3D(*tmp,5,0,-1,3);
+    mGeometry["sprite"] = tmp;
     mGeometry["spacecruiser3"]= new QVector<GLfloat>;
     QString s("../Aurora/obj_files/starcruiser_scaled.obj");
     Aurora::parseObj(s, *mGeometry["spacecruiser3"]);
@@ -243,6 +246,10 @@ void Game::drawEdges() {
 void Game::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    if (loadingMain) {
+
+        return; // RETURN
+    }
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     viewMat.setToIdentity();
     viewMat.lookAt(camPos, camPos + camFront, camUp);
