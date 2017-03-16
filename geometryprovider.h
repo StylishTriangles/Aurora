@@ -1,5 +1,6 @@
 #ifndef GEOMETRYPROVIDER_H
 #define GEOMETRYPROVIDER_H
+#include <random>
 #include <QVector>
 #include <QVector3D>
 #include <QDebug>
@@ -32,14 +33,21 @@ public:
         TitanPylons
     };
 
-    GeometryProvider() = default;
+//    GeometryProvider() = default;
     // radius - radius of icosahedron, outData - vector to write vertex data,
     // stride - stride size in elements, elemPos - position of first vertex in each stride
-#define STRIDE 8    // stride length
-#define VPOS 0      // vertex pos in stride
-#define NPOS 3      // normal...
-#define TPOS 6      // texture...
+    static const int STRIDE = 8;    // stride length
+    static const int VPOS = 0;      // vertex pos in stride
+    static const int NPOS = 3;      // normal...
+    static const int TPOS = 6;      // texture...
+    static constexpr float T_TEX_RATIO = 0.9f; // vertical texture ratio on Titan
+//    static constexpr float T_TILE_WIDTH = 1.0f-T_TEX_RATIO; // Titan pylon texture tile width
+    static std::mt19937 RNG;
+    // planimetry
     static void circle(QVector<GLfloat>& outData);
+    static void rectangle3D(QVector<GLfloat>& outData, int stride = STRIDE, int vertexPos = VPOS, int normalPos = NPOS, int texturePos = TPOS); // bot left=(-1,-1,0); top right=(1,1,0)
+
+    // stereometry
     static void icosahedron(QVector<GLfloat>& outData,  int stride = STRIDE, int vertexPos = VPOS, int normalPos = NPOS, int texturePos = TPOS);
     static void geosphere(QVector<GLfloat>& outData, SubdivisionCount subCount = Four, int stride = STRIDE, int vertexPos = VPOS, int normalPos = NPOS, int texPos = TPOS);
     static void sphere(QVector<GLfloat>& outData, const int parallelsAmount = 24, const int meridiansAmount = 24); // stride = 5, vertices [0-2], texture [3-4]

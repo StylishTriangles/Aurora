@@ -7,5 +7,10 @@
         <file>shaders/planegeometry.frag</file>
         <file>shaders/planegeometry.vert</file>
         <file>shaders/starSprite.frag</file>
+        <file>shaders/starfield.frag</file>
+        <file>shaders/starfield.vert</file>
+        <file>shaders/loadingScreen.frag</file>
+        <file>shaders/loadingScreen.vert</file>
+        <file>shaders/starSprite2.frag</file>
     </qresource>
 </RCC>

@@ -117,6 +117,7 @@ private:
     // active scene
     int stage;
     int actSystem;
+    bool loadingMain;
     // temp
     long long int cnt;
 

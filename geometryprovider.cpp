@@ -3,6 +3,8 @@
 #include <random>
 #include <utility>
 
+std::mt19937 GeometryProvider::RNG = std::mt19937(std::random_device()());
+
 template <typename T>
 inline T normalizeAngle(T val)
 {
@@ -35,6 +37,48 @@ void GeometryProvider::circle(QVector<GLfloat>& outData){
     for(float i=0.0f; i<2*M_PI; i+=(M_PI/360.0)){
         outData.push_back(sinf(i));
         outData.push_back(cosf(i));
+    }
+}
+
+void GeometryProvider::rectangle3D(QVector<GLfloat> &outData, int stride, int vertexPos, int normalPos, int texturePos)
+{
+    Q_ASSERT(stride>=(3*(vertexPos>=0)+3*(normalPos>=0)+2*(texturePos>=0)));
+    outData.resize(stride*6);
+    static GLfloat verts[] = {
+        -1,1,0,
+        -1,-1,0,
+        1,1,0,
+
+        1,1,0,
+        -1,-1,0,
+        1,-1,0
+    };
+    static GLfloat tex[] = {
+        0,0,
+        0,1,
+        1,0,
+
+        1,0,
+        0,1,
+        1,1
+    };
+    int iter = 0;
+    for (int i = vertexPos; i < outData.size() and vertexPos>-1; i+=stride) {
+        outData[i] = verts[iter];
+        outData[i+1] = verts[iter+1];
+        outData[i+2] = verts[iter+2];
+        iter+=3;
+    }
+    for (int i = normalPos; i < outData.size() and normalPos>-1; i+= stride) {
+        outData[i] = 0;
+        outData[i+1] = 0;
+        outData[i+2] = 1;
+    }
+    iter = 0;
+    for (int i = texturePos; i < outData.size() and texturePos>-1; i+= stride) {
+        outData[i] = tex[iter];
+        outData[i+1] = tex[iter+1];
+        iter+=2;
     }
 }
 
@@ -277,7 +321,7 @@ void GeometryProvider::titan(QVector<GLfloat>& modelSurface, SubdivisionCount su
     std::uniform_real_distribution<GLfloat> proc(0.0f, 1.0f);
     std::gamma_distribution<GLfloat> height(alpha, beta);
     if (seed == 0)
-        rng.seed(std::random_device()());
+        rng.seed(RNG());
     // create output buffers
     QVector<GLfloat> modelPylons;
     QVector<GLfloat> pylonTriangle(stride*3, 0.0f);
@@ -372,6 +416,12 @@ void GeometryProvider::texturize(Type T, QVector<GLfloat> &data, unsigned stride
             data[seq+texturePos + 1] = 0.5f-asinf(data[seq+vertexPos + 1])/(M_PI);
             data[seq+texturePos + 1 + stride] = 0.5f-asinf(data[seq+vertexPos + 1 + stride])/(M_PI);
             data[seq+texturePos + 1 + 2*stride] = 0.5f-asinf(data[seq+vertexPos + 1 + 2*stride])/(M_PI);
+            if (T == Type::TitanSurface) {
+                data[seq+texturePos + 1] *= T_TEX_RATIO;
+                data[seq+texturePos + 1 + stride] *= T_TEX_RATIO;
+                data[seq+texturePos + 1 + 2*stride] *= T_TEX_RATIO;
+            }
+
         }
     }
     else if (T == Type::TitanPylons)
@@ -391,8 +441,9 @@ void GeometryProvider::texturize(Type T, QVector<GLfloat> &data, unsigned stride
 
 void GeometryProvider::genNormals(Type geometryType, QVector<GLfloat>& data, unsigned stride, unsigned vertexPos, unsigned normalPos)
 {
-    if (geometryType == Icosahedron or geometryType == Geosphere or geometryType == TitanSurface or geometryType==TitanPylons) {
-        auto saveNorm = [&data](int pos, float x, float y, float z) -> void { data[pos]=x; data[pos+1]=y; data[pos+2]=z;};
+    auto saveNorm = [&data](int pos, float x, float y, float z) -> void { data[pos]=x; data[pos+1]=y; data[pos+2]=z;};
+    auto saveNorm3D = [&data](int pos, const QVector3D &v) -> void { data[pos]=v.x(); data[pos+1]=v.y(); data[pos+2]=v.z();};
+    if (geometryType == Icosahedron or geometryType == Geosphere or geometryType == TitanSurface) {
         for (int i = 0; i < data.size(); i+=stride*3)
         {
 //            QVector3D norm = QVector3D((data[i+vertexPos]+data[i+vertexPos+stride]+data[i+vertexPos+2*stride])/3,         NEVER DO DIS
@@ -402,6 +453,18 @@ void GeometryProvider::genNormals(Type geometryType, QVector<GLfloat>& data, uns
             saveNorm(i+normalPos, data[i+vertexPos], data[i+vertexPos+1], data[i+vertexPos+2]);
             saveNorm(i+normalPos+stride, data[i+vertexPos+stride], data[i+vertexPos+stride+1], data[i+vertexPos+stride+2]);
             saveNorm(i+normalPos+2*stride, data[i+vertexPos+2*stride], data[i+vertexPos+2*stride+1], data[i+vertexPos+2*stride+2]);
+        }
+    }
+    else if (geometryType == TitanPylons) {
+        for (int i = 0; i < data.size(); i+=stride*3)
+        {
+            QVector3D v1 = QVector3D(data[i+vertexPos], data[i+vertexPos+1], data[i+vertexPos+2]);
+            QVector3D v2 = QVector3D(data[i+vertexPos+stride], data[i+vertexPos+stride+1], data[i+vertexPos+stride+2]);
+            QVector3D v3 = QVector3D(data[i+vertexPos+2*stride], data[i+vertexPos+2*stride+1], data[i+vertexPos+2*stride+2]);
+            QVector3D norm = QVector3D::normal(v1,v2,v3);
+            saveNorm3D(i+normalPos, norm);
+            saveNorm3D(i+normalPos+stride, norm);
+            saveNorm3D(i+normalPos+2*stride, norm);
         }
     }
 }
