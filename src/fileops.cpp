@@ -156,6 +156,8 @@ bool parseObj(const QString &filepath, QVector<GLfloat> &mData)
                         i++;
                     }
                 }
+                if(j==1)
+                    tmp*=-1.0f;
                 tex.back()[j]=tmp*tmp2;
             }
         }

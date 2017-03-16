@@ -6,5 +6,6 @@
         <file>shaders/lightVertex.vert</file>
         <file>shaders/planegeometry.frag</file>
         <file>shaders/planegeometry.vert</file>
+        <file>shaders/starSprite.frag</file>
     </qresource>
 </RCC>

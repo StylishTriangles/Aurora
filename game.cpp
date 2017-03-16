@@ -90,7 +90,7 @@ void Game::initializeGL()
     GeometryProvider::circle(*tmp);
     mGeometry["circle"]=tmp;
     mGeometry["spacecruiser3"]= new QVector<GLfloat>;
-    QString s("../Aurora/obj_files/starcruiser_scaled.obj");
+    QString s("../Aurora/obj_files/Spacecruiser_lesserpoly.obj");
     Aurora::parseObj(s, *mGeometry["spacecruiser3"]);
 
     // load and compile shaders
@@ -100,7 +100,7 @@ void Game::initializeGL()
     loadTextures();
 
     // make models
-    //spaceShip= new ModelContainer({0.0f, 0.0f, 3.0f}, {0.0f, 0.0f, 0.0f}, "spacecruiser", "spacecruiser", ModelContainer::Spaceship);
+    spaceShip= new ModelContainer({0.0f, 0.0f, 3.0f}, {0.0f, 0.0f, 0.0f}, "spacecruiser", "spacecruiser", ModelContainer::Spaceship);
     galaxyMap = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "skybox", ModelContainer::Skybox);
     galaxyMap->setScale(50.0f);
     generateSolarSystems(solarSystems);
@@ -147,9 +147,6 @@ void Game::drawModel(ModelContainer* mod)
     static auto distance = [](QVector3D const& camPos, QVector3D const& modPos) -> float {
         return (camPos-modPos).length();
     };
-
-//    if(mod->type==ModelContainer::Star)
-//    qDebug()<<modelMat*vp*QVector4D(mod->position, 1.0f);
 //    float d = distance(camPos, mod->getPos()) / mod->getScale().x();
     float d=distance(camPos, mod->getPos());
     int detailLevel = (d > 60.f)?1:(d > 30.f)?2:(d > 15.f)?3:4;
@@ -258,7 +255,7 @@ void Game::paintGL()
     }
     else if(stage==2) {
             drawModel(solarSystems[actSystem]);
-            //drawModel(spaceShip);
+            drawModel(spaceShip);
     }
     emit paintCompleted();
 }
