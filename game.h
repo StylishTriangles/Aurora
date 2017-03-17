@@ -84,12 +84,12 @@ protected:
 
 private:
     int bindModel(ModelContainer* mod, int detail);
-    int bindModel(QString const & name, int detail);
+    int bindModel(QString const & name, int detail = -1);
 
     QMatrix4x4 projectionMat, viewMat;
     QOpenGLBuffer planetVbo;
     QOpenGLVertexArrayObject Vao;
-    QOpenGLShaderProgram *planetsProgram, *lightsProgram, *planeGeoProgram;
+    QOpenGLShaderProgram *planetsProgram, *lightsProgram, *planeGeoProgram, *loadingMainProgram;
     QPoint lastCursorPos;
     bool shadersCompiled, initComplete;
     // game world objects
@@ -118,6 +118,8 @@ private:
     int stage;
     int actSystem;
     bool loadingMain;
+    // timers
+    QElapsedTimer et;
     // temp
     long long int cnt;
 

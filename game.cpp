@@ -14,6 +14,7 @@ Game::Game(QWidget *parent) :
     stage(0), actSystem(-1), loadingMain(true),
     cnt(0)
 {
+    et.start();
     // load settings
     loadSettings();
 
@@ -35,6 +36,7 @@ Game::~Game()
     delete planetsProgram;
     delete lightsProgram;
     delete planeGeoProgram;
+    delete loadingMainProgram;
 }
 
 inline void qNormalizeAngle(float& a)
@@ -87,11 +89,12 @@ void Game::initializeGL()
         mGeometry[QStringLiteral("titan%1").arg(i)]=tmp;
     }
     tmp = new QVector<GLfloat>;
+    GeometryProvider::rectangle3D(*tmp);
+    mGeometry["sprite"] = tmp;
+    qDebug() << tmp->size();
+    tmp = new QVector<GLfloat>;
     GeometryProvider::circle(*tmp);
     mGeometry["circle"]=tmp;
-    tmp = new QVector<GLfloat>;
-    GeometryProvider::rectangle3D(*tmp,5,0,-1,3);
-    mGeometry["sprite"] = tmp;
     mGeometry["spacecruiser3"]= new QVector<GLfloat>;
     QString s("../Aurora/obj_files/Spacecruiser_lesserpoly.obj");
     Aurora::parseObj(s, *mGeometry["spacecruiser3"]);
@@ -132,7 +135,7 @@ inline int Game::bindModel(ModelContainer* mod, int detail)
 
 inline int Game::bindModel(QString const & name, int detail)
 {
-    auto it = mVbo.find(name + QString::number(detail));
+    auto it = mVbo.find(name + ((detail>-1)?QString::number(detail):""));
     Q_ASSERT_X(it != mVbo.end(), "Game::bindModel()", (const char*)(name + QString::number(detail)).data());
     it.value().bind();
     return it.value().size();
@@ -244,7 +247,20 @@ void Game::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if (loadingMain) {
-
+        glDisable(GL_CULL_FACE);
+        int msize = bindModel("sprite");
+        qDebug() << msize;
+        loadingMainProgram->bind();
+        loadingMainProgram->setUniformValue("time", GLfloat(et.nsecsElapsed()/1000));
+        loadingMainProgram->setUniformValue("mouse", QVector2D(lastCursorPos.x(), lastCursorPos.y()));
+        loadingMainProgram->setUniformValue("resolution", QVector2D(width(), height()));
+        mTextures["moon"]->bind();
+        glEnableVertexAttribArray(0);
+//        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8*sizeof(GLfloat), 0);
+//        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8*sizeof(GLfloat), (GLvoid*)(6*sizeof(GLfloat)));
+        glDrawArrays(GL_TRIANGLES,0,msize);
+        emit paintCompleted();
         return; // RETURN
     }
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -423,6 +439,7 @@ void Game::loadShaders()
     planetsProgram = new QOpenGLShaderProgram;
     lightsProgram = new QOpenGLShaderProgram;
     planeGeoProgram = new QOpenGLShaderProgram;
+    loadingMainProgram = new QOpenGLShaderProgram;
 
     // planet shader
     bool noerror = true;
@@ -453,8 +470,18 @@ void Game::loadShaders()
     noerror |= planeGeoProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/planegeometry.frag");
     planeGeoProgram->bindAttributeLocation("position", 0);
     noerror |= planeGeoProgram->link();
-    shadersCompiled = true;
     if (!noerror) {qDebug() << planeGeoProgram->log();}
+
+    // Loading screen shader
+    noerror = true;
+    noerror |= loadingMainProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/loadingScreen.vert");
+    noerror |= loadingMainProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/loadingScreen.frag");
+    planeGeoProgram->bindAttributeLocation("position", 0);
+    lightsProgram->bindAttributeLocation("uv", 2);
+    noerror |= loadingMainProgram->link();
+    if (!noerror) {qDebug() << loadingMainProgram->log();}
+
+    shadersCompiled = true;
 }
 
 void Game::loadSettings() {

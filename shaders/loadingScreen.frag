@@ -6,7 +6,9 @@
 uniform float time;
 uniform vec2 mouse;
 uniform vec2 resolution;
-
+in vec3 fragPos;
+//in vec2 texPos;
+//uniform sampler2D diffuseMap;
 
 #define iterations 14
 #define formuparam2 0.79
@@ -26,6 +28,8 @@ uniform vec2 resolution;
 
 #define transverseSpeed zoom*2.0
 #define cloud 0.11
+
+out vec4 color;
 
  
 float triangle(float x, float a) { 
@@ -53,7 +57,7 @@ float field(in vec3 p) {
 
 
 void main() {   
-     	vec2 uv2 = 2. * gl_FragCoord.xy / vec2(512) - 1.;
+        vec2 uv2 = 2. * fragPos.xy / vec2(512) - 1.;
 	vec2 uvs = uv2 * vec2(512)  / 512.;
 	
 	float time2 = time;               
@@ -171,5 +175,6 @@ void main() {
 	backCol2.b = 0.5*mix(backCol2.g, backCol2.b, 0.8);
 	backCol2.g = 0.0;
 	backCol2.bg = mix(backCol2.gb, backCol2.bg, 0.5*(cos(time*0.01) + 1.0));	
-	gl_FragColor = forCol2 + vec4(backCol2, 1.0);
+        gl_FragColor = forCol2 + vec4(backCol2, 1.0);
+//        gl_FragColor = vec4(1.0,0.0,0.0,1.0);//texture2D(diffuseMap, texPos);
 }
