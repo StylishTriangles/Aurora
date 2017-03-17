@@ -71,12 +71,16 @@ void MainWindow::on_newGameButton_clicked()
     gameScr = new Game(this);
     wHUD = new HUD(gameScr);
     gameWorker = new GameWorker(gameScr);
+    gameLoader = new GameWorker(gameScr);
     workerThread = new QThread;
+    loaderThread = new QThread;
     actionTimer = new QTimer;
     actionTimer->setTimerType(Qt::TimerType::PreciseTimer);
     // prepare gameWorker thread
     QObject::connect(actionTimer, SIGNAL(timeout(void)), gameWorker, SLOT(onTick(void)));
     QObject::connect(gameWorker, SIGNAL(frameReady(void)), gameScr, SLOT(update(void)));
+    // prepare gameLoader thread
+    QObject::connect(this, SIGNAL(sigLoadGame()), gameLoader, SLOT(initGame()));
     // connect signals from Game widget
     QObject::connect(gameScr, SIGNAL(escPressed(void)), wHUD, SLOT(togglePauseMenu(void)));
     QObject::connect(gameScr, SIGNAL(paintCompleted(void)), gameWorker, SLOT(acceptFrame(void)));
@@ -86,14 +90,17 @@ void MainWindow::on_newGameButton_clicked()
     QObject::connect(wHUD, SIGNAL(quitGame(void)), this, SLOT(reload(void)));
     QObject::connect(wHUD, SIGNAL(enterSettings(void)), opt, SLOT(show()));
 
+    ui->centralWidget->hide();
+    gameScr->show();
     actionTimer->start(tickDelayMs);
     actionTimer->moveToThread(workerThread);
     gameWorker->moveToThread(workerThread);
+    gameLoader->moveToThread(loaderThread);
     workerThread->start();
+    loaderThread->start();
     wololoTimer.stop();
 
-    ui->centralWidget->hide();
-    gameScr->show();
+    //emit sigLoadGame();
 }
 
 void MainWindow::on_optionsButton_clicked()
@@ -117,9 +124,13 @@ void MainWindow::unloadGame()
     if (gameScr != nullptr) {
         actionTimer->deleteLater();
         workerThread->exit();
+        loaderThread->exit();
         workerThread->wait();
+        loaderThread->wait();
         delete gameWorker;
         delete workerThread;
+        delete gameLoader;
+        delete loaderThread;
         delete gameScr; // also deletes mHUD
         gameScr = nullptr;
     }

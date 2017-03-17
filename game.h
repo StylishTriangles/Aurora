@@ -42,6 +42,7 @@ public:
 public slots:
     void onTick();
     void acceptFrame();
+    void initGame();
 signals:
     void frameReady();
 private:
@@ -74,12 +75,17 @@ protected:
     void drawModel(ModelContainer* mod);
     void drawOrbit(ModelContainer* mod);
     void drawEdges();
+    void drawLoadingScreen();
 
+    void initializeEnv1();
+    void initializeEnv2();
     void loadTextures();
     void loadShaders();
     void loadSettings();
+    void loadPrototypes();
     void setLightTypes();
     void allocateVbos();
+    void setupLS();
     void parseInput(float dT);
 
 private:
@@ -91,16 +97,18 @@ private:
     QOpenGLVertexArrayObject Vao;
     QOpenGLShaderProgram *planetsProgram, *lightsProgram, *planeGeoProgram, *loadingMainProgram;
     QPoint lastCursorPos;
-    bool shadersCompiled, initComplete;
+    bool shadersCompiled, initComplete, preInitComplete;
     // game world objects
     QHash<QString, QVector<GLfloat>*> mGeometry;
     QHash<QString, QOpenGLBuffer> mVbo;
 
     QHash<QString, QOpenGLTexture*> mTextures;
+    QHash<QString, QImage> tempImageData;
     QHash<QString, Light> mLights;
     QVector<ModelContainer*> solarSystems;
     QVector<QVector<int> > edges;
     ModelContainer* galaxyMap, *spaceShip;
+    QOpenGLBuffer lsVbo;
     // current camera rotation and position
     float camSpeed, rotationSpeed;
     float camFov, camNear, camFar;
@@ -117,7 +125,6 @@ private:
     // active scene
     int stage;
     int actSystem;
-    bool loadingMain;
     // timers
     QElapsedTimer et;
     // temp
