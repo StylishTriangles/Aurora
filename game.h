@@ -21,6 +21,8 @@
 
 #include "geometryprovider.h"
 #include "modelcontainer.h"
+#include "player.h"
+#include "details.h"
 #include "include/fileops.h"
 #include "include/mapgenerator.h"
 #include "include/ray_intersect.h"
@@ -65,6 +67,7 @@ public:
 protected:
     void initializeGL() Q_DECL_OVERRIDE;
     void resizeGL(int w ,int h) Q_DECL_OVERRIDE;
+    void update();
     void paintGL() Q_DECL_OVERRIDE;
     void mousePressEvent(QMouseEvent* event) Q_DECL_OVERRIDE;
     void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
@@ -82,6 +85,7 @@ protected:
     void allocateVbos();
     void parseInput(float dT);
 
+    void setSolarSystemOwner(QVector3D ownerCol, QVector2D pos);
 private:
     int bindModel(ModelContainer* mod, int detail);
     int bindModel(QString const & name, int detail);
@@ -89,7 +93,7 @@ private:
     QMatrix4x4 projectionMat, viewMat;
     QOpenGLBuffer planetVbo;
     QOpenGLVertexArrayObject Vao;
-    QOpenGLShaderProgram *planetsProgram, *lightsProgram, *planeGeoProgram;
+    QOpenGLShaderProgram *planetsProgram, *lightsProgram, *planeGeoProgram, *edgesProgram;
     QPoint lastCursorPos;
     bool shadersCompiled, initComplete;
     // game world objects
@@ -99,8 +103,12 @@ private:
     QHash<QString, QOpenGLTexture*> mTextures;
     QHash<QString, Light> mLights;
     QVector<ModelContainer*> solarSystems;
+    QVector<Details*> solarDetails;
     QVector<QVector<int> > edges;
     ModelContainer* galaxyMap, *spaceShip;
+    QVector<Player*> mPlayers;
+
+    QVector<QPair<QVector3D, QVector2D>> solarChanges;
     // current camera rotation and position
     float camSpeed, rotationSpeed;
     float camFov, camNear, camFar;

@@ -106,7 +106,7 @@ void Game::initializeGL()
     spaceShip= new ModelContainer({0.0f, 0.0f, 3.0f}, {0.0f, 0.0f, 0.0f}, "spacecruiser", "spacecruiser", ModelContainer::Spaceship);
     galaxyMap = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "skybox", ModelContainer::Skybox);
     galaxyMap->setScale(50.0f);
-    generateSolarSystems(solarSystems);
+    generateSolarSystems(solarSystems, solarDetails);
     mGeometry["edges"] = new QVector<float>();
     generateEdges(solarSystems, edges, *mGeometry["edges"], *mGeometry["geosphere1"], 2*solarSystems.size());
 
@@ -114,6 +114,10 @@ void Game::initializeGL()
     setLightTypes();
 
     allocateVbos();
+
+    //make players
+    Player* tmpP= new Player("Korpi", {0.0f, 1.0f, 0.0f});
+    mPlayers.push_back(tmpP);
 
     initComplete = true;
 }
@@ -221,6 +225,7 @@ void Game::drawOrbit(ModelContainer* mod) {
     planeGeoProgram->bind();
     planeGeoProgram->setUniformValue("vp",vp);
     planeGeoProgram->setUniformValue("modelMat",modelMat);
+    planeGeoProgram->setUniformValue("col",QVector3D(1.0f, 1.0f, 1.0f));//tmp
 
     mVbo["circle"].bind();
     this->glEnableVertexAttribArray(0);
@@ -230,14 +235,23 @@ void Game::drawOrbit(ModelContainer* mod) {
 }
 
 void Game::drawEdges() {
-    planeGeoProgram->bind();
-    planeGeoProgram->setUniformValue("vp", projectionMat*viewMat);
-    planeGeoProgram->setUniformValue("modelMat", QMatrix4x4());
+    edgesProgram->bind();
+    edgesProgram->setUniformValue("vp", projectionMat*viewMat);
+    edgesProgram->setUniformValue("modelMat", QMatrix4x4());
     mVbo["edges"].bind();
     this->glEnableVertexAttribArray(0);
-    this->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid*)0);
+    this->glEnableVertexAttribArray(1);
+    this->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
+    this->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(2*sizeof(GLfloat)));
 
     glDrawArrays(GL_LINES, 0, mGeometry["edges"]->size());
+}
+
+void Game::update(){
+    for(int i=0; i<solarChanges.size(); i++){
+        setSolarSystemOwner(solarChanges[i].first, solarChanges[i].second);
+    }
+    solarChanges.clear();
 }
 
 void Game::paintGL()
@@ -264,6 +278,7 @@ void Game::paintGL()
             drawModel(solarSystems[actSystem]);
             drawModel(spaceShip);
     }
+    update();
     emit paintCompleted();
 }
 
@@ -423,6 +438,7 @@ void Game::loadShaders()
     planetsProgram = new QOpenGLShaderProgram;
     lightsProgram = new QOpenGLShaderProgram;
     planeGeoProgram = new QOpenGLShaderProgram;
+    edgesProgram = new QOpenGLShaderProgram;
 
     // planet shader
     bool noerror = true;
@@ -455,6 +471,16 @@ void Game::loadShaders()
     noerror |= planeGeoProgram->link();
     shadersCompiled = true;
     if (!noerror) {qDebug() << planeGeoProgram->log();}
+
+    // edges source shader
+    noerror = true;
+    noerror |= edgesProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/edgesVert.vert");
+    noerror |= edgesProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/edgesFrag.frag");
+    edgesProgram->bindAttributeLocation("position", 0);
+    edgesProgram->bindAttributeLocation("col", 1);
+    noerror |= edgesProgram->link();
+    shadersCompiled = true;
+    if (!noerror) {qDebug() << edgesProgram->log();}
 }
 
 void Game::loadSettings() {
@@ -503,6 +529,8 @@ void Game::allocateVbos() {
         auto it2 = mVbo.insert(it.key(), QOpenGLBuffer());
         it2.value().create();
         it2.value().bind();
+        if(it2.key()=="edges")
+            it2.value().setUsagePattern(QOpenGLBuffer::DynamicDraw);
         it2.value().allocate(it.value()->data(),it.value()->size()*sizeof(GLfloat));
         ++it;
     }
@@ -584,6 +612,26 @@ void Game::parseInput(float dT)
         keys-=(Qt::LeftButton^mouseXor);
     }
     if(keys.find(Qt::RightButton^mouseXor) != keys.end()) {
+        if(stage==0){
+            QVector<QPair<GLfloat, int> > collisions;
+            QVector3D ray_begin, ray_dir, xyz_min, xyz_max;
+            float d;
+            screenPosToWorldRay(lastCursorPos.x(), this->height()-lastCursorPos.y(), this->width(), this->height(), viewMat, projectionMat, ray_begin, ray_dir);
+            for(int i=0; i<solarSystems.size(); i++){
+                xyz_min=QVector3D(-1.0f, -1.0f, -1.0f)*solarSystems[i]->getScale();
+                xyz_max=QVector3D(1.0f, 1.0f, 1.0f)*solarSystems[i]->getScale();
+                if(testRayOBBIntersection(ray_begin, ray_dir, xyz_min, xyz_max, solarSystems[i]->getModelMat(), d)) {
+                    collisions.push_back({testRayPreciselyIntersection(*(mGeometry[solarSystems[i]->model+"1"]), ray_begin, ray_dir, solarSystems[i]->getModelMat(), 8, 0), i});
+                    if(collisions[collisions.size()-1].first<=-10e6+0.0001 && collisions[collisions.size()-1].first>=-10e6-0.0001)
+                        collisions.pop_back();
+                }
+            }
+            if(collisions.size()!=0){
+                std::sort(collisions.begin(), collisions.end());
+                solarDetails[collisions[0].second]->setOwner(0);
+                solarChanges+={mPlayers[0]->getColor(), QVector2D(solarSystems[collisions[0].second]->position)};
+            }
+        }
         if(stage==2) {
             camPos = camPosDef + solarSystems[actSystem]->position;
             camFront = camFrontDef;
@@ -614,6 +662,23 @@ void Game::parseInput(float dT)
         front.setY(sinf(qDegreesToRadians(camRot.x())));
         front.setZ(sinf(qDegreesToRadians(camRot.y())) * cosf(qDegreesToRadians(camRot.x())));
         camFront = front.normalized();
+    }
+}
+
+void Game::setSolarSystemOwner(QVector3D ownerCol, QVector2D pos){
+    float a, b;
+    mVbo["edges"].bind();
+    for(int i=0; i<mVbo["edges"].size(); i+=5){
+        mVbo["edges"].read(sizeof(GLfloat)*i, &a, sizeof(GLfloat));
+        mVbo["edges"].read(sizeof(GLfloat)*(i+1), &b, sizeof(GLfloat));
+        if(a>=pos.x()-0.01f && a<=pos.x()+0.01f && b>=pos.y()-0.01f && b<=pos.y()+0.01f){
+            mVbo["edges"].write(sizeof(GLfloat)*(i+2), &ownerCol, 3*sizeof(GLfloat));
+        }
+    }
+    for(int i=0; i<mVbo["edges"].size(); i+=5){
+        mVbo["edges"].read(sizeof(GLfloat)*(i+2), &a, sizeof(GLfloat));
+        mVbo["edges"].read(sizeof(GLfloat)*(i+3), &b, sizeof(GLfloat));
+        qDebug()<<a<<" "<<b;
     }
 }
 
