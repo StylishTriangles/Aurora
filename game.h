@@ -44,6 +44,7 @@ public:
 public slots:
     void onTick();
     void acceptFrame();
+    void initGame();
 signals:
     void frameReady();
 private:
@@ -77,37 +78,44 @@ protected:
     void drawModel(ModelContainer* mod);
     void drawOrbit(ModelContainer* mod);
     void drawEdges();
+    void drawLoadingScreen();
 
+    void initializeEnv1();
+    void initializeEnv2();
     void loadTextures();
     void loadShaders();
     void loadSettings();
+    void loadPrototypes();
     void setLightTypes();
     void allocateVbos();
+    void setupLS();
     void parseInput(float dT);
 
     void setSolarSystemOwner(QVector3D ownerCol, QVector2D pos);
 private:
     int bindModel(ModelContainer* mod, int detail);
-    int bindModel(QString const & name, int detail);
+    int bindModel(QString const & name, int detail = -1);
 
     QMatrix4x4 projectionMat, viewMat;
     QOpenGLBuffer planetVbo;
     QOpenGLVertexArrayObject Vao;
-    QOpenGLShaderProgram *planetsProgram, *lightsProgram, *planeGeoProgram, *edgesProgram;
+    QOpenGLShaderProgram *planetsProgram, *lightsProgram, *planeGeoProgram, *loadingMainProgram, *edgesProgram;
     QPoint lastCursorPos;
-    bool shadersCompiled, initComplete;
+    bool shadersCompiled, initComplete, preInitComplete;
     // game world objects
     QHash<QString, QVector<GLfloat>*> mGeometry;
     QHash<QString, QOpenGLBuffer> mVbo;
+    QOpenGLBuffer lsVbo;
 
     QHash<QString, QOpenGLTexture*> mTextures;
+    QHash<QString, QImage> tempImageData;
     QHash<QString, Light> mLights;
     QVector<ModelContainer*> solarSystems;
     QVector<Details*> solarDetails;
     QVector<QVector<int> > edges;
     ModelContainer* galaxyMap, *spaceShip;
-    QVector<Player*> mPlayers;
 
+    QVector<Player*> mPlayers;
     QVector<QPair<QVector3D, QVector2D>> solarChanges;
     // current camera rotation and position
     float camSpeed, rotationSpeed;
@@ -125,7 +133,8 @@ private:
     // active scene
     int stage;
     int actSystem;
-    bool loadingMain;
+    // timers
+    QElapsedTimer et;
     // temp
     long long int cnt;
 

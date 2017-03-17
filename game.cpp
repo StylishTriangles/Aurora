@@ -1,4 +1,5 @@
 #include "game.h"
+#include <QCursor>
 #include <QDebug>
 #include <QOpenGLContext>
 #include <QResource>
@@ -7,13 +8,14 @@
 
 Game::Game(QWidget *parent) :
     QOpenGLWidget(parent),
-    shadersCompiled(false), initComplete(false),
+    shadersCompiled(false), initComplete(false), preInitComplete(false),
     camFov(60.0f), camNear(0.01f), camFar(100.0f),
     camRot(camRotDef),
     lightPos(0.0f, -0.0f, 0.0f),
-    stage(0), actSystem(-1), loadingMain(true),
+    stage(0), actSystem(-1),
     cnt(0)
 {
+    et.start();
     // load settings
     loadSettings();
 
@@ -35,6 +37,7 @@ Game::~Game()
     delete planetsProgram;
     delete lightsProgram;
     delete planeGeoProgram;
+    delete loadingMainProgram;
 }
 
 inline void qNormalizeAngle(float& a)
@@ -71,55 +74,16 @@ void Game::initializeGL()
     camSpeed = 0.05f;
     rotationSpeed = 0.1f;
 
-    // initialize models
-    QVector<GLfloat>* tmp;
-    for (int i = 1; i <= 4; i++)
-    {
-        tmp = new QVector<GLfloat>;
-        GeometryProvider::geosphere(*tmp, GeometryProvider::SubdivisionCount(i));
-//        GeometryProvider::cube(*tmp);
-        mGeometry[QStringLiteral("geosphere%1").arg(i)]=tmp;
-    }
-    for (int i = 3; i <= 3; i++)
-    {
-        tmp=new QVector<GLfloat>;
-        GeometryProvider::titan(*tmp, GeometryProvider::SubdivisionCount(i), 420);
-        mGeometry[QStringLiteral("titan%1").arg(i)]=tmp;
-    }
-    tmp = new QVector<GLfloat>;
-    GeometryProvider::circle(*tmp);
-    mGeometry["circle"]=tmp;
-    tmp = new QVector<GLfloat>;
-    GeometryProvider::rectangle3D(*tmp,5,0,-1,3);
-    mGeometry["sprite"] = tmp;
-    mGeometry["spacecruiser3"]= new QVector<GLfloat>;
-    QString s("../Aurora/obj_files/Spacecruiser_lesserpoly.obj");
-    Aurora::parseObj(s, *mGeometry["spacecruiser3"]);
+    initializeEnv1();
 
-    // load and compile shaders
-    loadShaders();
+    initializeEnv2();
 
-    // load textures
-    loadTextures();
-
-    // make models
-    spaceShip= new ModelContainer({0.0f, 0.0f, 3.0f}, {0.0f, 0.0f, 0.0f}, "spacecruiser", "spacecruiser", ModelContainer::Spaceship);
-    galaxyMap = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "skybox", ModelContainer::Skybox);
-    galaxyMap->setScale(50.0f);
-    generateSolarSystems(solarSystems, solarDetails);
-    mGeometry["edges"] = new QVector<float>();
-    generateEdges(solarSystems, edges, *mGeometry["edges"], *mGeometry["geosphere1"], 2*solarSystems.size());
-
-    //set light types
-    setLightTypes();
-
-    allocateVbos();
-
-    //make players
+    //make players //tmp
     Player* tmpP= new Player("Korpi", {0.0f, 1.0f, 0.0f});
     mPlayers.push_back(tmpP);
 
-    initComplete = true;
+    setupLS();
+    preInitComplete = true;
 }
 
 void Game::resizeGL(int w, int h)
@@ -136,7 +100,7 @@ inline int Game::bindModel(ModelContainer* mod, int detail)
 
 inline int Game::bindModel(QString const & name, int detail)
 {
-    auto it = mVbo.find(name + QString::number(detail));
+    auto it = mVbo.find(name + ((detail>-1)?QString::number(detail):""));
     Q_ASSERT_X(it != mVbo.end(), "Game::bindModel()", (const char*)(name + QString::number(detail)).data());
     it.value().bind();
     return it.value().size();
@@ -254,11 +218,29 @@ void Game::update(){
     solarChanges.clear();
 }
 
+void Game::drawLoadingScreen()
+{
+    //glDisable(GL_CULL_FACE);
+    int msize = lsVbo.size();
+    lsVbo.bind();
+    loadingMainProgram->bind();
+    loadingMainProgram->setUniformValue("time", GLfloat(et.nsecsElapsed()/1e9f));
+    loadingMainProgram->setUniformValue("mouse", QVector2D((GLfloat)QCursor::pos().x()/width(), (GLfloat)QCursor::pos().y()/height()));
+    loadingMainProgram->setUniformValue("resolution", QVector2D(width(), height()));
+//    mTextures["moon"]->bind();
+    glEnableVertexAttribArray(0);
+//        glEnableVertexAttribArray(2);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8*sizeof(GLfloat), 0);
+//        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8*sizeof(GLfloat), (GLvoid*)(6*sizeof(GLfloat)));
+    glDrawArrays(GL_TRIANGLES,0,msize);
+}
+
 void Game::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    if (loadingMain) {
-
+    if (!initComplete) {
+        drawLoadingScreen();
+        emit paintCompleted();
         return; // RETURN
     }
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -397,13 +379,32 @@ void Game::keyReleaseEvent(QKeyEvent *event)
         keys -= Qt::Key_Shift;
 }
 
+void Game::initializeEnv1()
+{
+    //loadSettings();
+    loadTextures();
+    loadShaders();
+    loadPrototypes();
+    setLightTypes();
+}
+
+void Game::initializeEnv2()
+{
+    allocateVbos();
+    initComplete = true;
+}
+
 void Game::loadTextures()
 {
     QOpenGLTexture* tex;
     tex = new QOpenGLTexture(QImage(QString(":/planets/earth.png")));
     mTextures.insert("earth", tex);
+    QImage img;
+    img = QImage(QString(":/planets/earth.png"));
+    tempImageData.insert("earth", img);
 
 #ifdef QT_DEBUG
+    //old but working
     tex = new QOpenGLTexture(QImage(QString("../Aurora/atmosphere.png")));
     mTextures.insert("atmosphere", tex);
     tex = new QOpenGLTexture(QImage(QString("../Aurora/atmosphere.png")));
@@ -426,6 +427,29 @@ void Game::loadTextures()
     mTextures.insert("spacecruiser", tex);
     tex =  new QOpenGLTexture(QImage(QString("../Aurora/textures/spacecruiser.png")));
     mTextures.insert("spacecruiserSpec", tex);
+
+    img = QImage(QString("../Aurora/atmosphere.png"));
+    tempImageData.insert("atmosphere", img);
+    img = QImage(QString("../Aurora/atmosphere.png"));
+    tempImageData.insert("atmosphereSpec", img);
+    img = QImage(QString("../Aurora/moon.png"));
+    tempImageData.insert("moon", img);
+    img = QImage(QString("../Aurora/moon.png"));
+    tempImageData.insert("moonSpec", img);
+    img = QImage(QString(":/misc/skybox.png"));
+    tempImageData.insert("skybox", img);
+    img = QImage(QString(":/misc/skybox.png"));
+    tempImageData.insert("skyboxSpec", img);
+    img = QImage(QString("../Aurora/imgtures/earthSpec.png"));
+    tempImageData.insert("earthSpec", img);
+    img = QImage(QString("../Aurora/imgtures/venus.png"));
+    tempImageData.insert("venus", img);
+    img = QImage(QString("../Aurora/imgtures/venus.png"));
+    tempImageData.insert("venusSpec", img);
+    img = QImage(QString("../Aurora/imgtures/spacecruiser.png"));
+    tempImageData.insert("spacecruiser", img);
+    img = QImage(QString("../Aurora/imgtures/spacecruiser.png"));
+    tempImageData.insert("spacecruiserSpec", img);
 #else
     QResource::registerResource("textures/textures.rcc");
     tex = new QOpenGLTexture(QImage(QString(":/planets/atmosphere.png")));
@@ -469,7 +493,6 @@ void Game::loadShaders()
     noerror |= planeGeoProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/planegeometry.frag");
     planeGeoProgram->bindAttributeLocation("position", 0);
     noerror |= planeGeoProgram->link();
-    shadersCompiled = true;
     if (!noerror) {qDebug() << planeGeoProgram->log();}
 
     // edges source shader
@@ -479,8 +502,8 @@ void Game::loadShaders()
     edgesProgram->bindAttributeLocation("position", 0);
     edgesProgram->bindAttributeLocation("col", 1);
     noerror |= edgesProgram->link();
-    shadersCompiled = true;
     if (!noerror) {qDebug() << edgesProgram->log();}
+    shadersCompiled = true;
 }
 
 void Game::loadSettings() {
@@ -488,13 +511,13 @@ void Game::loadSettings() {
     Aurora::readSettings(mSettings);
     QString str;
     QSurfaceFormat qsf;
-    // configure anti-aliasing
+    /// configure anti-aliasing
     str = mSettings[Aurora::SETTING_GRAPHICS_AA];
     if (str == "No AA") qsf.setSamples(0);
     else if (str == "2x MSAA") qsf.setSamples(2);
     else if (str == "4x MSAA") qsf.setSamples(4);
     else if (str == "8x MSAA") qsf.setSamples(8);
-    // configure v-sync
+    /// configure v-sync
     str = mSettings[Aurora::SETTING_GRAPHICS_VSYNC];
     if (str == "No Vsync")
     {qsf.setSwapInterval(0); qsf.setSwapBehavior(QSurfaceFormat::SingleBuffer);}
@@ -502,12 +525,50 @@ void Game::loadSettings() {
     {qsf.setSwapInterval(1); qsf.setSwapBehavior(QSurfaceFormat::DoubleBuffer);}
     else if (str == "Triple Buffering")
     {qsf.setSwapInterval(1); qsf.setSwapBehavior(QSurfaceFormat::TripleBuffer);}
-    // configure alpha buffer
+    /// configure alpha buffer
     str = mSettings[Aurora::SETTING_ALPHA_BUFFER_SIZE];
     qsf.setAlphaBufferSize(str.toInt());
 
-    // apply settings
+    /// apply settings
     setFormat(qsf);
+}
+
+void Game::loadPrototypes()
+{
+    /// initialize geometry
+    QVector<GLfloat>* tmp;
+    for (int i = 1; i <= 4; i++)
+    {
+        tmp = new QVector<GLfloat>;
+        GeometryProvider::geosphere(*tmp, GeometryProvider::SubdivisionCount(i));
+//        GeometryProvider::cube(*tmp);
+        mGeometry[QStringLiteral("geosphere%1").arg(i)]=tmp;
+    }
+    for (int i = 3; i <= 3; i++)
+    {
+        tmp=new QVector<GLfloat>;
+        GeometryProvider::titan(*tmp, GeometryProvider::SubdivisionCount(i), 420);
+        mGeometry[QStringLiteral("titan%1").arg(i)]=tmp;
+    }
+    tmp = new QVector<GLfloat>;
+    GeometryProvider::rectangle3D(*tmp);
+    mGeometry["sprite"] = tmp;
+    qDebug() << tmp->size();
+    tmp = new QVector<GLfloat>;
+    GeometryProvider::circle(*tmp);
+    mGeometry["circle"]=tmp;
+    mGeometry["spacecruiser3"]= new QVector<GLfloat>;
+    QString s("../Aurora/obj_files/Spacecruiser_lesserpoly.obj");
+    Aurora::parseObj(s, *mGeometry["spacecruiser3"]);
+
+
+    /// make models
+    spaceShip= new ModelContainer({0.0f, 0.0f, 3.0f}, {0.0f, 0.0f, 0.0f}, "spacecruiser", "spacecruiser", ModelContainer::Spaceship);
+    galaxyMap = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "skybox", ModelContainer::Skybox);
+    galaxyMap->setScale(50.0f);
+    generateSolarSystems(solarSystems, solarDetails);
+    mGeometry["edges"] = new QVector<float>();
+    generateEdges(solarSystems, edges, *mGeometry["edges"], *mGeometry["geosphere1"], 2*solarSystems.size());
 }
 
 void Game::setLightTypes(){
@@ -534,6 +595,24 @@ void Game::allocateVbos() {
         it2.value().allocate(it.value()->data(),it.value()->size()*sizeof(GLfloat));
         ++it;
     }
+}
+
+void Game::setupLS()
+{
+    // setup geometry
+    QVector<GLfloat> qv;
+    GeometryProvider::rectangle3D(qv);
+    lsVbo.create();
+    lsVbo.bind();
+    lsVbo.allocate(qv.data(),qv.size()*sizeof(GLfloat));
+    // Loading screen shader
+    loadingMainProgram = new QOpenGLShaderProgram;
+    bool noerror = true;
+    noerror |= loadingMainProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/loadingScreen.vert");
+    noerror |= loadingMainProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/loadingScreen.frag");
+    loadingMainProgram->bindAttributeLocation("position", 0);
+    noerror |= loadingMainProgram->link();
+    if (!noerror) {qDebug() << loadingMainProgram->log();}
 }
 
 void Game::parseInput(float dT)
@@ -675,11 +754,6 @@ void Game::setSolarSystemOwner(QVector3D ownerCol, QVector2D pos){
             mVbo["edges"].write(sizeof(GLfloat)*(i+2), &ownerCol, 3*sizeof(GLfloat));
         }
     }
-    for(int i=0; i<mVbo["edges"].size(); i+=5){
-        mVbo["edges"].read(sizeof(GLfloat)*(i+2), &a, sizeof(GLfloat));
-        mVbo["edges"].read(sizeof(GLfloat)*(i+3), &b, sizeof(GLfloat));
-        qDebug()<<a<<" "<<b;
-    }
 }
 
 // GameWorker::
@@ -690,8 +764,9 @@ void GameWorker::onTick()
     lastTick = nse;
     g->parseInput(dT*25.0f);
     // gaym logic
-    if (!g->initComplete)
-        return;
+    if (!g->initComplete) {
+        emit frameReady(); return;
+    }
     if(g->actSystem != -1){
         orbit(g->solarSystems[g->actSystem], nse);
     }
@@ -714,4 +789,9 @@ void GameWorker::acceptFrame() {
 //    qint64 nse = et.nsecsElapsed();
 //    float dT = (float)(nse-lastFrame)/1e9f;
 //    lastFrame = nse;
+}
+
+void GameWorker::initGame()
+{
+    g->initializeEnv1();
 }

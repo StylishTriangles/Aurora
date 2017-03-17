@@ -38,6 +38,9 @@ private slots:
 
     void on_minigameButton_clicked();
 
+signals:
+    void sigLoadGame();
+
 private:
     void unloadGame(); // free Game's memory
 
@@ -48,8 +51,8 @@ private:
     ArkanoidWidget* wArkanoid;
 
     // game related variables
-    QThread* workerThread;
-    GameWorker* gameWorker;
+    QThread *workerThread, *loaderThread;
+    GameWorker *gameWorker, *gameLoader;
     QTimer* actionTimer;
     QTimer wololoTimer;
     int tickDelayMs;
