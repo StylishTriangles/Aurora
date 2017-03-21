@@ -45,6 +45,7 @@ public slots:
     void initGame();
 signals:
     void frameReady();
+    void initComplete();
 private:
     void orbit(ModelContainer* m, qint64 nse);
     Game* g;
@@ -77,16 +78,21 @@ protected:
     void drawEdges();
     void drawLoadingScreen();
 
-    void initializeEnv1();
-    void initializeEnv2();
+    void allocateVbos();
+    void initializeEnvRemote();
+    void initializeEnvLocal();
     void loadTextures();
     void loadShaders();
     void loadSettings();
     void loadPrototypes();
     void setLightTypes();
-    void allocateVbos();
     void setupLS();
+    void setupTextures();
+
     void parseInput(float dT);
+
+public slots:
+    void initializeEnv();
 
 private:
     int bindModel(ModelContainer* mod, int detail);
@@ -103,7 +109,7 @@ private:
     QHash<QString, QOpenGLBuffer> mVbo;
 
     QHash<QString, QOpenGLTexture*> mTextures;
-    QHash<QString, QImage> tempImageData;
+    QHash<QString, QImage> mTempImageData;
     QHash<QString, Light> mLights;
     QVector<ModelContainer*> solarSystems;
     QVector<QVector<int> > edges;
