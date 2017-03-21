@@ -2,7 +2,7 @@
 
 #include<random>
 
-void generateSolarSystems(QVector<ModelContainer *> &solarSystems){
+void generateSolarSystems(QVector<ModelContainer *> &solarSystems, QVector<Details*> &solarDetails){
     std::mt19937 rng((long long int)(new int(75192)));
     std::uniform_real_distribution<float> ufd(-20.0f, 20.0f), eps(-0.1f, 0.1f), alfa(0.0f, 2*M_PI);
     std::uniform_int_distribution<int> uid(1, 6), luid(1, 1000);
@@ -22,34 +22,35 @@ void generateSolarSystems(QVector<ModelContainer *> &solarSystems){
         if(p<=800){
             if(p<=400){
                 if(p<=200)
-                    addWhiteDwarf(solarSystems, rng, eps, x, y);
+                    addWhiteDwarf(solarSystems, solarDetails, rng, eps, x, y);
                 else
-                    addYellowDwarf(solarSystems, rng, eps, x, y);
+                    addYellowDwarf(solarSystems, solarDetails, rng, eps, x, y);
             }
             else{
                 if(p<=600)
-                    addBlueDwarf(solarSystems, rng, eps, x, y);
+                    addBlueDwarf(solarSystems, solarDetails, rng, eps, x, y);
                 else
-                    addRedDwarf(solarSystems, rng, eps, x, y);
+                    addRedDwarf(solarSystems, solarDetails, rng, eps, x, y);
             }
         }
         else{
             if(p<=950){
                 if(p<=875)
-                    addRedGiant(solarSystems, rng, eps, x, y);
+                    addRedGiant(solarSystems, solarDetails, rng, eps, x, y);
                 else
-                    addBlueGiant(solarSystems, rng, eps, x, y);
+                    addBlueGiant(solarSystems, solarDetails, rng, eps, x, y);
             }
             else{
                 if(p<=975)
-                    addRedSuperGiant(solarSystems, rng, eps, x, y);
+                    addRedSuperGiant(solarSystems, solarDetails, rng, eps, x, y);
                 else
-                    addBlueSuperGiant(solarSystems, rng, eps, x, y);
+                    addBlueSuperGiant(solarSystems, solarDetails, rng, eps, x, y);
             }
         }
     }
     for(int i=0; i<10; i++){ //generate planets in systems
         planetsInSystem=uid(rng);
+        solarDetails[i]->setPlanetNumber(planetsInSystem);
         for(int j=0; j<planetsInSystem; j++){
             p=luid(rng);
             if(p<=600)
@@ -94,7 +95,7 @@ void generateSolarSystems(QVector<ModelContainer *> &solarSystems){
     solarSystems.back()->addChild(tmpM);*/
 }
 
-void addYellowDwarf(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
+void addYellowDwarf(QVector<ModelContainer*>& solarSystems, QVector<Details*>& solarDetails, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
     ModelContainer* tmpM, *tmpM2;
     tmpM = new ModelContainer({x, y, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "yellow_dwarf", ModelContainer::Star);
     tmpM->setScale(eps(rng)+0.3f);
@@ -102,9 +103,11 @@ void addYellowDwarf(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, s
     tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
     tmpM2->setScale(50.0f);
     solarSystems.back()->addChild(tmpM2);
+    Details* tmpD = new Details(-1, QVector<int>(), "yellow_dwarf", tmpM->position);
+    solarDetails.push_back(tmpD);
 }
 
-void addWhiteDwarf(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
+void addWhiteDwarf(QVector<ModelContainer*>& solarSystems, QVector<Details*>& solarDetails, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
     ModelContainer* tmpM, *tmpM2;
     tmpM = new ModelContainer({x, y, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "white_dwarf", ModelContainer::Star);
     tmpM->setScale(eps(rng)+0.3f);
@@ -112,9 +115,11 @@ void addWhiteDwarf(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, st
     tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
     tmpM2->setScale(50.0f);
     solarSystems.back()->addChild(tmpM2);
+    Details* tmpD = new Details(-1, QVector<int>(), "white_dwarf", tmpM->position);
+    solarDetails.push_back(tmpD);
 }
 
-void addBlueDwarf(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
+void addBlueDwarf(QVector<ModelContainer*>& solarSystems, QVector<Details *> &solarDetails, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
     ModelContainer* tmpM, *tmpM2;
     tmpM = new ModelContainer({x, y, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "blue_dwarf", ModelContainer::Star);
     tmpM->setScale(eps(rng)+0.3f);
@@ -122,9 +127,11 @@ void addBlueDwarf(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, std
     tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
     tmpM2->setScale(50.0f);
     solarSystems.back()->addChild(tmpM2);
+    Details* tmpD = new Details(-1, QVector<int>(), "blue_dwarf", tmpM->position);
+    solarDetails.push_back(tmpD);
 }
 
-void addRedDwarf(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
+void addRedDwarf(QVector<ModelContainer*>& solarSystems, QVector<Details*>& solarDetails, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
     ModelContainer* tmpM, *tmpM2;
     tmpM = new ModelContainer({x, y, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "red_dwarf", ModelContainer::Star);
     tmpM->setScale(eps(rng)+0.3f);
@@ -132,9 +139,11 @@ void addRedDwarf(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, std:
     tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
     tmpM2->setScale(50.0f);
     solarSystems.back()->addChild(tmpM2);
+    Details* tmpD = new Details(-1, QVector<int>(), "red_dwarf", tmpM->position);
+    solarDetails.push_back(tmpD);
 }
 
-void addRedGiant(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
+void addRedGiant(QVector<ModelContainer*>& solarSystems, QVector<Details*>& solarDetails, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
     ModelContainer* tmpM, *tmpM2;
     tmpM = new ModelContainer({x, y, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "red_giant", ModelContainer::Star);
     tmpM->setScale(eps(rng)+0.6f);
@@ -142,9 +151,11 @@ void addRedGiant(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, std:
     tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
     tmpM2->setScale(50.0f);
     solarSystems.back()->addChild(tmpM2);
+    Details* tmpD = new Details(-1, QVector<int>(), "red_giant", tmpM->position);
+    solarDetails.push_back(tmpD);
 }
 
-void addBlueGiant(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
+void addBlueGiant(QVector<ModelContainer*>& solarSystems, QVector<Details*>& solarDetails, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
     ModelContainer* tmpM, *tmpM2;
     tmpM = new ModelContainer({x, y, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "blue_giant", ModelContainer::Star);
     tmpM->setScale(eps(rng)+0.6f);
@@ -152,9 +163,11 @@ void addBlueGiant(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, std
     tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
     tmpM2->setScale(50.0f);
     solarSystems.back()->addChild(tmpM2);
+    Details* tmpD = new Details(-1, QVector<int>(), "blue_giant", tmpM->position);
+    solarDetails.push_back(tmpD);
 }
 
-void addRedSuperGiant(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
+void addRedSuperGiant(QVector<ModelContainer*>& solarSystems, QVector<Details*>& solarDetails, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
     ModelContainer* tmpM, *tmpM2;
     tmpM = new ModelContainer({x, y, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "red_super_giant", ModelContainer::Star);
     tmpM->setScale(eps(rng)+1.0f);
@@ -162,9 +175,11 @@ void addRedSuperGiant(QVector<ModelContainer*>& solarSystems, std::mt19937& rng,
     tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
     tmpM2->setScale(50.0f);
     solarSystems.back()->addChild(tmpM2);
+    Details* tmpD = new Details(-1, QVector<int>(), "red_super_giant", tmpM->position);
+    solarDetails.push_back(tmpD);
 }
 
-void addBlueSuperGiant(QVector<ModelContainer*>& solarSystems, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
+void addBlueSuperGiant(QVector<ModelContainer*>& solarSystems, QVector<Details*>& solarDetails, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
     ModelContainer* tmpM, *tmpM2;
     tmpM = new ModelContainer({x, y, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "blue_super_giant", ModelContainer::Star);
     tmpM->setScale(eps(rng)+1.0f);
@@ -172,6 +187,8 @@ void addBlueSuperGiant(QVector<ModelContainer*>& solarSystems, std::mt19937& rng
     tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
     tmpM2->setScale(50.0f);
     solarSystems.back()->addChild(tmpM2);
+    Details* tmpD = new Details(-1, QVector<int>(), "blue_super_giant", tmpM->position);
+    solarDetails.push_back(tmpD);
 }
 
 bool comp(QVector3D a, QVector3D b){
@@ -234,10 +251,16 @@ void generateEdges(QVector<ModelContainer *> &solarSystems, QVector<QVector<int>
     for(int i=0; i<edges.size(); i++){
         for(int j=0; j<edges[i].size(); j++){
             if(i<edges[i][j]){
-                geom.push_back(solarSystems[i]->position.x());
-                geom.push_back(solarSystems[i]->position.y());
-                geom.push_back(solarSystems[edges[i][j]]->position.x());
-                geom.push_back(solarSystems[edges[i][j]]->position.y());
+                geom+=(solarSystems[i]->position.x());
+                geom+=(solarSystems[i]->position.y());
+                geom+=1.0f;
+                geom+=1.0f;
+                geom+=1.0f;
+                geom+=(solarSystems[edges[i][j]]->position.x());
+                geom+=(solarSystems[edges[i][j]]->position.y());
+                geom+=1.0f;
+                geom+=1.0f;
+                geom+=1.0f;
             }
         }
     }

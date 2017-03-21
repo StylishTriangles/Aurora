@@ -21,6 +21,8 @@
 
 #include "geometryprovider.h"
 #include "modelcontainer.h"
+#include "player.h"
+#include "details.h"
 #include "include/fileops.h"
 #include "include/mapgenerator.h"
 #include "include/ray_intersect.h"
@@ -67,6 +69,7 @@ public:
 protected:
     void initializeGL() Q_DECL_OVERRIDE;
     void resizeGL(int w ,int h) Q_DECL_OVERRIDE;
+    void update();
     void paintGL() Q_DECL_OVERRIDE;
     void mousePressEvent(QMouseEvent* event) Q_DECL_OVERRIDE;
     void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
@@ -77,6 +80,8 @@ protected:
     void drawOrbit(ModelContainer* mod);
     void drawEdges();
     void drawLoadingScreen();
+    
+    void setSolarSystemOwner(QVector3D ownerCol, QVector2D pos);
 
     void allocateVbos();
     void initializeEnvRemote();
@@ -93,7 +98,7 @@ protected:
 
 public slots:
     void initializeEnv();
-
+    
 private:
     int bindModel(ModelContainer* mod, int detail);
     int bindModel(QString const & name, int detail = -1);
@@ -101,20 +106,24 @@ private:
     QMatrix4x4 projectionMat, viewMat;
     QOpenGLBuffer planetVbo;
     QOpenGLVertexArrayObject Vao;
-    QOpenGLShaderProgram *planetsProgram, *lightsProgram, *planeGeoProgram, *loadingMainProgram;
+    QOpenGLShaderProgram *planetsProgram, *lightsProgram, *planeGeoProgram, *loadingMainProgram, *edgesProgram;
     QPoint lastCursorPos;
     bool shadersCompiled, initComplete, preInitComplete;
     // game world objects
     QHash<QString, QVector<GLfloat>*> mGeometry;
     QHash<QString, QOpenGLBuffer> mVbo;
+    QOpenGLBuffer lsVbo;
 
     QHash<QString, QOpenGLTexture*> mTextures;
     QHash<QString, QImage> mTempImageData;
     QHash<QString, Light> mLights;
     QVector<ModelContainer*> solarSystems;
+    QVector<Details*> solarDetails;
     QVector<QVector<int> > edges;
     ModelContainer* galaxyMap, *spaceShip;
-    QOpenGLBuffer lsVbo;
+
+    QVector<Player*> mPlayers;
+    QVector<QPair<QVector3D, QVector2D>> solarChanges;
     // current camera rotation and position
     float camSpeed, rotationSpeed;
     float camFov, camNear, camFar;
