@@ -81,6 +81,7 @@ void MainWindow::on_newGameButton_clicked()
     QObject::connect(gameWorker, SIGNAL(frameReady(void)), gameScr, SLOT(update(void)));
     // prepare gameLoader thread
     QObject::connect(this, SIGNAL(sigLoadGame()), gameLoader, SLOT(initGame()));
+    QObject::connect(gameLoader, SIGNAL(initComplete()), gameScr, SLOT(initializeEnv()));
     // connect signals from Game widget
     QObject::connect(gameScr, SIGNAL(escPressed(void)), wHUD, SLOT(togglePauseMenu(void)));
     QObject::connect(gameScr, SIGNAL(paintCompleted(void)), gameWorker, SLOT(acceptFrame(void)));
@@ -100,7 +101,7 @@ void MainWindow::on_newGameButton_clicked()
     loaderThread->start();
     wololoTimer.stop();
 
-    //emit sigLoadGame();
+    emit sigLoadGame();
 }
 
 void MainWindow::on_optionsButton_clicked()

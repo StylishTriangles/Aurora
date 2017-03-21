@@ -47,6 +47,7 @@ public slots:
     void initGame();
 signals:
     void frameReady();
+    void initComplete();
 private:
     void orbit(ModelContainer* m, qint64 nse);
     Game* g;
@@ -79,19 +80,25 @@ protected:
     void drawOrbit(ModelContainer* mod);
     void drawEdges();
     void drawLoadingScreen();
+    
+    void setSolarSystemOwner(QVector3D ownerCol, QVector2D pos);
 
-    void initializeEnv1();
-    void initializeEnv2();
+    void allocateVbos();
+    void initializeEnvRemote();
+    void initializeEnvLocal();
     void loadTextures();
     void loadShaders();
     void loadSettings();
     void loadPrototypes();
     void setLightTypes();
-    void allocateVbos();
     void setupLS();
+    void setupTextures();
+
     void parseInput(float dT);
 
-    void setSolarSystemOwner(QVector3D ownerCol, QVector2D pos);
+public slots:
+    void initializeEnv();
+    
 private:
     int bindModel(ModelContainer* mod, int detail);
     int bindModel(QString const & name, int detail = -1);
@@ -108,7 +115,7 @@ private:
     QOpenGLBuffer lsVbo;
 
     QHash<QString, QOpenGLTexture*> mTextures;
-    QHash<QString, QImage> tempImageData;
+    QHash<QString, QImage> mTempImageData;
     QHash<QString, Light> mLights;
     QVector<ModelContainer*> solarSystems;
     QVector<Details*> solarDetails;

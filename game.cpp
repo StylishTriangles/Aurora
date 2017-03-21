@@ -4,6 +4,7 @@
 #include <QOpenGLContext>
 #include <QResource>
 #include <QtMath>
+#include <functional>
 #include <random>
 
 Game::Game(QWidget *parent) :
@@ -379,17 +380,18 @@ void Game::keyReleaseEvent(QKeyEvent *event)
         keys -= Qt::Key_Shift;
 }
 
-void Game::initializeEnv1()
+void Game::initializeEnvRemote()
 {
-    //loadSettings();
+//    loadSettings();
     loadTextures();
-    loadShaders();
     loadPrototypes();
     setLightTypes();
 }
 
-void Game::initializeEnv2()
+void Game::initializeEnvLocal()
 {
+    loadShaders();
+    setupTextures();
     allocateVbos();
     initComplete = true;
 }
@@ -401,7 +403,7 @@ void Game::loadTextures()
     mTextures.insert("earth", tex);
     QImage img;
     img = QImage(QString(":/planets/earth.png"));
-    tempImageData.insert("earth", img);
+    mTempImageData.insert("earth", img);
 
 #ifdef QT_DEBUG
     //old but working
@@ -429,27 +431,27 @@ void Game::loadTextures()
     mTextures.insert("spacecruiserSpec", tex);
 
     img = QImage(QString("../Aurora/atmosphere.png"));
-    tempImageData.insert("atmosphere", img);
+    mTempImageData.insert("atmosphere", img);
     img = QImage(QString("../Aurora/atmosphere.png"));
-    tempImageData.insert("atmosphereSpec", img);
+    mTempImageData.insert("atmosphereSpec", img);
     img = QImage(QString("../Aurora/moon.png"));
-    tempImageData.insert("moon", img);
+    mTempImageData.insert("moon", img);
     img = QImage(QString("../Aurora/moon.png"));
-    tempImageData.insert("moonSpec", img);
+    mTempImageData.insert("moonSpec", img);
     img = QImage(QString(":/misc/skybox.png"));
-    tempImageData.insert("skybox", img);
+    mTempImageData.insert("skybox", img);
     img = QImage(QString(":/misc/skybox.png"));
-    tempImageData.insert("skyboxSpec", img);
-    img = QImage(QString("../Aurora/imgtures/earthSpec.png"));
-    tempImageData.insert("earthSpec", img);
-    img = QImage(QString("../Aurora/imgtures/venus.png"));
-    tempImageData.insert("venus", img);
-    img = QImage(QString("../Aurora/imgtures/venus.png"));
-    tempImageData.insert("venusSpec", img);
-    img = QImage(QString("../Aurora/imgtures/spacecruiser.png"));
-    tempImageData.insert("spacecruiser", img);
-    img = QImage(QString("../Aurora/imgtures/spacecruiser.png"));
-    tempImageData.insert("spacecruiserSpec", img);
+    mTempImageData.insert("skyboxSpec", img);
+    img = QImage(QString("../Aurora/textures/earthSpec.png"));
+    mTempImageData.insert("earthSpec", img);
+    img = QImage(QString("../Aurora/textures/venus.png"));
+    mTempImageData.insert("venus", img);
+    img = QImage(QString("../Aurora/textures/venus.png"));
+    mTempImageData.insert("venusSpec", img);
+    img = QImage(QString("../Aurora/textures/spacecruiser.png"));
+    mTempImageData.insert("spacecruiser", img);
+    img = QImage(QString("../Aurora/textures/spacecruiser.png"));
+    mTempImageData.insert("spacecruiserSpec", img);
 #else
     QResource::registerResource("textures/textures.rcc");
     tex = new QOpenGLTexture(QImage(QString(":/planets/atmosphere.png")));
@@ -553,7 +555,6 @@ void Game::loadPrototypes()
     tmp = new QVector<GLfloat>;
     GeometryProvider::rectangle3D(*tmp);
     mGeometry["sprite"] = tmp;
-    qDebug() << tmp->size();
     tmp = new QVector<GLfloat>;
     GeometryProvider::circle(*tmp);
     mGeometry["circle"]=tmp;
@@ -571,7 +572,8 @@ void Game::loadPrototypes()
     generateEdges(solarSystems, edges, *mGeometry["edges"], *mGeometry["geosphere1"], 2*solarSystems.size());
 }
 
-void Game::setLightTypes(){
+void Game::setLightTypes()
+{
     mLights.insert("white_dwarf", Light({0.1f, 0.1f, 0.1f},{0.5f, 0.5f, 0.5f},{1.0f, 1.0f, 1.0f},32.0f));
     mLights.insert("yellow_dwarf", Light({0.1f, 0.1f, 0.1f},{0.5f, 0.5f, 0.35f},{1.0f, 1.0f, 0.7f},32.0f));
     mLights.insert("blue_dwarf", Light({0.1f, 0.1f, 0.1f},{0.35f, 0.35f, 0.5f},{0.7f, 0.7f, 1.0f},32.0f));
@@ -584,7 +586,8 @@ void Game::setLightTypes(){
     mLights.insert("blue_super_giant", Light({0.1f, 0.1f, 0.1f},{0.7f, 0.7f, 1.0f},{0.7f, 0.7f, 1.0f},32.0f));
 }
 
-void Game::allocateVbos() {
+void Game::allocateVbos()
+{
     auto it = mGeometry.begin();
     while (it != mGeometry.end()) {
         auto it2 = mVbo.insert(it.key(), QOpenGLBuffer());
@@ -615,49 +618,33 @@ void Game::setupLS()
     if (!noerror) {qDebug() << loadingMainProgram->log();}
 }
 
+void Game::setupTextures()
+{
+    auto it = mTempImageData.begin();
+    while (it != mTempImageData.end()) {
+        mTextures.insert(it.key(), new QOpenGLTexture(std::move(it.value())));
+        ++it;
+    }
+}
+
 void Game::parseInput(float dT)
 {
     float camV = camSpeed * dT;
-    if (keys.find(Qt::Key_W) != keys.end()) {
-        if(stage==0) {
-            if((camPos+camV*camFront).length()<49)
+    if (keys.find(Qt::Key_W) != keys.end())
             camPos += camV * camFront;
-        }
-        else {
-            if((camPos+camV*camFront - solarSystems[actSystem]->position).length()<49)
-            camPos += camV * camFront;
-        }
-    }
-    if (keys.find(Qt::Key_S) != keys.end()) {
-        if(stage==0) {
-            if((camPos-camV*camFront).length()<49)
+    if (keys.find(Qt::Key_S) != keys.end())
             camPos -= camV * camFront;
-        }
-        else {
-            if((camPos-camV*camFront - solarSystems[actSystem]->position).length()<49)
-            camPos -= camV * camFront;
-        }
-    }
-    if (keys.find(Qt::Key_D) != keys.end()) {
-        if(stage==0) {
-            if((camPos+QVector3D::normal(camFront, camUp) * camV).length()<49)
+    if (keys.find(Qt::Key_D) != keys.end())
             camPos += QVector3D::normal(camFront, camUp) * camV;
-        }
-        else {
-            if((camPos+QVector3D::normal(camFront, camUp) * camV - solarSystems[actSystem]->position).length()<49)
-            camPos += QVector3D::normal(camFront, camUp) * camV;
-        }
-    }
-    if (keys.find(Qt::Key_A) != keys.end()) {
-        if(stage==0) {
-            if((camPos-QVector3D::normal(camFront, camUp) * camV).length()<49)
+    if (keys.find(Qt::Key_A) != keys.end())
             camPos -= QVector3D::normal(camFront, camUp) * camV;
-        }
-        else {
-            if((camPos-QVector3D::normal(camFront, camUp) * camV - solarSystems[actSystem]->position).length()<49)
-            camPos -= QVector3D::normal(camFront, camUp) * camV;
-        }
+    if (stage==0) {
+        if(camPos.lengthSquared()>49*49)
+            camPos*= 0.995f;
+        else if(stage == 2 and (camPos - solarSystems[actSystem]->position).lengthSquared() > 49*49)
+            camPos*=0.995f; // !TODO
     }
+
     if (keys.find(Qt::Key_Shift) != keys.end())
         camSpeed = 0.1f;
     else
@@ -677,7 +664,7 @@ void Game::parseInput(float dT)
                         collisions.pop_back();
                 }
             }
-            if(collisions.size()!=0){
+            if(collisions.size()!=0) {
                 std::sort(collisions.begin(), collisions.end());
                 camPos = camPosDef + solarSystems[collisions[0].second]->position;
                 camFront = camFrontDef;
@@ -696,7 +683,7 @@ void Game::parseInput(float dT)
             QVector3D ray_begin, ray_dir, xyz_min, xyz_max;
             float d;
             screenPosToWorldRay(lastCursorPos.x(), this->height()-lastCursorPos.y(), this->width(), this->height(), viewMat, projectionMat, ray_begin, ray_dir);
-            for(int i=0; i<solarSystems.size(); i++){
+            for(int i=0; i<solarSystems.size(); i++) {
                 xyz_min=QVector3D(-1.0f, -1.0f, -1.0f)*solarSystems[i]->getScale();
                 xyz_max=QVector3D(1.0f, 1.0f, 1.0f)*solarSystems[i]->getScale();
                 if(testRayOBBIntersection(ray_begin, ray_dir, xyz_min, xyz_max, solarSystems[i]->getModelMat(), d)) {
@@ -705,7 +692,7 @@ void Game::parseInput(float dT)
                         collisions.pop_back();
                 }
             }
-            if(collisions.size()!=0){
+            if(collisions.size()!=0) {
                 std::sort(collisions.begin(), collisions.end());
                 solarDetails[collisions[0].second]->setOwner(0);
                 solarChanges+={mPlayers[0]->getColor(), QVector2D(solarSystems[collisions[0].second]->position)};
@@ -744,13 +731,19 @@ void Game::parseInput(float dT)
     }
 }
 
-void Game::setSolarSystemOwner(QVector3D ownerCol, QVector2D pos){
+void Game::initializeEnv()
+{
+    initializeEnvLocal();
+}
+
+void Game::setSolarSystemOwner(QVector3D ownerCol, QVector2D pos)
+{
     float a, b;
     mVbo["edges"].bind();
-    for(int i=0; i<mVbo["edges"].size(); i+=5){
+    for(int i=0; i<mVbo["edges"].size(); i+=5) {
         mVbo["edges"].read(sizeof(GLfloat)*i, &a, sizeof(GLfloat));
         mVbo["edges"].read(sizeof(GLfloat)*(i+1), &b, sizeof(GLfloat));
-        if(a>=pos.x()-0.01f && a<=pos.x()+0.01f && b>=pos.y()-0.01f && b<=pos.y()+0.01f){
+        if(a>=pos.x()-0.01f && a<=pos.x()+0.01f && b>=pos.y()-0.01f && b<=pos.y()+0.01f) {
             mVbo["edges"].write(sizeof(GLfloat)*(i+2), &ownerCol, 3*sizeof(GLfloat));
         }
     }
@@ -793,5 +786,6 @@ void GameWorker::acceptFrame() {
 
 void GameWorker::initGame()
 {
-    g->initializeEnv1();
+    g->initializeEnvRemote();
+    emit initComplete();
 }
