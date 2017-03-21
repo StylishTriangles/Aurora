@@ -75,10 +75,6 @@ void Game::initializeGL()
     camSpeed = 0.05f;
     rotationSpeed = 0.1f;
 
-    initializeEnv1();
-
-    initializeEnv2();
-
     //make players //tmp
     Player* tmpP= new Player("Korpi", {0.0f, 1.0f, 0.0f});
     mPlayers.push_back(tmpP);
@@ -398,38 +394,11 @@ void Game::initializeEnvLocal()
 
 void Game::loadTextures()
 {
-    QOpenGLTexture* tex;
-    tex = new QOpenGLTexture(QImage(QString(":/planets/earth.png")));
-    mTextures.insert("earth", tex);
     QImage img;
     img = QImage(QString(":/planets/earth.png"));
     mTempImageData.insert("earth", img);
 
 #ifdef QT_DEBUG
-    //old but working
-    tex = new QOpenGLTexture(QImage(QString("../Aurora/atmosphere.png")));
-    mTextures.insert("atmosphere", tex);
-    tex = new QOpenGLTexture(QImage(QString("../Aurora/atmosphere.png")));
-    mTextures.insert("atmosphereSpec", tex);
-    tex = new QOpenGLTexture(QImage(QString("../Aurora/moon.png")));
-    mTextures.insert("moon", tex);
-    tex = new QOpenGLTexture(QImage(QString("../Aurora/moon.png")));
-    mTextures.insert("moonSpec", tex);
-    tex = new QOpenGLTexture(QImage(QString(":/misc/skybox.png")));
-    mTextures.insert("skybox", tex);
-    tex = new QOpenGLTexture(QImage(QString(":/misc/skybox.png")));
-    mTextures.insert("skyboxSpec", tex);
-    tex =  new QOpenGLTexture(QImage(QString("../Aurora/textures/earthSpec.png")));
-    mTextures.insert("earthSpec", tex);
-    tex =  new QOpenGLTexture(QImage(QString("../Aurora/textures/venus.png")));
-    mTextures.insert("venus", tex);
-    tex =  new QOpenGLTexture(QImage(QString("../Aurora/textures/venus.png")));
-    mTextures.insert("venusSpec", tex);
-    tex =  new QOpenGLTexture(QImage(QString("../Aurora/textures/spacecruiser.png")));
-    mTextures.insert("spacecruiser", tex);
-    tex =  new QOpenGLTexture(QImage(QString("../Aurora/textures/spacecruiser.png")));
-    mTextures.insert("spacecruiserSpec", tex);
-
     img = QImage(QString("../Aurora/atmosphere.png"));
     mTempImageData.insert("atmosphere", img);
     img = QImage(QString("../Aurora/atmosphere.png"));
