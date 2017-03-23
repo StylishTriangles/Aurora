@@ -11,7 +11,6 @@ HUD::HUD(QWidget *parent) :
     ui->setupUi(this);
     fpsRefreshTimer.start(deltaTms);
     QObject::connect(&fpsRefreshTimer, SIGNAL(timeout()), this, SLOT(updateFPS()));
-    hidePauseMenu();
 }
 
 HUD::~HUD()
@@ -28,7 +27,7 @@ void HUD::resizeEvent(QResizeEvent *)
 // private slots
 void HUD::on_exitButton_clicked()
 {
-    togglePauseMenu();
+    emit togglePauseMenu();
 }
 
 void HUD::updateFPS()
@@ -38,47 +37,16 @@ void HUD::updateFPS()
     frameCount = 0;
 }
 
-void HUD::on_resumeButton_clicked()
-{
-    hidePauseMenu();
-    emit unpause();
-}
-
-void HUD::on_exitToMenuButton_clicked()
-{
-    emit quitGame();
-}
-
-void HUD::on_exitToSystemButton_clicked()
-{
-    emit quitAll();
-}
-
 // public slots
 void HUD::acceptFrame()
 {
     frameCount++;
 }
 
-void HUD::showPauseMenu()
+void HUD::toggle()
 {
-    ui->pauseMenu->show();
-}
-
-void HUD::hidePauseMenu()
-{
-    ui->pauseMenu->hide();
-}
-
-void HUD::togglePauseMenu()
-{
-    if (ui->pauseMenu->isHidden())
-        ui->pauseMenu->show();
+    if (this->isHidden())
+        show();
     else
-        ui->pauseMenu->hide();
-}
-
-void HUD::on_optionsButton_clicked()
-{
-    emit enterSettings();
+        hide();
 }

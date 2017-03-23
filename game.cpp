@@ -28,7 +28,9 @@ Game::Game(QWidget *parent) :
 
 Game::~Game()
 {
-    planetsProgram->release();
+    if (!initComplete)
+        return;
+
     for(auto p:mGeometry)
         delete p;
     for(auto p:solarSystems)
@@ -329,12 +331,11 @@ void Game::wheelEvent(QWheelEvent *event)
 
 void Game::keyPressEvent(QKeyEvent *event)
 {
-    if (event->key() == Qt::Key_Escape)
-    {
-        event->accept();
+    if (event->key() == Qt::Key_Escape and initComplete)
         emit escPressed();
-        return;
-    }
+    if (event->key() == Qt::Key_H and initComplete)
+        emit toggleHUD();
+
     if (event->key() == Qt::Key_W)
         keys += Qt::Key_W;
     if (event->key() == Qt::Key_S)
@@ -390,6 +391,7 @@ void Game::initializeEnvLocal()
     setupTextures();
     allocateVbos();
     initComplete = true;
+    emit toggleHUD();
 }
 
 void Game::loadTextures()

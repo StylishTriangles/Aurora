@@ -70,6 +70,7 @@ void MainWindow::on_newGameButton_clicked()
 {
     gameScr = new Game(this);
     wHUD = new HUD(gameScr);
+    wOSD = new OSD(gameScr);
     gameWorker = new GameWorker(gameScr);
     gameLoader = new GameWorker(gameScr);
     workerThread = new QThread;
@@ -83,16 +84,23 @@ void MainWindow::on_newGameButton_clicked()
     QObject::connect(this, SIGNAL(sigLoadGame()), gameLoader, SLOT(initGame()));
     QObject::connect(gameLoader, SIGNAL(initComplete()), gameScr, SLOT(initializeEnv()));
     // connect signals from Game widget
-    QObject::connect(gameScr, SIGNAL(escPressed(void)), wHUD, SLOT(togglePauseMenu(void)));
+    QObject::connect(gameScr, SIGNAL(escPressed(void)), wOSD, SLOT(togglePauseMenu(void)));
     QObject::connect(gameScr, SIGNAL(paintCompleted(void)), gameWorker, SLOT(acceptFrame(void)));
     QObject::connect(gameScr, SIGNAL(paintCompleted(void)), wHUD, SLOT(acceptFrame(void)));
+    QObject::connect(gameScr, SIGNAL(toggleHUD(void)), wHUD, SLOT(toggle(void)));
     // connect signals from HUD
-    QObject::connect(wHUD, SIGNAL(quitAll(void)), this, SLOT(close(void)));
-    QObject::connect(wHUD, SIGNAL(quitGame(void)), this, SLOT(reload(void)));
-    QObject::connect(wHUD, SIGNAL(enterSettings(void)), opt, SLOT(show()));
+    QObject::connect(wHUD, SIGNAL(togglePauseMenu(void)), wOSD, SLOT(togglePauseMenu(void)));
+
+    // connect signals from OSD
+    QObject::connect(wOSD, SIGNAL(quitAll(void)), this, SLOT(close(void)));
+    QObject::connect(wOSD, SIGNAL(quitGame(void)), this, SLOT(reload(void)));
+    QObject::connect(wOSD, SIGNAL(enterSettings(void)), opt, SLOT(show()));
 
     ui->centralWidget->hide();
     gameScr->show();
+    gameScr->setFocus();
+    wHUD->hide();
+    wOSD->hide();
     actionTimer->start(tickDelayMs);
     actionTimer->moveToThread(workerThread);
     gameWorker->moveToThread(workerThread);
@@ -132,7 +140,7 @@ void MainWindow::unloadGame()
         delete workerThread;
         delete gameLoader;
         delete loaderThread;
-        delete gameScr; // also deletes mHUD
+        delete gameScr; // also deletes mHUD, mOSD
         gameScr = nullptr;
     }
 

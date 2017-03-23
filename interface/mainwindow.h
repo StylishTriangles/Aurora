@@ -4,9 +4,10 @@
 #include <QMainWindow>
 #include <QThread>
 #include <QTimer>
-#include "options.h"
 #include "game.h"
 #include "hud.h"
+#include "options.h"
+#include "osd.h"
 #include "levels/arkanoid.h"
 
 using Aurora::ArkanoidWidget;
@@ -48,6 +49,7 @@ private:
     Options* opt;
     Game* gameScr;
     HUD* wHUD;
+    OSD* wOSD;
     ArkanoidWidget* wArkanoid;
 
     // game related variables

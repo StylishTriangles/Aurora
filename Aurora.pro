@@ -29,7 +29,8 @@ SOURCES += main.cpp\
     src/mapgenerator.cpp \
     src/helper_classes.cpp \
     details.cpp \
-    player.cpp
+    player.cpp \
+    interface/osd.cpp
 
 HEADERS  += interface/mainwindow.h \
     interface/options.h \
@@ -44,11 +45,13 @@ HEADERS  += interface/mainwindow.h \
     include/mapgenerator.h \
     include/helper_classes.h \
     details.h \
-    player.h
+    player.h \
+    interface/osd.h
 
 FORMS    += interface/mainwindow.ui \
     interface/options.ui \
-    interface/hud.ui
+    interface/hud.ui \
+    interface/osd.ui
 
 RESOURCES += \
     shaders.qrc \

@@ -146,9 +146,10 @@ private:
     long long int cnt;
 
 signals:
-    void exitToMenu();
     void escPressed();
+    void exitToMenu();
     void paintCompleted();
+    void toggleHUD();
 };
 
 #endif // GAME_H
