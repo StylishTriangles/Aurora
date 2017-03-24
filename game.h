@@ -80,8 +80,6 @@ protected:
     void drawOrbit(ModelContainer* mod);
     void drawEdges();
     void drawLoadingScreen();
-    
-    void setSolarSystemOwner(QVector3D ownerCol, QVector2D pos);
 
     void allocateVbos();
     void initializeEnvRemote();
@@ -123,7 +121,7 @@ private:
     ModelContainer* galaxyMap, *spaceShip;
 
     QVector<Player*> mPlayers;
-    QVector<QPair<QVector3D, QVector2D>> solarChanges;
+    QVector<QPair<QVector3D, int>> solarChanges;
     // current camera rotation and position
     float camSpeed, rotationSpeed;
     float camFov, camNear, camFar;

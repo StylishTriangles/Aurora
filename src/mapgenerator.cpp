@@ -50,7 +50,7 @@ void generateSolarSystems(QVector<ModelContainer *> &solarSystems, QVector<Detai
     }
     for(int i=0; i<10; i++){ //generate planets in systems
         planetsInSystem=uid(rng);
-        solarDetails[i]->setPlanetNumber(planetsInSystem);
+        solarDetails[i]->setPlanetCount(planetsInSystem);
         for(int j=0; j<planetsInSystem; j++){
             p=luid(rng);
             if(p<=600)
@@ -61,38 +61,12 @@ void generateSolarSystems(QVector<ModelContainer *> &solarSystems, QVector<Detai
                 else
                     addTitan(solarSystems[i], rng, eps, alfa, j);
             }
+            //tmp
+            p=luid(rng);
+            if(p<=500)
+                solarDetails[i]->setColonized(j);
         }
     }
-    /*solarSystems.push_back(new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "earth", ModelContainer::Star));
-    ModelContainer* tmpM = new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
-    tmpM->setScale(50.0f);
-    solarSystems.back()->addChild(tmpM);
-    tmpM = new ModelContainer({3.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "earth", ModelContainer::Planet);
-    tmpM->setScale(0.1f);
-    ModelContainer* tmpM2 = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "atmosphere", ModelContainer::Planet);
-    tmpM2->setScale(1.01f);
-    tmpM->addChild(tmpM2);
-    tmpM2 = new ModelContainer({0.2f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "moon", ModelContainer::Moon);
-    tmpM2->setScale(0.1f);
-    tmpM->addChild(tmpM2);
-    solarSystems.back()->addChild(tmpM);
-    tmpM = new ModelContainer({4.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "titan", "earth", ModelContainer::Titan);
-    tmpM->setScale(0.1f);
-    solarSystems.back()->addChild(tmpM);
-
-    solarSystems.push_back(new ModelContainer({3.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "earth", ModelContainer::Star));
-    tmpM = new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
-    tmpM->setScale(50.0f);
-    solarSystems.back()->addChild(tmpM);
-    tmpM = new ModelContainer({3.5f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "earth", ModelContainer::Planet);
-    tmpM->setScale(0.1f);
-    tmpM2 = new ModelContainer({0.3f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "moon", ModelContainer::Moon);
-    tmpM2->setScale(0.1f);
-    tmpM->addChild(tmpM2);
-    tmpM2 = new ModelContainer({0.4f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "moon", ModelContainer::Moon);
-    tmpM2->setScale(0.1f);
-    tmpM->addChild(tmpM2);
-    solarSystems.back()->addChild(tmpM);*/
 }
 
 void addYellowDwarf(QVector<ModelContainer*>& solarSystems, QVector<Details*>& solarDetails, std::mt19937& rng, std::uniform_real_distribution<float> &eps, float x, float y){
@@ -277,7 +251,7 @@ void addMoon(ModelContainer* mod, std::mt19937& rng, std::uniform_real_distribut
 }
 
 void addAtmo(ModelContainer* mod){
-    ModelContainer* tmp= new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "atmosphere", ModelContainer::Planet);
+    ModelContainer* tmp= new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "atmosphere", ModelContainer::Atmo);
     tmp->setScale(1.01f);
     mod->addChild(tmp);
 }
@@ -342,4 +316,9 @@ void addVolcanicPlanet(ModelContainer* mod, std::mt19937& rng, std::uniform_real
         addMoon(tmp, rng, eps, alfa);
     }
     mod->addChild(tmp);
+}
+
+
+int posToIdx(QVector3D pos){
+    return int((roundf(pos.length())-3.0f)/2.0f);
 }

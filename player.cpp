@@ -20,3 +20,17 @@ QString Player::getName(){
 QVector3D Player::getColor(){
     return color;
 }
+
+void Player::ownSystem(int sys){
+    ownedSystems.push_back(sys);
+}
+
+void Player::looseSystem(int sys){
+    for(int i=0; i<ownedSystems.size(); i++){
+        if(ownedSystems[i]==sys){
+            std::swap(ownedSystems[i], ownedSystems[ownedSystems.size()-1]);
+            ownedSystems.pop_back();
+            break;
+        }
+    }
+}

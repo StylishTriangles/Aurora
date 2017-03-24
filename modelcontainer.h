@@ -17,6 +17,7 @@ public:
         Skybox,
         Titan,
         Planet,
+        Atmo,
         Moon,
         Star,
         Spaceship,

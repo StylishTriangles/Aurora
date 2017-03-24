@@ -29,4 +29,6 @@ void addTitan(ModelContainer* mod, std::mt19937& rng, std::uniform_real_distribu
 void addTerranPlanet(ModelContainer* mod, std::mt19937& rng, std::uniform_real_distribution<float>& eps, std::uniform_real_distribution<float>& alfa, int idx);
 void addVolcanicPlanet(ModelContainer* mod, std::mt19937& rng, std::uniform_real_distribution<float> &eps, std::uniform_real_distribution<float> &alfa, int idx);
 
+int posToIdx(QVector3D pos);
+
 #endif // MAPGENERATOR_H

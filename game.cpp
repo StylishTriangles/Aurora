@@ -37,10 +37,17 @@ Game::~Game()
         delete p;
     for(auto p:mTextures)
         delete p;
+    for(auto p:mPlayers)
+        delete p;
+    for(auto p:solarDetails)
+        delete p;
     delete planetsProgram;
     delete lightsProgram;
     delete planeGeoProgram;
+    delete edgesProgram;
     delete loadingMainProgram;
+    delete galaxyMap;
+    delete spaceShip;
 }
 
 inline void qNormalizeAngle(float& a)
@@ -109,7 +116,7 @@ void Game::drawModel(ModelContainer* mod)
 {
     if(mod->type==ModelContainer::Skybox)
         glCullFace(GL_FRONT);
-    if(mod->type==ModelContainer::Planet || mod->type==ModelContainer::Titan || mod->type==ModelContainer::Moon){
+    if((mod->type==ModelContainer::Planet || mod->type==ModelContainer::Titan || mod->type==ModelContainer::Moon) && stage!=0){
         drawOrbit(mod);
     }
     QMatrix4x4 modelMat = mod->getModelMat();
@@ -182,13 +189,16 @@ void Game::drawModel(ModelContainer* mod)
 
 void Game::drawOrbit(ModelContainer* mod) {
     QMatrix4x4 modelMat = mod->parent->getModelMat();
-//    modelMat.scale(QVector3D(1.0f, 1.0f, 1.0f)/mod->parent->getScale());
     modelMat.scale(mod->position.length());
     QMatrix4x4 vp = projectionMat * viewMat;
     planeGeoProgram->bind();
     planeGeoProgram->setUniformValue("vp",vp);
     planeGeoProgram->setUniformValue("modelMat",modelMat);
-    planeGeoProgram->setUniformValue("col",QVector3D(1.0f, 1.0f, 1.0f));//tmp
+    if(solarDetails[actSystem]->isColonized(posToIdx(mod->position))==0 || solarDetails[actSystem]->getOwner()==-1
+            || mod->type==ModelContainer::Moon)
+    planeGeoProgram->setUniformValue("col",QVector3D(1.0f, 1.0f, 1.0f));
+    else
+    planeGeoProgram->setUniformValue("col",mPlayers[solarDetails[actSystem]->getOwner()]->getColor());
 
     mVbo["circle"].bind();
     this->glEnableVertexAttribArray(0);
@@ -212,7 +222,8 @@ void Game::drawEdges() {
 
 void Game::update(){
     for(int i=0; i<solarChanges.size(); i++){
-        setSolarSystemOwner(solarChanges[i].first, solarChanges[i].second);
+        solarDetails[solarChanges[i].second]->setOwner(0, mVbo["edges"], solarChanges[i].first, QVector2D(solarSystems[solarChanges[i].second]->position));
+        mPlayers[0]->ownSystem(solarChanges[i].second);
     }
     solarChanges.clear();
 }
@@ -257,7 +268,7 @@ void Game::paintGL()
     }
     else if(stage==2) {
             drawModel(solarSystems[actSystem]);
-            drawModel(spaceShip);
+//            drawModel(spaceShip); zbugowany
     }
     update();
     emit paintCompleted();
@@ -350,6 +361,8 @@ void Game::keyPressEvent(QKeyEvent *event)
         keys += Qt::Key_E;
     if (event->key() == Qt::Key_Shift)
         keys += Qt::Key_Shift;
+    if (event->key() == Qt::Key_C)
+        keys += Qt::Key_C;
     if (event->key() == Qt::Key_R)
     {
         camPos   = camPosDef;
@@ -375,6 +388,8 @@ void Game::keyReleaseEvent(QKeyEvent *event)
         keys -= Qt::Key_E;
     if (event->key() == Qt::Key_Shift)
         keys -= Qt::Key_Shift;
+    if (event->key() == Qt::Key_C)
+        keys -= Qt::Key_C;
 }
 
 void Game::initializeEnvRemote()
@@ -609,17 +624,19 @@ void Game::parseInput(float dT)
             camPos += QVector3D::normal(camFront, camUp) * camV;
     if (keys.find(Qt::Key_A) != keys.end())
             camPos -= QVector3D::normal(camFront, camUp) * camV;
-    if (stage==0) {
-        if(camPos.lengthSquared()>49*49)
-            camPos*= 0.995f;
-        else if(stage == 2 and (camPos - solarSystems[actSystem]->position).lengthSquared() > 49*49)
-            camPos*=0.995f; // !TODO
-    }
 
     if (keys.find(Qt::Key_Shift) != keys.end())
         camSpeed = 0.1f;
     else
         camSpeed = 0.05f; // default
+
+    if (keys.find(Qt::Key_C) != keys.end() && stage==2)
+            solarDetails[actSystem]->calculateSystem(0);
+
+    if (stage==0 && camPos.lengthSquared()>49*49)
+        camPos*= 0.995f;
+    if(stage == 2 && (camPos - solarSystems[actSystem]->position).lengthSquared() > 49*49)
+        camPos*= 0.995f;
     if(keys.find(Qt::LeftButton^mouseXor) != keys.end()) {
         if(stage==0) {
             QVector<QPair<GLfloat, int> > collisions;
@@ -665,8 +682,7 @@ void Game::parseInput(float dT)
             }
             if(collisions.size()!=0) {
                 std::sort(collisions.begin(), collisions.end());
-                solarDetails[collisions[0].second]->setOwner(0);
-                solarChanges+={mPlayers[0]->getColor(), QVector2D(solarSystems[collisions[0].second]->position)};
+                solarChanges+={mPlayers[0]->getColor(), collisions[0].second};
             }
         }
         if(stage==2) {
@@ -705,19 +721,6 @@ void Game::parseInput(float dT)
 void Game::initializeEnv()
 {
     initializeEnvLocal();
-}
-
-void Game::setSolarSystemOwner(QVector3D ownerCol, QVector2D pos)
-{
-    float a, b;
-    mVbo["edges"].bind();
-    for(int i=0; i<mVbo["edges"].size(); i+=5) {
-        mVbo["edges"].read(sizeof(GLfloat)*i, &a, sizeof(GLfloat));
-        mVbo["edges"].read(sizeof(GLfloat)*(i+1), &b, sizeof(GLfloat));
-        if(a>=pos.x()-0.01f && a<=pos.x()+0.01f && b>=pos.y()-0.01f && b<=pos.y()+0.01f) {
-            mVbo["edges"].write(sizeof(GLfloat)*(i+2), &ownerCol, 3*sizeof(GLfloat));
-        }
-    }
 }
 
 // GameWorker::
