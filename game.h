@@ -24,10 +24,10 @@
 #include "player.h"
 #include "details.h"
 #include "include/fileops.h"
+#include "include/helper_classes.h"
 #include "include/mapgenerator.h"
 #include "include/ray_intersect.h"
 #include "interface/hud.h"
-#include "include/helper_classes.h"
 
 namespace Ui {
 class Game;
@@ -59,8 +59,6 @@ private:
 class Game : public QOpenGLWidget, protected QOpenGLFunctions_4_3_Core
 {
     Q_OBJECT
-public:
-
 public:
     explicit Game(QWidget *parent = 0);
     ~Game();
@@ -96,6 +94,7 @@ protected:
 
 public slots:
     void initializeEnv();
+    void receiveButton(int keyID);
     
 private:
     int bindModel(ModelContainer* mod, int detail);

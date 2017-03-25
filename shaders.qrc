@@ -14,5 +14,6 @@
         <file>shaders/starSprite2.frag</file>
         <file>shaders/edgesFrag.frag</file>
         <file>shaders/edgesVert.vert</file>
+        <file>shaders/funShader.frag</file>
     </qresource>
 </RCC>

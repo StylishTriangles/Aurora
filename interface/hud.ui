@@ -28,9 +28,9 @@
   <widget class="QLCDNumber" name="FPSCounter">
    <property name="geometry">
     <rect>
-     <x>280</x>
+     <x>270</x>
      <y>0</y>
-     <width>46</width>
+     <width>41</width>
      <height>23</height>
     </rect>
    </property>
@@ -462,36 +462,6 @@
     <number>3</number>
    </property>
   </widget>
-  <widget class="QPushButton" name="exitButton">
-   <property name="geometry">
-    <rect>
-     <x>1240</x>
-     <y>10</y>
-     <width>32</width>
-     <height>32</height>
-    </rect>
-   </property>
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QPushButton{
-border-image: url(:/interface/icons/quit0.png);
-}
-QPushButton:hover{
-border-image: url(:/interface/icons/quit1.png);
-}
-QPushButton:pressed{
-border-image: url(:/interface/icons/quit2.png);
-}</string>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-  </widget>
   <widget class="QFrame" name="management">
    <property name="geometry">
     <rect>
@@ -509,19 +479,22 @@ border-image: url(:/interface/icons/quit2.png);
    <property name="styleSheet">
     <string notr="true">QObject{
 border: 2px solid gray;
-background:  rgb(0,0,0,180);
-border-radius: 24px;
+background:  rgb(0,0,0,100);
 }
 
 QFrame{
-border-radius: 0px 0px 24px 0px;
+border-bottom-right-radius: 52px;
 }
 
 QPushButton{
-font: 18px &quot;Leelawadee UI&quot;;
+font: 20px &quot;Impact&quot;;
+font-style: italic;
 text-align:center;
 color: white;
-width: 32px;
+width: 48px;
+height: 48px;
+border-radius: 24px;
+border-color: white;
 }
 QPushButton:hover{
 border-color: Tomato;
@@ -553,15 +526,18 @@ border-color: Black;
     </property>
     <property name="font">
      <font>
-      <family>Leelawadee UI</family>
+      <family>Impact</family>
       <pointsize>-1</pointsize>
       <weight>50</weight>
-      <italic>false</italic>
+      <italic>true</italic>
       <bold>false</bold>
      </font>
     </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Fleets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
     <property name="text">
-     <string>F</string>
+     <string>F </string>
     </property>
    </widget>
    <widget class="QPushButton" name="research">
@@ -581,15 +557,18 @@ border-color: Black;
     </property>
     <property name="font">
      <font>
-      <family>Leelawadee UI</family>
+      <family>Impact</family>
       <pointsize>-1</pointsize>
       <weight>50</weight>
-      <italic>false</italic>
+      <italic>true</italic>
       <bold>false</bold>
      </font>
     </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Research&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
     <property name="text">
-     <string>R</string>
+     <string>R </string>
     </property>
    </widget>
    <widget class="QPushButton" name="diplomacy">
@@ -609,15 +588,18 @@ border-color: Black;
     </property>
     <property name="font">
      <font>
-      <family>Leelawadee UI</family>
+      <family>Impact</family>
       <pointsize>-1</pointsize>
       <weight>50</weight>
-      <italic>false</italic>
+      <italic>true</italic>
       <bold>false</bold>
      </font>
     </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Diplomacy&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
     <property name="text">
-     <string>D</string>
+     <string>D </string>
     </property>
    </widget>
    <widget class="QPushButton" name="empire">
@@ -637,15 +619,88 @@ border-color: Black;
     </property>
     <property name="font">
      <font>
-      <family>Leelawadee UI</family>
+      <family>Impact</family>
       <pointsize>-1</pointsize>
       <weight>50</weight>
-      <italic>false</italic>
+      <italic>true</italic>
       <bold>false</bold>
      </font>
     </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Empire&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
     <property name="text">
-     <string>E</string>
+     <string>E </string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QFrame" name="tools">
+   <property name="geometry">
+    <rect>
+     <x>1010</x>
+     <y>0</y>
+     <width>271</width>
+     <height>71</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>MS Gothic</family>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QObject{
+border: 2px solid gray;
+background:  rgb(0,0,0,100);
+}
+
+QFrame{
+border-bottom-left-radius: 52px;
+}
+
+QPushButton{
+font: 20px &quot;Impact&quot;;
+font-style: italic;
+text-align:center;
+color: white;
+width: 32px;
+border-radius: 24px;
+}
+QPushButton:hover{
+border-color: Tomato;
+}
+QPushButton:pressed{
+border-color: Black;
+}</string>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::StyledPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
+   </property>
+   <widget class="QPushButton" name="exitButton">
+    <property name="geometry">
+     <rect>
+      <x>210</x>
+      <y>10</y>
+      <width>48</width>
+      <height>48</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton = exitButton{
+border-image: url(:/interface/icons/quit_alt0.png);
+}</string>
+    </property>
+    <property name="text">
+     <string/>
     </property>
    </widget>
   </widget>

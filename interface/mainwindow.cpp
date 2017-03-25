@@ -90,7 +90,7 @@ void MainWindow::on_newGameButton_clicked()
     QObject::connect(gameScr, SIGNAL(toggleHUD(void)), wHUD, SLOT(toggle(void)));
     // connect signals from HUD
     QObject::connect(wHUD, SIGNAL(togglePauseMenu(void)), wOSD, SLOT(togglePauseMenu(void)));
-
+    QObject::connect(wHUD, SIGNAL(buttonClicked(int)), gameScr, SLOT(receiveButton(int)));
     // connect signals from OSD
     QObject::connect(wOSD, SIGNAL(quitAll(void)), this, SLOT(close(void)));
     QObject::connect(wOSD, SIGNAL(quitGame(void)), this, SLOT(reload(void)));

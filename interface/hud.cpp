@@ -50,3 +50,23 @@ void HUD::toggle()
     else
         hide();
 }
+
+void HUD::on_empire_clicked()
+{
+    emit buttonClicked(Button_Empire);
+}
+
+void HUD::on_fleets_clicked()
+{
+    emit buttonClicked(Button_Fleets);
+}
+
+void HUD::on_research_clicked()
+{
+    emit buttonClicked(Button_Research);
+}
+
+void HUD::on_diplomacy_clicked()
+{
+    emit buttonClicked(Button_Diplomacy);
+}

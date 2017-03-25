@@ -1,5 +1,7 @@
 #include "details.h"
 
+#include <QDebug>
+
 Details::Details(int _owner, QVector<int> _colonizated, QString _starType, QVector3D _pos)
 {
     owner=_owner;colonized=_colonizated;starType=_starType;pos=_pos;
@@ -84,14 +86,14 @@ void Details::calculateIndustry(){
 }
 
 void Details::addPopulation(){
-    int idx=-1, pop;
+    int idx=-1, pop = 0;
     double sum=0, tmp;
     for(int i=0; i<colonized.size(); i++){
         if(colonized[i]==0)
             continue;
         tmp=0;
         for(int j=0; j<4; j++){
-            tmp+=production[i][j];
+            //tmp+=production[i][j];
         }
         if(tmp>sum){
             idx=i;
@@ -99,7 +101,7 @@ void Details::addPopulation(){
         }
     }
     if(idx!=-1)
-        colonized[i]++;
+        colonized[idx]++;
     foodToNext=pop*30;
 }
 
