@@ -10,6 +10,7 @@
 Game::Game(QWidget *parent) :
     QOpenGLWidget(parent),
     shadersCompiled(false), initComplete(false), preInitComplete(false),
+    stageChange(0),
     camFov(60.0f), camNear(0.01f), camFar(100.0f),
     camRot(camRotDef),
     lightPos(0.0f, -0.0f, 0.0f),
@@ -195,8 +196,8 @@ void Game::drawOrbit(ModelContainer* mod) {
     planeGeoProgram->bind();
     planeGeoProgram->setUniformValue("vp",vp);
     planeGeoProgram->setUniformValue("modelMat",modelMat);
-    if(solarDetails[actSystem]->isColonized(posToIdx(mod->position))==0 || solarDetails[actSystem]->getOwner()==-1
-            || mod->type==ModelContainer::Moon)
+    if(actSystem==-1 || (solarDetails[actSystem]->isColonized(posToIdx(mod->position))==0 || solarDetails[actSystem]->getOwner()==-1
+            || mod->type==ModelContainer::Moon))
     planeGeoProgram->setUniformValue("col",QVector3D(1.0f, 1.0f, 1.0f));
     else
     planeGeoProgram->setUniformValue("col",mPlayers[solarDetails[actSystem]->getOwner()]->getColor());
@@ -227,6 +228,27 @@ void Game::update(){
         mPlayers[0]->ownSystem(solarChanges[i].second);
     }
     solarChanges.clear();
+    if(stageChange!=0){
+        if(stageChange==-1){
+            camPos = camPosDef + solarSystems[actSystem]->position;
+            camFront = camFrontDef;
+            camUp = camUpDef;
+            camRot = camRotDef;
+            stage=0;
+            actSystem=-1;
+            lightPos=QVector3D(0.0f, -0.0f, 0.0f);
+        }
+        else{
+            camPos = camPosDef + solarSystems[stageChange-1]->position;
+            camFront = camFrontDef;
+            camUp = camUpDef;
+            camRot = camRotDef;
+            actSystem=stageChange-1;
+            stage=2;
+            lightPos=solarSystems[stageChange-1]->position;
+        }
+        stageChange=0;
+    }
 }
 
 void Game::drawLoadingScreen()
@@ -663,14 +685,7 @@ void Game::parseInput(float dT)
             }
             if(collisions.size()!=0) {
                 std::sort(collisions.begin(), collisions.end());
-                camPos = camPosDef + solarSystems[collisions[0].second]->position;
-                camFront = camFrontDef;
-                camUp = camUpDef;
-                camRot = camRotDef;
-                actSystem=collisions[0].second;
-                qDebug() << solarSystems[actSystem]->tex;
-                stage=2;
-                lightPos=solarSystems[collisions[0].second]->position;
+                stageChange=collisions[0].second+1;
             }
         }
         keys-=(Qt::LeftButton^mouseXor);
@@ -696,13 +711,7 @@ void Game::parseInput(float dT)
             }
         }
         if(stage==2) {
-            camPos = camPosDef + solarSystems[actSystem]->position;
-            camFront = camFrontDef;
-            camUp = camUpDef;
-            camRot = camRotDef;
-            stage=0;
-            actSystem=-1;
-            lightPos=QVector3D(0.0f, -0.0f, 0.0f);
+            stageChange=-1;
         }
         keys-=(Qt::RightButton^mouseXor);
     }

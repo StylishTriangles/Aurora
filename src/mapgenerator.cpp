@@ -54,12 +54,12 @@ void generateSolarSystems(QVector<ModelContainer *> &solarSystems, QVector<Detai
         for(int j=0; j<planetsInSystem; j++){
             p=luid(rng);
             if(p<=600)
-            addTerranPlanet(solarSystems[i], rng, eps, alfa, j);
+            addTerranPlanet(solarSystems[i], *solarDetails[i], rng, eps, alfa, j);
             else{
                 if(p>=800)
-                    addVolcanicPlanet(solarSystems[i], rng, eps, alfa, j);
+                    addVolcanicPlanet(solarSystems[i], *solarDetails[i], rng, eps, alfa, j);
                 else
-                    addTitan(solarSystems[i], rng, eps, alfa, j);
+                    addTitan(solarSystems[i], *solarDetails[i], rng, eps, alfa, j);
             }
             //tmp
             p=luid(rng);
@@ -256,11 +256,11 @@ void addAtmo(ModelContainer* mod){
     mod->addChild(tmp);
 }
 
-void addTitan(ModelContainer* mod, std::mt19937& rng, std::uniform_real_distribution<float> &eps, std::uniform_real_distribution<float> &alfa, int idx){
+void addTitan(ModelContainer* mod, Details& det, std::mt19937& rng, std::uniform_real_distribution<float> &eps, std::uniform_real_distribution<float> &alfa, int idx){
     ModelContainer* tmp= new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "titan", "earth", ModelContainer::Titan);
     std::uniform_int_distribution<int> uid(1, 10);
     float d, x;
-    d=2*idx+3.0f+eps(rng);
+    d=2.0f*idx+3.0f+eps(rng);
     x=alfa(rng);
     tmp->position[0]=d*sinf(x);
     tmp->position[1]=d*cosf(x);
@@ -274,13 +274,14 @@ void addTitan(ModelContainer* mod, std::mt19937& rng, std::uniform_real_distribu
         addMoon(tmp, rng, eps, alfa);
     }
     mod->addChild(tmp);
+    det.setPlanetType(idx, &tmp->model);
 }
 
-void addTerranPlanet(ModelContainer* mod, std::mt19937& rng, std::uniform_real_distribution<float> &eps, std::uniform_real_distribution<float> &alfa, int idx){
+void addTerranPlanet(ModelContainer* mod, Details& det, std::mt19937& rng, std::uniform_real_distribution<float> &eps, std::uniform_real_distribution<float> &alfa, int idx){
     ModelContainer* tmp= new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "earth", ModelContainer::Planet);
     std::uniform_int_distribution<int> uid(1, 10);
     float d, x;
-    d=2*idx+3.0f+eps(rng);
+    d=2.0f*idx+3.0f+eps(rng);
     x=alfa(rng);
     tmp->position[0]=d*sinf(x);
     tmp->position[1]=d*cosf(x);
@@ -295,13 +296,14 @@ void addTerranPlanet(ModelContainer* mod, std::mt19937& rng, std::uniform_real_d
         addMoon(tmp, rng, eps, alfa);
     }
     mod->addChild(tmp);
+    det.setPlanetType(idx, &tmp->tex);
 }
 
-void addVolcanicPlanet(ModelContainer* mod, std::mt19937& rng, std::uniform_real_distribution<float> &eps, std::uniform_real_distribution<float> &alfa, int idx) {
+void addVolcanicPlanet(ModelContainer* mod, Details& det, std::mt19937& rng, std::uniform_real_distribution<float> &eps, std::uniform_real_distribution<float> &alfa, int idx) {
     ModelContainer* tmp= new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "venus", ModelContainer::Planet);
     std::uniform_int_distribution<int> uid(1, 10);
     float d, x;
-    d=2*idx+3.0f+eps(rng);
+    d=2.0f*idx+3.0f+eps(rng);
     x=alfa(rng);
     tmp->position[0]=d*sinf(x);
     tmp->position[1]=d*cosf(x);
@@ -316,8 +318,8 @@ void addVolcanicPlanet(ModelContainer* mod, std::mt19937& rng, std::uniform_real
         addMoon(tmp, rng, eps, alfa);
     }
     mod->addChild(tmp);
+    det.setPlanetType(idx, &tmp->tex);
 }
-
 
 int posToIdx(QVector3D pos){
     return int((roundf(pos.length())-3.0f)/2.0f);
