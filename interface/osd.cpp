@@ -15,9 +15,9 @@ OSD::~OSD()
 }
 
 // protected
-void OSD::resizeEvent(QResizeEvent *)
+void OSD::resizeEvent(QResizeEvent *pEvent)
 {
-    // !TODO resize all ui elements
+    this->resize(pEvent->size());
 }
 
 // private slots

@@ -33,7 +33,7 @@ void main()
     // Specular
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+    float spec = 0.5*pow(max(dot(viewDir, reflectDir), 0.0), shininess);
     vec4 specular = vec4(light.specular * spec, 0.333333333f) * texture2D(specularMap, TexCoord);
 
     color = ambient + diffuse + specular;

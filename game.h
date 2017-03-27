@@ -28,6 +28,7 @@
 #include "include/mapgenerator.h"
 #include "include/ray_intersect.h"
 #include "interface/hud.h"
+#include "interface/osd.h"
 
 namespace Ui {
 class Game;
@@ -69,11 +70,11 @@ protected:
     void resizeGL(int w ,int h) Q_DECL_OVERRIDE;
     void update();
     void paintGL() Q_DECL_OVERRIDE;
+    void keyPressEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
+    void keyReleaseEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
     void mousePressEvent(QMouseEvent* event) Q_DECL_OVERRIDE;
     void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void wheelEvent(QWheelEvent* event) Q_DECL_OVERRIDE;
-    void keyPressEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
-    void keyReleaseEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
     void drawModel(ModelContainer* mod);
     void drawOrbit(ModelContainer* mod);
     void drawEdges();
@@ -124,7 +125,7 @@ private:
     // current camera rotation and position
     float camSpeed, rotationSpeed;
     float camFov, camNear, camFar;
-    const QVector3D camPosDef = QVector3D(0.0f, 0.0f,  15.0f), camFrontDef = QVector3D(0.0f, 0.0f, -1.0f), camUpDef = QVector3D(0.0f, 1.0f,  0.0f);
+    const QVector3D camPosDef = QVector3D(0.0f, 0.0f,  12.0f), camFrontDef = QVector3D(0.0f, 0.0f, -1.0f), camUpDef = QVector3D(0.0f, 1.0f,  0.0f);
     QVector3D camPos, camFront, camUp;
     const QVector3D camRotDef = QVector3D(0.0f, -90.0f, 0.0f);
     QVector3D camRot;

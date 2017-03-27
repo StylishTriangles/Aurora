@@ -26,7 +26,7 @@ public:
     };
 
 protected:
-    void resizeEvent(QResizeEvent* ) Q_DECL_OVERRIDE;
+    void resizeEvent(QResizeEvent* event) Q_DECL_OVERRIDE;
 
 private slots:
     void on_exitButton_clicked();

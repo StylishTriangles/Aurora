@@ -36,10 +36,13 @@ MainWindow::~MainWindow()
     delete ui;
 }
 // public
-void MainWindow::resizeEvent(QResizeEvent *)
+void MainWindow::resizeEvent(QResizeEvent *event)
 {
-    if (gameScr!=nullptr)
-        gameScr->resize(this->size());
+    if (gameScr!=nullptr) {
+        gameScr->resize(event->size());
+        wHUD->resize(event->size());
+        wOSD->resize(event->size());
+    }
 }
 
 void MainWindow::loadGameSettings()

@@ -96,7 +96,6 @@ void Game::resizeGL(int w, int h)
 {
     projectionMat.setToIdentity();
     projectionMat.perspective(camFov, w / float(h), camNear, camFar);
-    findChild<HUD*>()->resize(w,h);
 }
 
 inline int Game::bindModel(ModelContainer* mod, int detail)
@@ -151,6 +150,8 @@ void Game::drawModel(ModelContainer* mod)
         lightsProgram->setUniformValue("vp",vp);
         lightsProgram->setUniformValue("mColor", mLights.find(mod->tex).value().diffuse);
         lightsProgram->setUniformValue("modelMat",modelMat);
+        lightsProgram->setUniformValue("time", GLfloat(et.nsecsElapsed()/1e9f));
+        lightsProgram->setUniformValue("radius", mod->getScale().length());
     }
     else {
         planetsProgram->bind();
@@ -161,7 +162,7 @@ void Game::drawModel(ModelContainer* mod)
         planetsProgram->setUniformValue("light.ambient", light.ambient); //można zmieniac te wartosci i patrzec, co sie stanie
         planetsProgram->setUniformValue("light.diffuse", light.diffuse); //-||-
         planetsProgram->setUniformValue("light.specular", light.specular); //-||-
-        planetsProgram->setUniformValue("shininess", light.shininess);
+        planetsProgram->setUniformValue("shininess", 32.0f);
         planetsProgram->setUniformValue("viewPos", camPos);
         planetsProgram->setUniformValue("diffuseMap", 0);
         planetsProgram->setUniformValue("specularMap", 1);
@@ -274,6 +275,58 @@ void Game::paintGL()
     emit paintCompleted();
 }
 
+void Game::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Escape and initComplete)
+        emit escPressed();
+    if (event->key() == Qt::Key_H and initComplete)
+        emit toggleHUD();
+
+    if (event->key() == Qt::Key_W)
+        keys += Qt::Key_W;
+    if (event->key() == Qt::Key_S)
+        keys += Qt::Key_S;
+    if (event->key() == Qt::Key_D)
+        keys += Qt::Key_D;
+    if (event->key() == Qt::Key_A)
+        keys += Qt::Key_A;
+    if (event->key() == Qt::Key_Q)
+        keys += Qt::Key_Q;
+    if (event->key() == Qt::Key_E)
+        keys += Qt::Key_E;
+    if (event->key() == Qt::Key_Shift)
+        keys += Qt::Key_Shift;
+    if (event->key() == Qt::Key_C)
+        keys += Qt::Key_C;
+    if (event->key() == Qt::Key_R)
+    {
+        camPos   = camPosDef;
+        camFront = camFrontDef;
+        camUp    = camUpDef;
+        camRot = camRotDef;
+    }
+}
+
+void Game::keyReleaseEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_W)
+        keys -= Qt::Key_W;
+    if (event->key() == Qt::Key_S)
+        keys -= Qt::Key_S;
+    if (event->key() == Qt::Key_D)
+        keys -= Qt::Key_D;
+    if (event->key() == Qt::Key_A)
+        keys -= Qt::Key_A;
+    if (event->key() == Qt::Key_Q)
+        keys -= Qt::Key_Q;
+    if (event->key() == Qt::Key_E)
+        keys -= Qt::Key_E;
+    if (event->key() == Qt::Key_Shift)
+        keys -= Qt::Key_Shift;
+    if (event->key() == Qt::Key_C)
+        keys -= Qt::Key_C;
+}
+
 void Game::mousePressEvent(QMouseEvent *event)
 {
     lastCursorPos = event->pos();
@@ -338,58 +391,6 @@ void Game::wheelEvent(QWheelEvent *event)
         }
     }
     event->accept();
-}
-
-void Game::keyPressEvent(QKeyEvent *event)
-{
-    if (event->key() == Qt::Key_Escape and initComplete)
-        emit escPressed();
-    if (event->key() == Qt::Key_H and initComplete)
-        emit toggleHUD();
-
-    if (event->key() == Qt::Key_W)
-        keys += Qt::Key_W;
-    if (event->key() == Qt::Key_S)
-        keys += Qt::Key_S;
-    if (event->key() == Qt::Key_D)
-        keys += Qt::Key_D;
-    if (event->key() == Qt::Key_A)
-        keys += Qt::Key_A;
-    if (event->key() == Qt::Key_Q)
-        keys += Qt::Key_Q;
-    if (event->key() == Qt::Key_E)
-        keys += Qt::Key_E;
-    if (event->key() == Qt::Key_Shift)
-        keys += Qt::Key_Shift;
-    if (event->key() == Qt::Key_C)
-        keys += Qt::Key_C;
-    if (event->key() == Qt::Key_R)
-    {
-        camPos   = camPosDef;
-        camFront = camFrontDef;
-        camUp    = camUpDef;
-        camRot = camRotDef;
-    }
-}
-
-void Game::keyReleaseEvent(QKeyEvent *event)
-{
-    if (event->key() == Qt::Key_W)
-        keys -= Qt::Key_W;
-    if (event->key() == Qt::Key_S)
-        keys -= Qt::Key_S;
-    if (event->key() == Qt::Key_D)
-        keys -= Qt::Key_D;
-    if (event->key() == Qt::Key_A)
-        keys -= Qt::Key_A;
-    if (event->key() == Qt::Key_Q)
-        keys -= Qt::Key_Q;
-    if (event->key() == Qt::Key_E)
-        keys -= Qt::Key_E;
-    if (event->key() == Qt::Key_Shift)
-        keys -= Qt::Key_Shift;
-    if (event->key() == Qt::Key_C)
-        keys -= Qt::Key_C;
 }
 
 void Game::initializeEnvRemote()
@@ -560,16 +561,24 @@ void Game::loadPrototypes()
 
 void Game::setLightTypes()
 {
-    mLights.insert("white_dwarf", Light({0.1f, 0.1f, 0.1f},{0.5f, 0.5f, 0.5f},{1.0f, 1.0f, 1.0f},32.0f));
-    mLights.insert("yellow_dwarf", Light({0.1f, 0.1f, 0.1f},{0.5f, 0.5f, 0.35f},{1.0f, 1.0f, 0.7f},32.0f));
-    mLights.insert("blue_dwarf", Light({0.1f, 0.1f, 0.1f},{0.35f, 0.35f, 0.5f},{0.7f, 0.7f, 1.0f},32.0f));
-    mLights.insert("red_dwarf", Light({0.1f, 0.1f, 0.1f},{0.5f, 0.35f, 0.35f},{1.0f, 0.7f, 0.7f},32.0f));
+    // nobody knows
+    mLights.insert("white_dwarf", Light(6500)/1.66f);
+    // 2,200 K
+    mLights.insert("yellow_dwarf", Light(2200));
+    // nobody knows
+    mLights.insert("blue_dwarf", Light(10000));
+    // 2,300-3,800 K
+    mLights.insert("red_dwarf", Light(1500)*1.1);
 
-    mLights.insert("red_giant", Light({0.1f, 0.1f, 0.1f},{0.7f, 0.5f, 0.5f},{1.0f, 0.7f, 0.7f},32.0f));
-    mLights.insert("blue_giant", Light({0.1f, 0.1f, 0.1f},{0.5f, 0.5f, 0.7f},{0.7f, 0.7f, 1.0f},32.0f));
+    // 3,500–5,000 K
+    mLights.insert("red_giant", Light(5000)*2.0f);
+    // 10,000–50,000 K
+    mLights.insert("blue_giant", Light(15000)*2.0);
 
-    mLights.insert("red_super_giant", Light({0.1f, 0.1f, 0.1f},{1.0f, 0.7f, 0.7f},{1.0f, 0.7f, 0.7f},32.0f));
-    mLights.insert("blue_super_giant", Light({0.1f, 0.1f, 0.1f},{0.7f, 0.7f, 1.0f},{0.7f, 0.7f, 1.0f},32.0f));
+    // 3,500–4,500 K
+    mLights.insert("red_super_giant", Light(4000)*2.5f);
+    // 10,000–50,000 K
+    mLights.insert("blue_super_giant", Light(25000)*3.0);
 }
 
 void Game::allocateVbos()
@@ -659,6 +668,7 @@ void Game::parseInput(float dT)
                 camUp = camUpDef;
                 camRot = camRotDef;
                 actSystem=collisions[0].second;
+                qDebug() << solarSystems[actSystem]->tex;
                 stage=2;
                 lightPos=solarSystems[collisions[0].second]->position;
             }

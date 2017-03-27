@@ -23,7 +23,7 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    void resizeEvent(QResizeEvent*) Q_DECL_OVERRIDE;
+    void resizeEvent(QResizeEvent*event) Q_DECL_OVERRIDE;
 
     void loadGameSettings();
 

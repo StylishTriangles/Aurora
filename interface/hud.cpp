@@ -19,9 +19,12 @@ HUD::~HUD()
 }
 
 // protected
-void HUD::resizeEvent(QResizeEvent *)
+void HUD::resizeEvent(QResizeEvent *event)
 {
-    // !TODO resize all ui elements
+    QPoint tmp = QPoint(event->size().width(), event->size().height());
+    tmp.rx()-=ui->tools->width();
+    tmp.setY(0);
+    ui->tools->move(tmp);
 }
 
 // private slots

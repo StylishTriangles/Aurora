@@ -18,7 +18,7 @@ varying vec2 surfacePosition;
 //#define resolution iResolution.xy
 
 // lower this if your GPU cries for mercy (set to 0 to remove clouds!)
-#define CLOUDS_STEPS 0
+#define CLOUDS_STEPS 120
 #define ENABLE_SSS 1
 
 // its from here https://github.com/achlubek/venginenative/blob/master/shaders/include/WaterHeight.glsl
