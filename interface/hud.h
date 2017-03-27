@@ -18,6 +18,12 @@ class HUD : public QWidget
 public:
     explicit HUD(QWidget *parent = 0);
     ~HUD();
+    enum Buttons {
+        Button_Empire,
+        Button_Fleets,
+        Button_Research,
+        Button_Diplomacy
+    };
 
 protected:
     void resizeEvent(QResizeEvent* ) Q_DECL_OVERRIDE;
@@ -25,6 +31,10 @@ protected:
 private slots:
     void on_exitButton_clicked();
     void updateFPS();
+    void on_empire_clicked();
+    void on_fleets_clicked();
+    void on_research_clicked();
+    void on_diplomacy_clicked();
 
 public slots:
     void acceptFrame();
@@ -33,6 +43,7 @@ public slots:
 signals:
     void enterSettings();
     void togglePauseMenu();
+    void buttonClicked(int buttonID);
 
 private:
     Ui::HUD *ui;

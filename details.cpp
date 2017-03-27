@@ -122,7 +122,7 @@ void Details::calculateIndustry(){
 }
 
 void Details::addPopulation(){
-    int idx=-1, pop=0;
+    int idx=-1, pop = 0;
     double sum=0, tmp;
     for(int i=0; i<colonized.size(); i++){
         pop+=colonized[i];
@@ -130,7 +130,7 @@ void Details::addPopulation(){
             continue;
         tmp=0;
         for(int j=0; j<4; j++){
-            tmp+=production[i][j];
+            //tmp+=production[i][j];
         }
         if(tmp>sum){
             idx=i;

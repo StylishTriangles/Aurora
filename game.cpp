@@ -620,7 +620,7 @@ void Game::setupLS()
     loadingMainProgram = new QOpenGLShaderProgram;
     bool noerror = true;
     noerror |= loadingMainProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/loadingScreen.vert");
-    noerror |= loadingMainProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/loadingScreen.frag");
+    noerror |= loadingMainProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/funShader.frag");
     loadingMainProgram->bindAttributeLocation("position", 0);
     noerror |= loadingMainProgram->link();
     if (!noerror) {qDebug() << loadingMainProgram->log();}
@@ -728,12 +728,19 @@ void Game::parseInput(float dT)
     }
 }
 
+/// public slots
 void Game::initializeEnv()
 {
     initializeEnvLocal();
 }
 
-// GameWorker::
+void Game::receiveButton(int buttonID)
+{
+    switch(buttonID) {
+    }
+}
+
+/// GameWorker::
 void GameWorker::onTick()
 {
     qint64 nse = et.nsecsElapsed();
