@@ -122,6 +122,7 @@ private:
 
     QVector<Player*> mPlayers;
     QVector<QPair<QVector3D, int>> solarChanges;
+    int stageChange;
     // current camera rotation and position
     float camSpeed, rotationSpeed;
     float camFov, camNear, camFar;
