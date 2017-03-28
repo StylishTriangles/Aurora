@@ -44,6 +44,7 @@ Game::~Game()
         delete p;
     delete planetsProgram;
     delete lightsProgram;
+    delete coronaProgram;
     delete planeGeoProgram;
     delete edgesProgram;
     delete loadingMainProgram;
@@ -116,12 +117,22 @@ void Game::drawModel(ModelContainer* mod)
 {
     if(mod->type==ModelContainer::Skybox)
         glCullFace(GL_FRONT);
-    if((mod->type==ModelContainer::Planet || mod->type==ModelContainer::Titan || mod->type==ModelContainer::Moon) && stage!=0){
+    if((mod->type==ModelContainer::Planet || mod->type==ModelContainer::Titan || mod->type==ModelContainer::Moon) && stage!=0)
         drawOrbit(mod);
+    if (mod->type == ModelContainer::StarCorona)
+        mod->setRotation(camRot);
+    // setup variables
+    QOpenGLShaderProgram* currProgram;
+    switch (mod->type) {
+    case ModelContainer::Star: currProgram = lightsProgram; break;
+    case ModelContainer::StarCorona: currProgram = coronaProgram; break;
+    case ModelContainer::Planet:
+    default: currProgram = planetsProgram;
     }
+
     QMatrix4x4 modelMat = mod->getModelMat();
     QMatrix4x4 vp = projectionMat * viewMat;
-    static auto distance = [](QVector3D const& camPos, QVector3D const& modPos) -> float {
+    auto distance = [](QVector3D const& camPos, QVector3D const& modPos) -> float {
         return (camPos-modPos).length();
     };
 //    float d = distance(camPos, mod->getPos()) / mod->getScale().x();
@@ -146,27 +157,27 @@ void Game::drawModel(ModelContainer* mod)
         light.diffuse = QVector3D(0.0f,0.0f,0.0f);
         light.specular = light.diffuse;
     }
-    if (mod->type == ModelContainer::Star) {
-        lightsProgram->bind();
-        lightsProgram->setUniformValue("vp",vp);
-        lightsProgram->setUniformValue("mColor", mLights.find(mod->tex).value().diffuse);
-        lightsProgram->setUniformValue("modelMat",modelMat);
-        lightsProgram->setUniformValue("time", GLfloat(et.nsecsElapsed()/1e9f));
-        lightsProgram->setUniformValue("radius", mod->getScale().length());
+    if (mod->type == ModelContainer::Star or mod->type == ModelContainer::StarCorona) {
+        currProgram->bind();
+        currProgram->setUniformValue("vp",vp);
+        currProgram->setUniformValue("mColor", mLights.find(mod->tex).value().diffuse);
+        currProgram->setUniformValue("modelMat",modelMat);
+        currProgram->setUniformValue("time", GLfloat(et.nsecsElapsed()/1e9f));
+        currProgram->setUniformValue("radius", mod->getScale().length());
     }
     else {
-        planetsProgram->bind();
-        planetsProgram->setUniformValue("vp",vp);
-        planetsProgram->setUniformValue("modelMat",modelMat);
-        planetsProgram->setUniformValue("modelNorm",modelMat.inverted().transposed());
-        planetsProgram->setUniformValue("light.position",lightPos);
-        planetsProgram->setUniformValue("light.ambient", light.ambient); //można zmieniac te wartosci i patrzec, co sie stanie
-        planetsProgram->setUniformValue("light.diffuse", light.diffuse); //-||-
-        planetsProgram->setUniformValue("light.specular", light.specular); //-||-
-        planetsProgram->setUniformValue("shininess", 32.0f);
-        planetsProgram->setUniformValue("viewPos", camPos);
-        planetsProgram->setUniformValue("diffuseMap", 0);
-        planetsProgram->setUniformValue("specularMap", 1);
+        currProgram->bind();
+        currProgram->setUniformValue("vp",vp);
+        currProgram->setUniformValue("modelMat",modelMat);
+        currProgram->setUniformValue("modelNorm",modelMat.inverted().transposed());
+        currProgram->setUniformValue("light.position",lightPos);
+        currProgram->setUniformValue("light.ambient", light.ambient); //można zmieniac te wartosci i patrzec, co sie stanie
+        currProgram->setUniformValue("light.diffuse", light.diffuse); //-||-
+        currProgram->setUniformValue("light.specular", light.specular); //-||-
+        currProgram->setUniformValue("shininess", 32.0f);
+        currProgram->setUniformValue("viewPos", camPos);
+        currProgram->setUniformValue("diffuseMap", 0);
+        currProgram->setUniformValue("specularMap", 1);
     }
     if(mod->type!=ModelContainer::Star){
         mTextures[mod->tex]->bind(0);
@@ -181,12 +192,12 @@ void Game::drawModel(ModelContainer* mod)
     this->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6*sizeof(GLfloat)));
 
     glDrawArrays(GL_TRIANGLES, 0, geomSize);
+    if(mod->type==ModelContainer::Skybox)
+        glCullFace(GL_BACK);
     if(stage!=0){
         for (int i = 0; i < mod->children.size(); i++)
             drawModel(mod->children[i]);
     }
-    if(mod->type==ModelContainer::Skybox)
-        glCullFace(GL_BACK);
 }
 
 void Game::drawOrbit(ModelContainer* mod) {
@@ -222,7 +233,7 @@ void Game::drawEdges() {
     glDrawArrays(GL_LINES, 0, mGeometry["edges"]->size());
 }
 
-void Game::update(){
+void Game::applyChanges(){
     for(int i=0; i<solarChanges.size(); i++){
         solarDetails[solarChanges[i].second]->setOwner(0, mVbo["edges"], solarChanges[i].first, QVector2D(solarSystems[solarChanges[i].second]->position));
         mPlayers[0]->ownSystem(solarChanges[i].second);
@@ -270,6 +281,7 @@ void Game::drawLoadingScreen()
 
 void Game::paintGL()
 {
+    applyChanges();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if (!initComplete) {
         drawLoadingScreen();
@@ -293,7 +305,6 @@ void Game::paintGL()
             drawModel(solarSystems[actSystem]);
 //            drawModel(spaceShip); zbugowany
     }
-    update();
     emit paintCompleted();
 }
 
@@ -472,6 +483,7 @@ void Game::loadShaders()
 {
     planetsProgram = new QOpenGLShaderProgram;
     lightsProgram = new QOpenGLShaderProgram;
+    coronaProgram = new QOpenGLShaderProgram;
     planeGeoProgram = new QOpenGLShaderProgram;
     edgesProgram = new QOpenGLShaderProgram;
 
@@ -497,6 +509,17 @@ void Game::loadShaders()
     noerror |= lightsProgram->link();
     lightsProgram->setUniformValue("tex", 0);
     if (!noerror) {qDebug() << lightsProgram->log();}
+
+    // star corona shader
+    noerror = true;
+    noerror |= coronaProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/lightVertex.vert");
+    noerror |= coronaProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/corona.frag");
+    coronaProgram->bindAttributeLocation("position", 0);
+    coronaProgram->bindAttributeLocation("normal", 1);
+    coronaProgram->bindAttributeLocation("texCoord", 2);
+    noerror |= coronaProgram->link();
+    coronaProgram->setUniformValue("tex", 0);
+    if (!noerror) {qDebug() << coronaProgram->log();}
 
     // plane source shader
     noerror = true;
@@ -584,21 +607,21 @@ void Game::loadPrototypes()
 void Game::setLightTypes()
 {
     // nobody knows
-    mLights.insert("white_dwarf", Light(6500)/1.66f);
-    // 2,200 K
-    mLights.insert("yellow_dwarf", Light(2200));
+    mLights.insert("white_dwarf", Light(6500));
+    // 5700 K
+    mLights.insert("yellow_dwarf", Light(5700)*2);
     // nobody knows
     mLights.insert("blue_dwarf", Light(10000));
     // 2,300-3,800 K
     mLights.insert("red_dwarf", Light(1500)*1.1);
 
     // 3,500–5,000 K
-    mLights.insert("red_giant", Light(5000)*2.0f);
+    mLights.insert("red_giant", Light(3700)*1.5);
     // 10,000–50,000 K
     mLights.insert("blue_giant", Light(15000)*2.0);
 
     // 3,500–4,500 K
-    mLights.insert("red_super_giant", Light(4000)*2.5f);
+    mLights.insert("red_super_giant", Light(3500)*2.0f);
     // 10,000–50,000 K
     mLights.insert("blue_super_giant", Light(25000)*3.0);
 }
@@ -686,6 +709,7 @@ void Game::parseInput(float dT)
             if(collisions.size()!=0) {
                 std::sort(collisions.begin(), collisions.end());
                 stageChange=collisions[0].second+1;
+                qDebug() << solarSystems[collisions[0].second]->tex;
             }
         }
         keys-=(Qt::LeftButton^mouseXor);

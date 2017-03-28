@@ -9,7 +9,7 @@ Details::~Details(){
 
 Details::Details(int _owner, QVector<int> _colonizated, QString _starType, QVector3D _pos)
 {
-    owner=_owner;colonized=_colonizated;starType=_starType;pos=_pos;
+    owner=_owner;population=_colonizated;starType=_starType;pos=_pos;
 }
 
 void Details::setOwner(int newOwner, QOpenGLBuffer& mData, QVector3D ownerCol, QVector2D pos){
@@ -30,7 +30,7 @@ int Details::getOwner(){
 }
 
 void Details::setPlanetCount(int planetsInSystem){
-    colonized.resize(planetsInSystem);
+    population.resize(planetsInSystem);
     production.resize(planetsInSystem);
     for(int i=0; i<production.size(); i++){
         production[i].resize(4);
@@ -61,11 +61,11 @@ void Details::setPlanetType(int planet, QString * typ){
 }
 
 void Details::setColonized(int planetNum){
-    colonized[planetNum]=1;
+    population[planetNum]=1;
 }
 
 int Details::isColonized(int planetNum){
-    return colonized[planetNum];
+    return population[planetNum];
 }
 
 QPair<double, double> Details::calculateSystem(int flag){
@@ -85,28 +85,28 @@ QPair<double, double> Details::calculateSystem(int flag){
 
 void Details::calculateFood(){
     food=0;
-    for(int i=0; i<colonized.size(); i++){
-        if(colonized[i]>0){
-            food+=5+production[i][0]*colonized[i]; //very very tmp
+    for(int i=0; i<population.size(); i++){
+        if(population[i]>0){
+            food+=5+production[i][0]*population[i]; //very very tmp
         }
-        food-=colonized[i];
+        food-=population[i];
     }
 }
 
 void Details::calculateEnergy(){
     energy=0;
-    for(int i=0; i<colonized.size(); i++){
-        if(colonized[i]>0){
-            energy+=5+production[i][1]*colonized[i]; //very very tmp
+    for(int i=0; i<population.size(); i++){
+        if(population[i]>0){
+            energy+=5+production[i][1]*population[i]; //very very tmp
         }
     }
 }
 
 void Details::calculateScience(){
     science=0;
-    for(int i=0; i<colonized.size(); i++){
-        if(colonized[i]>0){
-            science+=5+production[i][2]*colonized[i]; //very very tmp
+    for(int i=0; i<population.size(); i++){
+        if(population[i]>0){
+            science+=5+production[i][2]*population[i]; //very very tmp
         }
     }
 
@@ -114,9 +114,9 @@ void Details::calculateScience(){
 
 void Details::calculateIndustry(){
     industry=0;
-    for(int i=0; i<colonized.size(); i++){
-        if(colonized[i]>0){
-            industry+=5+production[i][3]*colonized[i]; //very very tmp
+    for(int i=0; i<population.size(); i++){
+        if(population[i]>0){
+            industry+=5+production[i][3]*population[i]; //very very tmp
         }
     }
 }
@@ -124,9 +124,9 @@ void Details::calculateIndustry(){
 void Details::addPopulation(){
     int idx=-1, pop = 0;
     double sum=0, tmp;
-    for(int i=0; i<colonized.size(); i++){
-        pop+=colonized[i];
-        if(colonized[i]==0)
+    for(int i=0; i<population.size(); i++){
+        pop+=population[i];
+        if(population[i]==0)
             continue;
         tmp=0;
         for(int j=0; j<4; j++){
@@ -138,7 +138,7 @@ void Details::addPopulation(){
         }
     }
     if(idx!=-1)
-        colonized[idx]++;
+        population[idx]++;
     foodToNext=pop*30;
 }
 

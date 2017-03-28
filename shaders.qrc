@@ -15,5 +15,6 @@
         <file>shaders/edgesFrag.frag</file>
         <file>shaders/edgesVert.vert</file>
         <file>shaders/funShader.frag</file>
+        <file>shaders/corona.frag</file>
     </qresource>
 </RCC>

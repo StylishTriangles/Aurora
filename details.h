@@ -13,7 +13,7 @@ private:
     int owner;
     QString starType;
     QVector3D pos;
-    QVector<int> colonized;
+    QVector<int> population;
     QVector<QString*> type;
     QVector<QVector<double>> production;
     double food, energy, science, industry, foodToNext;

@@ -68,8 +68,8 @@ public:
 protected:
     void initializeGL() Q_DECL_OVERRIDE;
     void resizeGL(int w ,int h) Q_DECL_OVERRIDE;
-    void update();
     void paintGL() Q_DECL_OVERRIDE;
+    void applyChanges();
     void keyPressEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
     void keyReleaseEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
     void mousePressEvent(QMouseEvent* event) Q_DECL_OVERRIDE;
@@ -104,7 +104,7 @@ private:
     QMatrix4x4 projectionMat, viewMat;
     QOpenGLBuffer planetVbo;
     QOpenGLVertexArrayObject Vao;
-    QOpenGLShaderProgram *planetsProgram, *lightsProgram, *planeGeoProgram, *loadingMainProgram, *edgesProgram;
+    QOpenGLShaderProgram *planetsProgram, *lightsProgram, *planeGeoProgram, *loadingMainProgram, *edgesProgram, *coronaProgram;
     QPoint lastCursorPos;
     bool shadersCompiled, initComplete, preInitComplete;
     // game world objects

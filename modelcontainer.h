@@ -20,6 +20,7 @@ public:
         Atmo,
         Moon,
         Star,
+        StarCorona,
         Spaceship,
         // special types
         Sprite
@@ -31,6 +32,7 @@ public:
 
     void addChild(ModelContainer & m);
     void addChild(ModelContainer * m);
+    inline void setRotation(QVector3D rXYZ) {rotation = rXYZ;}
     inline void setScale(float factor) {scale.setX(factor); scale.setY(factor); scale.setZ(factor);}
     inline void setScale(float x, float y, float z) {scale.setX(x); scale.setY(y); scale.setZ(z);}
     QVector3D getPos() const;
