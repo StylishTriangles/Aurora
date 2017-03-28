@@ -12,6 +12,7 @@ namespace Aurora {
 const QString DEFAULT_CONFIG_FILENAME = QString("settings.cfg");
 const QString SETTING_ALPHA_BUFFER_SIZE = QString("ALPHA_SIZE");
 const QString SETTING_GRAPHICS_AA = QString("ANTI_ALIASING");
+const QString SETTING_GRAPHICS_LOADING_SCREEN = QString("LOAD_SCR");
 const QString SETTING_GRAPHICS_VSYNC = QString("VSYNC");
 
 bool readSettings(QFile &file, QHash<QString, QString> &mData);

@@ -654,7 +654,10 @@ void Game::setupLS()
     loadingMainProgram = new QOpenGLShaderProgram;
     bool noerror = true;
     noerror |= loadingMainProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/loadingScreen.vert");
-    noerror |= loadingMainProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/funShader.frag");
+    if (mSettings[Aurora::SETTING_GRAPHICS_LOADING_SCREEN] == "Beautiful ocean")
+        noerror |= loadingMainProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/funShader.frag");
+    else
+        noerror |= loadingMainProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/loadingScreen.frag");
     loadingMainProgram->bindAttributeLocation("position", 0);
     noerror |= loadingMainProgram->link();
     if (!noerror) {qDebug() << loadingMainProgram->log();}

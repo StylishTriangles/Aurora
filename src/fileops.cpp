@@ -58,6 +58,7 @@ void loadDefaultSettings(QHash<QString,QString> &mData)
     mData[SETTING_ALPHA_BUFFER_SIZE] = "8";
     mData[SETTING_GRAPHICS_AA] = "No AA";
     mData[SETTING_GRAPHICS_VSYNC] = "Double Buffering";
+    mData[SETTING_GRAPHICS_LOADING_SCREEN] = "Stars";
 }
 
 bool parseObj(const QString &filepath, QVector<GLfloat> &mData)

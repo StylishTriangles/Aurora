@@ -115,4 +115,10 @@ void Options::updateUI()
 {
     ui->AAbox->setCurrentText(mData[Aurora::SETTING_GRAPHICS_AA]);
     ui->VSbox->setCurrentText(mData[Aurora::SETTING_GRAPHICS_VSYNC]);
+    ui->LSbox->setCurrentText(mData[Aurora::SETTING_GRAPHICS_LOADING_SCREEN]);
+}
+
+void Options::on_LSbox_currentTextChanged(const QString &arg1)
+{
+    mData[Aurora::SETTING_GRAPHICS_LOADING_SCREEN] = arg1;
 }

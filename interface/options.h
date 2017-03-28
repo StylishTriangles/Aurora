@@ -31,6 +31,7 @@ private slots:
 
     void on_AAbox_currentTextChanged(const QString &arg1);
     void on_VSbox_currentTextChanged(const QString &arg1);
+    void on_LSbox_currentTextChanged(const QString &arg1);
 
 protected:
     QFile fOpt;
