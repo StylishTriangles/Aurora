@@ -77,6 +77,8 @@ void addYellowDwarf(QVector<ModelContainer*>& solarSystems, QVector<Details*>& s
     tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
     tmpM2->setScale(50.0f);
     solarSystems.back()->addChild(tmpM2);
+    tmpM2 = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "sprite", "yellow_dwarf", ModelContainer::StarCorona);
+    solarSystems.back()->addChild(tmpM2);
     Details* tmpD = new Details(-1, QVector<int>(), "yellow_dwarf", tmpM->position);
     solarDetails.push_back(tmpD);
 }
@@ -88,6 +90,8 @@ void addWhiteDwarf(QVector<ModelContainer*>& solarSystems, QVector<Details*>& so
     solarSystems.push_back(tmpM);
     tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
     tmpM2->setScale(50.0f);
+    solarSystems.back()->addChild(tmpM2);
+    tmpM2 = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "sprite", "white_dwarf", ModelContainer::StarCorona);
     solarSystems.back()->addChild(tmpM2);
     Details* tmpD = new Details(-1, QVector<int>(), "white_dwarf", tmpM->position);
     solarDetails.push_back(tmpD);
@@ -101,6 +105,8 @@ void addBlueDwarf(QVector<ModelContainer*>& solarSystems, QVector<Details *> &so
     tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
     tmpM2->setScale(50.0f);
     solarSystems.back()->addChild(tmpM2);
+    tmpM2 = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "sprite", "blue_dwarf", ModelContainer::StarCorona);
+    solarSystems.back()->addChild(tmpM2);
     Details* tmpD = new Details(-1, QVector<int>(), "blue_dwarf", tmpM->position);
     solarDetails.push_back(tmpD);
 }
@@ -112,6 +118,8 @@ void addRedDwarf(QVector<ModelContainer*>& solarSystems, QVector<Details*>& sola
     solarSystems.push_back(tmpM);
     tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
     tmpM2->setScale(50.0f);
+    solarSystems.back()->addChild(tmpM2);
+    tmpM2 = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "sprite", "red_dwarf", ModelContainer::StarCorona);
     solarSystems.back()->addChild(tmpM2);
     Details* tmpD = new Details(-1, QVector<int>(), "red_dwarf", tmpM->position);
     solarDetails.push_back(tmpD);
@@ -125,6 +133,8 @@ void addRedGiant(QVector<ModelContainer*>& solarSystems, QVector<Details*>& sola
     tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
     tmpM2->setScale(50.0f);
     solarSystems.back()->addChild(tmpM2);
+    tmpM2 = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "sprite", "red_giant", ModelContainer::StarCorona);
+    solarSystems.back()->addChild(tmpM2);
     Details* tmpD = new Details(-1, QVector<int>(), "red_giant", tmpM->position);
     solarDetails.push_back(tmpD);
 }
@@ -136,6 +146,8 @@ void addBlueGiant(QVector<ModelContainer*>& solarSystems, QVector<Details*>& sol
     solarSystems.push_back(tmpM);
     tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
     tmpM2->setScale(50.0f);
+    solarSystems.back()->addChild(tmpM2);
+    tmpM2 = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "sprite", "blue_giant", ModelContainer::StarCorona);
     solarSystems.back()->addChild(tmpM2);
     Details* tmpD = new Details(-1, QVector<int>(), "blue_giant", tmpM->position);
     solarDetails.push_back(tmpD);
@@ -149,6 +161,8 @@ void addRedSuperGiant(QVector<ModelContainer*>& solarSystems, QVector<Details*>&
     tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
     tmpM2->setScale(50.0f);
     solarSystems.back()->addChild(tmpM2);
+    tmpM2 = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "sprite", "red_super_giant", ModelContainer::StarCorona);
+    solarSystems.back()->addChild(tmpM2);
     Details* tmpD = new Details(-1, QVector<int>(), "red_super_giant", tmpM->position);
     solarDetails.push_back(tmpD);
 }
@@ -160,6 +174,8 @@ void addBlueSuperGiant(QVector<ModelContainer*>& solarSystems, QVector<Details*>
     solarSystems.push_back(tmpM);
     tmpM2=new ModelContainer({0,0,0}, {0,0,0}, "geosphere", "skybox", ModelContainer::Skybox);
     tmpM2->setScale(50.0f);
+    solarSystems.back()->addChild(tmpM2);
+    tmpM2 = new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "sprite", "blue_super_giant", ModelContainer::StarCorona);
     solarSystems.back()->addChild(tmpM2);
     Details* tmpD = new Details(-1, QVector<int>(), "blue_super_giant", tmpM->position);
     solarDetails.push_back(tmpD);

@@ -140,6 +140,8 @@ void Game::drawModel(ModelContainer* mod)
     int detailLevel = (d > 60.f)?1:(d > 30.f)?2:(d > 15.f)?3:4;
     if (mod->type == ModelContainer::Skybox or mod->type == ModelContainer::Titan || mod->type==ModelContainer::Spaceship)
         detailLevel = 3;
+    if(mod->type==ModelContainer::StarCorona)
+        detailLevel =-1;
     int geomSize = bindModel(mod, detailLevel);
     // init variables
     Light light;
@@ -179,7 +181,7 @@ void Game::drawModel(ModelContainer* mod)
         currProgram->setUniformValue("diffuseMap", 0);
         currProgram->setUniformValue("specularMap", 1);
     }
-    if(mod->type!=ModelContainer::Star){
+    if(mod->type!=ModelContainer::Star && mod->type!=ModelContainer::StarCorona){
         mTextures[mod->tex]->bind(0);
         mTextures[(mod->tex+"Spec")]->bind(1);
     }
