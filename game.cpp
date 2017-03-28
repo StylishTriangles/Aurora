@@ -452,25 +452,25 @@ void Game::loadTextures()
 #ifdef QT_DEBUG
     img = QImage(QString("../Aurora/atmosphere.png"));
     mTempImageData.insert("atmosphere", img);
-    img = QImage(QString("../Aurora/atmosphere.png"));
+//    img = QImage(QString("../Aurora/atmosphere.png"));
     mTempImageData.insert("atmosphereSpec", img);
     img = QImage(QString("../Aurora/moon.png"));
     mTempImageData.insert("moon", img);
-    img = QImage(QString("../Aurora/moon.png"));
+//    img = QImage(QString("../Aurora/moon.png"));
     mTempImageData.insert("moonSpec", img);
     img = QImage(QString(":/misc/skybox.png"));
     mTempImageData.insert("skybox", img);
-    img = QImage(QString(":/misc/skybox.png"));
+//    img = QImage(QString(":/misc/skybox.png"));
     mTempImageData.insert("skyboxSpec", img);
     img = QImage(QString("../Aurora/textures/earthSpec.png"));
     mTempImageData.insert("earthSpec", img);
     img = QImage(QString("../Aurora/textures/venus.png"));
     mTempImageData.insert("venus", img);
-    img = QImage(QString("../Aurora/textures/venus.png"));
+//    img = QImage(QString("../Aurora/textures/venus.png"));
     mTempImageData.insert("venusSpec", img);
     img = QImage(QString("../Aurora/textures/spacecruiser.png"));
     mTempImageData.insert("spacecruiser", img);
-    img = QImage(QString("../Aurora/textures/spacecruiser.png"));
+//    img = QImage(QString("../Aurora/textures/spacecruiser.png"));
     mTempImageData.insert("spacecruiserSpec", img);
 #else
     QResource::registerResource("textures/textures.rcc");
