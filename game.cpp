@@ -131,6 +131,8 @@ void Game::drawModel(ModelContainer* mod)
     }
 
     QMatrix4x4 modelMat = mod->getModelMat();
+    if(stage==0 && mod->type==ModelContainer::Star)
+        modelMat.scale(reduceScale(mod->getScale().x())/mod->getScale().x());
     QMatrix4x4 vp = projectionMat * viewMat;
     auto distance = [](QVector3D const& camPos, QVector3D const& modPos) -> float {
         return (camPos-modPos).length();
@@ -165,7 +167,10 @@ void Game::drawModel(ModelContainer* mod)
         currProgram->setUniformValue("mColor", mLights.find(mod->tex).value().diffuse);
         currProgram->setUniformValue("modelMat",modelMat);
         currProgram->setUniformValue("time", GLfloat(et.nsecsElapsed()/1e9f));
-        currProgram->setUniformValue("radius", mod->getScale().length());
+        if(stage==0)
+            currProgram->setUniformValue("radius", reduceScale(mod->getScale().x()));
+        else
+            currProgram->setUniformValue("radius", mod->getScale().x());
     }
     else {
         currProgram->bind();
@@ -434,6 +439,7 @@ void Game::initializeEnvRemote()
     loadTextures();
     loadPrototypes();
     setLightTypes();
+    loadXml();
 }
 
 void Game::initializeEnvLocal()
@@ -449,7 +455,7 @@ void Game::loadTextures()
 {
     QImage img;
     img = QImage(QString(":/planets/earth.png"));
-    mTempImageData.insert("earth", img);
+    mTempImageData.insert("terran", img);
 
 #ifdef QT_DEBUG
     img = QImage(QString("../Aurora/atmosphere.png"));
@@ -465,11 +471,11 @@ void Game::loadTextures()
 //    img = QImage(QString(":/misc/skybox.png"));
     mTempImageData.insert("skyboxSpec", img);
     img = QImage(QString("../Aurora/textures/earthSpec.png"));
-    mTempImageData.insert("earthSpec", img);
+    mTempImageData.insert("terranSpec", img);
     img = QImage(QString("../Aurora/textures/venus.png"));
-    mTempImageData.insert("venus", img);
+    mTempImageData.insert("volcanic", img);
 //    img = QImage(QString("../Aurora/textures/venus.png"));
-    mTempImageData.insert("venusSpec", img);
+    mTempImageData.insert("volcanicSpec", img);
     img = QImage(QString("../Aurora/textures/spacecruiser.png"));
     mTempImageData.insert("spacecruiser", img);
 //    img = QImage(QString("../Aurora/textures/spacecruiser.png"));
@@ -606,6 +612,10 @@ void Game::loadPrototypes()
     generateEdges(solarSystems, edges, *mGeometry["edges"], *mGeometry["geosphere1"], 2*solarSystems.size());
 }
 
+void Game::loadXml(){
+    Aurora::getXMLFile("../Aurora/data/buildings.xml", allBuildings);
+}
+
 void Game::setLightTypes()
 {
     // nobody knows
@@ -689,8 +699,10 @@ void Game::parseInput(float dT)
     else
         camSpeed = 0.05f; // default
 
-    if (keys.find(Qt::Key_C) != keys.end() && stage==2)
-            solarDetails[actSystem]->calculateSystem(0);
+    if (keys.find(Qt::Key_C) != keys.end() && stage==2){
+            solarDetails[actSystem]->calculateSystem(1);
+            solarDetails[actSystem]->addSystemBuilding(allBuildings, "systemFoodImprovement1");
+    }
 
     if (stage==0 && camPos.lengthSquared()>49*49)
         camPos*= 0.995f;
@@ -700,13 +712,16 @@ void Game::parseInput(float dT)
         if(stage==0) {
             QVector<QPair<GLfloat, int> > collisions;
             QVector3D ray_begin, ray_dir, xyz_min, xyz_max;
+            QMatrix4x4 modelMat;
             float d;
             screenPosToWorldRay(lastCursorPos.x(), this->height()-lastCursorPos.y(), this->width(), this->height(), viewMat, projectionMat, ray_begin, ray_dir);
             for(int i=0; i<solarSystems.size(); i++){
+                modelMat=solarSystems[i]->getModelMat();
+                modelMat.scale(reduceScale(solarSystems[i]->getScale().x())/solarSystems[i]->getScale().x());
                 xyz_min=QVector3D(-1.0f, -1.0f, -1.0f)*solarSystems[i]->getScale();
                 xyz_max=QVector3D(1.0f, 1.0f, 1.0f)*solarSystems[i]->getScale();
-                if(testRayOBBIntersection(ray_begin, ray_dir, xyz_min, xyz_max, solarSystems[i]->getModelMat(), d)) {
-                    collisions.push_back({testRayPreciselyIntersection(*(mGeometry[solarSystems[i]->model+"1"]), ray_begin, ray_dir, solarSystems[i]->getModelMat(), 8, 0), i});
+                if(testRayOBBIntersection(ray_begin, ray_dir, xyz_min, xyz_max, modelMat, d)) {
+                    collisions.push_back({testRayPreciselyIntersection(*(mGeometry[solarSystems[i]->model+"1"]), ray_begin, ray_dir, modelMat, 8, 0), i});
                     if(collisions[collisions.size()-1].first<=-10e6+0.0001 && collisions[collisions.size()-1].first>=-10e6-0.0001)
                         collisions.pop_back();
                 }
@@ -714,7 +729,7 @@ void Game::parseInput(float dT)
             if(collisions.size()!=0) {
                 std::sort(collisions.begin(), collisions.end());
                 stageChange=collisions[0].second+1;
-                qDebug() << solarSystems[collisions[0].second]->tex;
+                qDebug() << solarSystems[collisions[0].second]->tex<<" "<<solarDetails[collisions[0].second]->getName()<<" "<<collisions[0].second;
             }
         }
         keys-=(Qt::LeftButton^mouseXor);

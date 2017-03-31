@@ -1,0 +1,10 @@
+<buildings>
+	<building Name="systemFoodImprovement1">
+		<resourcesPerCapita>
+			<resource Food="1" Restrictions="on terran"/>
+		</resourcesPerCapita>
+		<resourcesPerPlanet>
+			<resource Food="5" Restrictions="on terran"/>
+		</resourcesPerPlanet>
+	</building>
+</buildings>

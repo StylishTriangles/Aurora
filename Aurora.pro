@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui
+QT       += xml
 CONFIG   += c++17
 QMAKE_LFLAGS += -Wl,--large-address-aware
 QMAKE_LFLAGS_RELEASE = --static
