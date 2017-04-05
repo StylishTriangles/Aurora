@@ -173,6 +173,7 @@ void Game::drawModel(ModelContainer* mod)
         if (mod->type == ModelContainer::StarCorona) {
             currProgram->setUniformValue("camFront", camFront);
             currProgram->setUniformValue("camUp", camUp);
+            currProgram->setUniformValue("radius", mod->parent->getScale().x());
         }
     }
     else {

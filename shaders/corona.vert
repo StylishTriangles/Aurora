@@ -10,6 +10,7 @@ uniform mat4 vp; // projection * view
 uniform mat4 modelMat;
 uniform vec3 camFront;
 uniform vec3 camUp;
+uniform float radius;
 
 const float eps = 0.001;
 const float pi = 3.1415926535897932384;
@@ -18,7 +19,7 @@ vec3 pts[4] = vec3[](vec3(1,1,0), vec3(1,-1,0), vec3(-1,-1,0), vec3(-1,1,0));
 
 float dist2(vec3 a, vec3 b)
 {
-    return (a.x*a.x-b.x*b.x)+(a.y*a.y-b.y*b.y)+(a.z*a.z-b.z*b.z);
+    return (a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y)+(a.z-b.z)*(a.z-b.z);
 }
 
 mat4 rotationMatrix(vec3 axis, float angle)
@@ -39,9 +40,9 @@ void main()
     mat4 rot;
     for (int i = 0; i < 4; i++) {
         if (dist2(pts[i],position) < eps)
-            rot = rotationMatrix(camFront, angles[i]);
+            rot = rotationMatrix(camFront, angles[3-i]);
     }
-    gl_Position = vp * modelMat * rot * vec4(normalize(camUp)*3, 1.0f);
+    gl_Position = vp * modelMat * rot * vec4(normalize(camUp)*radius*6, 1.0f);
     fPosition = vec3(modelMat * vec4(position, 1.0f));
     TexCoord = vec2(texCoord.x, texCoord.y);
 }
