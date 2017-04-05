@@ -123,7 +123,7 @@ float noise(vec4 position, int octaves, float frequency, float persistence) {
 
 void main()
 {
-    float unDT = time/200.0;
+    float unDT = time/250.0;
     float unRadius = 4e5f/radius;
     vec4 position = vec4(fPosition, unDT);
     float n =(noise(position,4,40.0,0.7)+1.1)*0.5;

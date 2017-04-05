@@ -119,15 +119,13 @@ void Game::drawModel(ModelContainer* mod)
         glCullFace(GL_FRONT);
     if((mod->type==ModelContainer::Planet || mod->type==ModelContainer::Titan || mod->type==ModelContainer::Moon) && stage!=0)
         drawOrbit(mod);
-    if (mod->type == ModelContainer::StarCorona)
-        mod->setRotation(camRot);
     // setup variables
     QOpenGLShaderProgram* currProgram;
     switch (mod->type) {
-    case ModelContainer::Star: currProgram = lightsProgram; break;
-    case ModelContainer::StarCorona: currProgram = coronaProgram; break;
+    case ModelContainer::Star:          currProgram = lightsProgram; break;
+    case ModelContainer::StarCorona:    currProgram = coronaProgram; break;
     case ModelContainer::Planet:
-    default: currProgram = planetsProgram;
+    default:                            currProgram = planetsProgram;
     }
 
     QMatrix4x4 modelMat = mod->getModelMat();
@@ -166,6 +164,10 @@ void Game::drawModel(ModelContainer* mod)
         currProgram->setUniformValue("modelMat",modelMat);
         currProgram->setUniformValue("time", GLfloat(et.nsecsElapsed()/1e9f));
         currProgram->setUniformValue("radius", mod->getScale().length());
+        if (mod->type == ModelContainer::StarCorona) {
+            currProgram->setUniformValue("camFront", camFront);
+            currProgram->setUniformValue("camUp", camUp);
+        }
     }
     else {
         currProgram->bind();
@@ -514,7 +516,7 @@ void Game::loadShaders()
 
     // star corona shader
     noerror = true;
-    noerror |= coronaProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/lightVertex.vert");
+    noerror |= coronaProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/corona.vert");
     noerror |= coronaProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/corona.frag");
     coronaProgram->bindAttributeLocation("position", 0);
     coronaProgram->bindAttributeLocation("normal", 1);

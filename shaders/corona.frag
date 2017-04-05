@@ -127,5 +127,6 @@ void main()
     float brightness = (1.0 / (dist * dist) - 0.1) * 0.7;
 
     float total = brightness;
-    color = vec4(vec3(total,total,total)*mColor,1.0f);
+    //color = vec4(vec3(1.0,total,total)*mColor,1.0);
+    color = vec4(1,0,0,1);
 }
