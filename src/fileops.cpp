@@ -66,7 +66,7 @@ bool parseObj(const QString &filepath, QVector<GLfloat> &mData)
     QFile file(filepath);
     file.open(QIODevice::ReadOnly);
     if (!file.isOpen()){
-        qDebug()<<"WA SZMATO w parsowaniu .obj";
+        qDebug()<<"WA SZMATO w parsowaniu "<<filepath;
         return true;
     }
     QTextStream in(&file);
@@ -188,6 +188,40 @@ bool parseObj(const QString &filepath, QVector<GLfloat> &mData)
             }
         }
     }
+    file.close();
     return false;
+}
+
+bool readNames(const QString &filepath, QVector<QString> &mData, std::mt19937& rng)
+{
+    QFile file(filepath);
+    file.open(QIODevice::ReadOnly);
+    if (!file.isOpen()){
+        qDebug()<<"WA SZMATO w parsowaniu nazw układów";
+        return true;
+    }
+    QTextStream in(&file);
+    while (!in.atEnd()) {
+        QString line = in.readLine();
+        mData.push_back(line);
+    }
+    std::shuffle(mData.begin(), mData.end(), rng);
+    file.close();
+    return false;
+}
+
+bool getXMLFile(const QString& filepath, QDomDocument& mData){
+    QFile file(filepath);
+    file.open(QIODevice::ReadOnly);
+    if (!file.isOpen()){
+        qDebug()<<"WA SZMATO w parsowaniu "<<filepath;
+        return true;
+    }
+    if(!mData.setContent(&file)){
+        qDebug()<<"WA SZMATO w parsowaniu "<<filepath;
+        return true;
+    }
+    file.close();
+    return true;
 }
 } // namespace Aurora

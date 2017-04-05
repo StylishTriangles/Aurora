@@ -12,10 +12,11 @@
 #include <QOpenGLFunctions_4_3_Core>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
+#include <QPair>
 #include <QResizeEvent>
 #include <QSet>
+#include <QtXml/QtXml>
 #include <QVector>
-#include <QPair>
 
 #include <algorithm>
 
@@ -87,6 +88,7 @@ protected:
     void loadShaders();
     void loadSettings();
     void loadPrototypes();
+    void loadXml();
     void setLightTypes();
     void setupLS();
     void setupTextures();
@@ -123,6 +125,8 @@ private:
     QVector<Player*> mPlayers;
     QVector<QPair<QVector3D, int>> solarChanges;
     int stageChange;
+    // buildings
+    QDomDocument allBuildings;
     // current camera rotation and position
     float camSpeed, rotationSpeed;
     float camFov, camNear, camFar;

@@ -1,13 +1,19 @@
 #include "./include/mapgenerator.h"
+#include "./include/fileops.h"
 
 #include<random>
 
 void generateSolarSystems(QVector<ModelContainer *> &solarSystems, QVector<Details*> &solarDetails){
-    std::mt19937 rng((long long int)(new int(75192)));
-    std::uniform_real_distribution<float> ufd(-20.0f, 20.0f), eps(-0.1f, 0.1f), alfa(0.0f, 2*M_PI);
+    int * a=new int(75192);
+    long long int b=(long long int)a;
+    qDebug()<<"Random Seed: "<<b;
+    std::mt19937 rng(b);
+    std::uniform_real_distribution<float> ufd(-15.0f, 15.0f), eps(-0.1f, 0.1f), alfa(0.0f, 2*M_PI);
     std::uniform_int_distribution<int> uid(1, 6), luid(1, 1000);
     GLfloat x, y;
     int planetsInSystem, p;
+    QVector<QString> names;
+    Aurora::readNames("../Aurora/data/systemnames.txt", names, rng); //read solar system names from file
     for(int i=0; i<10; i++){ //generate stars
         x=ufd(rng);
         y=ufd(rng);
@@ -47,6 +53,7 @@ void generateSolarSystems(QVector<ModelContainer *> &solarSystems, QVector<Detai
                     addBlueSuperGiant(solarSystems, solarDetails, rng, eps, x, y);
             }
         }
+        solarDetails[i]->setName(names[i]);
     }
     for(int i=0; i<10; i++){ //generate planets in systems
         planetsInSystem=uid(rng);
@@ -273,7 +280,7 @@ void addAtmo(ModelContainer* mod){
 }
 
 void addTitan(ModelContainer* mod, Details& det, std::mt19937& rng, std::uniform_real_distribution<float> &eps, std::uniform_real_distribution<float> &alfa, int idx){
-    ModelContainer* tmp= new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "titan", "earth", ModelContainer::Titan);
+    ModelContainer* tmp= new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "titan", "terran", ModelContainer::Titan);
     std::uniform_int_distribution<int> uid(1, 10);
     float d, x;
     d=2.0f*idx+3.0f+eps(rng);
@@ -294,7 +301,7 @@ void addTitan(ModelContainer* mod, Details& det, std::mt19937& rng, std::uniform
 }
 
 void addTerranPlanet(ModelContainer* mod, Details& det, std::mt19937& rng, std::uniform_real_distribution<float> &eps, std::uniform_real_distribution<float> &alfa, int idx){
-    ModelContainer* tmp= new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "earth", ModelContainer::Planet);
+    ModelContainer* tmp= new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "terran", ModelContainer::Planet);
     std::uniform_int_distribution<int> uid(1, 10);
     float d, x;
     d=2.0f*idx+3.0f+eps(rng);
@@ -316,7 +323,7 @@ void addTerranPlanet(ModelContainer* mod, Details& det, std::mt19937& rng, std::
 }
 
 void addVolcanicPlanet(ModelContainer* mod, Details& det, std::mt19937& rng, std::uniform_real_distribution<float> &eps, std::uniform_real_distribution<float> &alfa, int idx) {
-    ModelContainer* tmp= new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "venus", ModelContainer::Planet);
+    ModelContainer* tmp= new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "geosphere", "volcanic", ModelContainer::Planet);
     std::uniform_int_distribution<int> uid(1, 10);
     float d, x;
     d=2.0f*idx+3.0f+eps(rng);
@@ -339,4 +346,9 @@ void addVolcanicPlanet(ModelContainer* mod, Details& det, std::mt19937& rng, std
 
 int posToIdx(QVector3D pos){
     return int((roundf(pos.length())-3.0f)/2.0f);
+}
+
+float reduceScale(GLfloat sc){
+    float minbefscale=0.1f, maxbefscale=3.0f, minaftscale=0.1f, maxaftscale=0.5f;
+    return sc*(maxaftscale-minaftscale)/(maxbefscale-minbefscale)+maxaftscale-maxbefscale*(maxaftscale-minaftscale)/(maxbefscale-minbefscale);
 }

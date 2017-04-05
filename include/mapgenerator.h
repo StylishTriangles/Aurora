@@ -30,5 +30,6 @@ void addTerranPlanet(ModelContainer* mod, Details &det, std::mt19937& rng, std::
 void addVolcanicPlanet(ModelContainer* mod, Details& det, std::mt19937& rng, std::uniform_real_distribution<float> &eps, std::uniform_real_distribution<float> &alfa, int idx);
 
 int posToIdx(QVector3D pos);
+float reduceScale(GLfloat sc);
 
 #endif // MAPGENERATOR_H
