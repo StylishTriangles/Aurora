@@ -707,7 +707,7 @@ void Game::parseInput(float dT)
         camSpeed = 0.05f; // default
 
     if (keys.find(Qt::Key_C) != keys.end() && stage==2){
-            solarDetails[actSystem]->calculateSystem(1);
+            solarDetails[actSystem]->calculateSystem(allBuildings, 1);
             solarDetails[actSystem]->addSystemBuilding(allBuildings, "systemFoodImprovement1");
     }
 

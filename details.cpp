@@ -87,7 +87,7 @@ int Details::isColonized(int planetNum){
     return population[planetNum];
 }
 
-QPair<double, double> Details::calculateSystem(int flag){
+QPair<double, double> Details::calculateSystem(const QDomDocument& mData, int flag){
     if(owner==-1){
         food=0;
         energy=0;
@@ -102,9 +102,12 @@ QPair<double, double> Details::calculateSystem(int flag){
             addPopulation();
         }
     }
+    calculateIndustry();
+    calculateQueue(mData, flag);
+    if(buildQueue.size()==0)
+        indInQueue=0;
     calculateEnergy();
     calculateScience();
-    calculateIndustry();
     qDebug()<<food<<" "<<energy<<" "<<science<<" "<<industry<<" "<<basicProduction[0][0];
     return {energy, science};
 }
@@ -147,6 +150,26 @@ void Details::calculateIndustry(){
     }
 }
 
+void Details::calculateQueue(const QDomDocument &mData, int flag){
+    int sum;
+    buildTime.resize(buildQueue.size());
+    for(int i=0; i<buildQueue.size(); i++){
+        sum+=buildQueue[i].second;
+        buildTime[i]=std::max((sum-indInQueue+industry-1)/industry, 1.0);
+    }
+    if(flag==1){
+        while(buildQueue.size()>0 && industry>=buildQueue[0].second){
+            addSystemBuilding(mData, buildQueue[0].first);
+            industry-=buildQueue[0].second;
+            buildQueue.pop_front();
+            buildTime.pop_front();
+        }
+        if(buildQueue.size()>0)
+            buildQueue[0].second-=industry;
+        calculateQueue(mData, 0);
+    }
+}
+
 void Details::addPopulation(){
     int idx=-1, pop = 0;
     double sum=0, tmp;
@@ -179,59 +202,77 @@ void Details::addSystemBuilding(const QDomDocument& mData, QString buildName){
     double foo, ene, sci, ind;
     QString restr;
     while(!building.isNull()){
-        effect=building.firstChildElement();
-        while(!effect.isNull()){
-            resource=effect.firstChildElement();
-            while(!resource.isNull()){
-                restr=resource.attribute("Restrictions", "");
-                foo=resource.attribute("Food", "0").toDouble();
-                ene=resource.attribute("Energy", "0").toDouble();
-                sci=resource.attribute("Science", "0").toDouble();
-                ind=resource.attribute("Industry", "0").toDouble();
-                if(effect.tagName()=="resourcesPerCapita"){
-                    if(restr.size()==0){
-                        for(int i=0; i<production.size(); i++){
-                            production[i][0]+=foo;
-                            production[i][1]+=ene;
-                            production[i][2]+=sci;
-                            production[i][3]+=ind;
-                        }
-                    }
-                    else{
-                        for(int i=0; i<type.size(); i++){
-                            if(restr.contains(*type[i])){
+        if(building.attribute("Name", "")==buildName){
+            effect=building.firstChildElement();
+            while(!effect.isNull()){
+                resource=effect.firstChildElement();
+                while(!resource.isNull()){
+                    restr=resource.attribute("Restrictions", "");
+                    foo=resource.attribute("Food", "0").toDouble();
+                    ene=resource.attribute("Energy", "0").toDouble();
+                    sci=resource.attribute("Science", "0").toDouble();
+                    ind=resource.attribute("Industry", "0").toDouble();
+                    if(effect.tagName()=="resourcesPerCapita"){
+                        if(restr.size()==0){
+                            for(int i=0; i<production.size(); i++){
                                 production[i][0]+=foo;
                                 production[i][1]+=ene;
                                 production[i][2]+=sci;
                                 production[i][3]+=ind;
                             }
                         }
-                    }
-                }
-                else if(effect.tagName()=="resourcesPerPlanet"){
-                    if(restr.size()==0){
-                        for(int i=0; i<production.size(); i++){
-                            basicProduction[i][0]+=foo;
-                            basicProduction[i][1]+=ene;
-                            basicProduction[i][2]+=sci;
-                            basicProduction[i][3]+=ind;
+                        else{
+                            for(int i=0; i<type.size(); i++){
+                                if(restr.contains(*type[i])){
+                                    production[i][0]+=foo;
+                                    production[i][1]+=ene;
+                                    production[i][2]+=sci;
+                                    production[i][3]+=ind;
+                                }
+                            }
                         }
                     }
-                    else{
-                        for(int i=0; i<type.size(); i++){
-                            if(restr.contains(*type[i])){
+                    else if(effect.tagName()=="resourcesPerPlanet"){
+                        if(restr.size()==0){
+                            for(int i=0; i<production.size(); i++){
                                 basicProduction[i][0]+=foo;
                                 basicProduction[i][1]+=ene;
                                 basicProduction[i][2]+=sci;
                                 basicProduction[i][3]+=ind;
                             }
                         }
+                        else{
+                            for(int i=0; i<type.size(); i++){
+                                if(restr.contains(*type[i])){
+                                    basicProduction[i][0]+=foo;
+                                    basicProduction[i][1]+=ene;
+                                    basicProduction[i][2]+=sci;
+                                    basicProduction[i][3]+=ind;
+                                }
+                            }
+                        }
                     }
+                    resource = resource.nextSiblingElement();
                 }
-                resource = resource.nextSiblingElement();
+                effect = effect.nextSiblingElement();
             }
-            effect = effect.nextSiblingElement();
         }
         building = building.nextSiblingElement();
     }
+    calculateSystem(mData, 0);
+}
+
+void Details::addToQueue(const QDomDocument &mData, QString s){
+    int i;
+    QDomElement root=mData.documentElement(), building;
+    building=root.firstChildElement();
+    while(!building.isNull()){
+        if(building.attribute("Name", "")==s){
+            i=building.attribute("Cost", "-1").toDouble();
+            break;
+        }
+        building = building.nextSiblingElement();
+    }
+    buildQueue.push_back({s, i});
+    calculateQueue(mData, c0);
 }

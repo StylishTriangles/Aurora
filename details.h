@@ -17,8 +17,10 @@ private:
     QVector<int> population;
     QVector<QString*> type;
     QVector<QVector<double>> production, basicProduction;
-    double food, energy, science, industry, foodToNext;
+    double food, energy, science, industry, foodToNext, indInQueue;
     QVector<QString> buildinds;
+    QVector<QPair<QString, int> > buildQueue;
+    QVector<int> buildTime;
 
 public:
     ~Details();
@@ -32,13 +34,16 @@ public:
     void setPlanetType(int planet, QString *typ);
     void setColonized(int planetNum);
     int isColonized(int planetNum);
-    QPair<double, double> calculateSystem(int flag);
+    QPair<double, double> calculateSystem(const QDomDocument &mData, int flag);
     void calculateFood();
     void calculateEnergy();
     void calculateScience();
     void calculateIndustry();
+    void calculateQueue(const QDomDocument &mData, int flag);
     void addPopulation();
-    void addSystemBuilding(const QDomDocument& mData, QString buildName);
+    void addSystemBuilding(const QDomDocument &mData, QString buildName);
+    void addToQueue(const QDomDocument &mData, QString s);
+
 };
 
 #endif // DETAILS_H

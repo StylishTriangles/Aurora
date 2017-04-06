@@ -1,10 +1,38 @@
 <buildings>
-	<building Name="systemFoodImprovement1">
+	<building Name="systemFoodImprovement1" IndCost="100">
 		<resourcesPerCapita>
 			<resource Food="1" Restrictions="on terran"/>
 		</resourcesPerCapita>
 		<resourcesPerPlanet>
-			<resource Food="5" Restrictions="on terran"/>
+			<resource Food="3" Restrictions="on terran"/>
+			<resource Energy="-2" Restrictions=""/>
+		</resourcesPerPlanet>
+	</building>
+	<building Name="systemEnergyImprovement1" IndCost="100">
+		<resourcesPerCapita>
+			<resource Energy="1" Restrictions="on terran"/>
+			<resource Energy="2" Restrictions="on volcanic"/>
+		</resourcesPerCapita>
+		<resourcesPerPlanet>
+			<resource Energy="10" Restrictions=""/>
+		</resourcesPerPlanet>
+	</building>
+	<building Name="systemScienceImprovement1" IndCost="100">
+		<resourcesPerCapita>
+			<resource Science="1" Restrictions="on volcanic"/>
+			<resource Science="2" Restrictions="on titan"/>
+		</resourcesPerCapita>
+		<resourcesPerPlanet>
+			<resource Energy="-2" Restrictions=""/>
+		</resourcesPerPlanet>
+	</building>
+	<building Name="systemIndustryImprovement1" IndCost="80">
+		<resourcesPerCapita>
+			<resource Industry="1" Restrictions="on terran on titan"/>
+		</resourcesPerCapita>
+		<resourcesPerPlanet>
+			<resource Industry="10" Restrictions=""/>
+			<resource Energy="-2" Restrictions=""/>
 		</resourcesPerPlanet>
 	</building>
 </buildings>
