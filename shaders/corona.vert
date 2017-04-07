@@ -42,7 +42,7 @@ void main()
         if (dist2(pts[i],position) < eps)
             rot = rotationMatrix(camFront, angles[3-i]);
     }
-    gl_Position = vp * modelMat * rot * vec4(normalize(camUp)*radius*6, 1.0f);
-    fPosition = vec3(modelMat * vec4(position, 1.0f));
+    gl_Position = vp/* * modelMat*/ * rot * vec4(normalize(camUp)*6, 1.0f);
+    fPosition = position;
     TexCoord = vec2(texCoord.x, texCoord.y);
 }

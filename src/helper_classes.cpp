@@ -10,7 +10,7 @@ Light::Light(float temperature)
 void Light::blackbody(float temperature)
 {
     QVector3D col = kelvinToRGB(temperature);//*getTempColorShift(temperature);
-    qDebug() << temperature << col;
+//    qDebug() << temperature << col;
     ambient = {0.1f,0.1f,0.1f};
     diffuse = col;
     specular = col;

@@ -123,10 +123,24 @@ float noise(vec4 position, int octaves, float frequency, float persistence) {
 
 void main()
 {
-    float dist = length(fPosition) * 3.0;
-    float brightness = (1.0 / (dist * dist) - 0.1) * 0.7;
+    float unDT = time/32;
+    float t = unDT - length(fPosition);
+    // Offset normal with noise
+    float freqency = 1.5;
+    float ox = snoise(vec4(fPosition, t) * freqency);
+    float oy = snoise(vec4((fPosition + 2000.0), t) * freqency);
+    float oz = snoise(vec4((fPosition + 4000.0), t) * freqency);
+    vec3 offsetVec = vec3(ox, oy, oz) * 0.1;
+
+    // Get the distance vector from the center
+    vec3 nDistVec = normalize(fPosition + offsetVec);
+
+    // Get noise with normalized position to offset the original position
+    vec3 position = fPosition + noise(vec4(nDistVec, t), 8, 2.0, 0.7) * 0.1;
+
+    float dist = length(position /*+ offsetVec*/) * 3.0;
+    float brightness = (1.0 / (dist * dist) - 0.15) * 0.7;
 
     float total = brightness;
-    //color = vec4(vec3(1.0,total,total)*mColor,1.0);
-    color = vec4(1,0,0,1);
+    color = vec4(vec3(total,total,total)*mColor,total);
 }

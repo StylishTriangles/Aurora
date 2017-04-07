@@ -64,7 +64,7 @@ void Game::initializeGL()
 {
     initializeOpenGLFunctions();
     //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glEnable(GL_DEPTH_TEST);
+//    glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
 //    glEnable(GL_DITHER);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -123,7 +123,9 @@ void Game::drawModel(ModelContainer* mod)
     QOpenGLShaderProgram* currProgram;
     switch (mod->type) {
     case ModelContainer::Star:          currProgram = lightsProgram; break;
-    case ModelContainer::StarCorona:    currProgram = coronaProgram; break;
+    case ModelContainer::StarCorona:    currProgram = coronaProgram;
+        glBlendFunc(GL_ONE, GL_ONE);
+        break;
     case ModelContainer::Planet:
     default:                            currProgram = planetsProgram;
     }
@@ -205,6 +207,8 @@ void Game::drawModel(ModelContainer* mod)
     glDrawArrays(GL_TRIANGLES, 0, geomSize);
     if(mod->type==ModelContainer::Skybox)
         glCullFace(GL_BACK);
+    if (mod->type==ModelContainer::StarCorona)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     if(stage!=0){
         for (int i = 0; i < mod->children.size(); i++)
             drawModel(mod->children[i]);
@@ -344,7 +348,7 @@ void Game::keyPressEvent(QKeyEvent *event)
         keys += Qt::Key_C;
     if (event->key() == Qt::Key_R)
     {
-        camPos   = camPosDef;
+        camPos   = camPosDef + ((actSystem>=0)?solarSystems[actSystem]->position:QVector3D(0,0,0));
         camFront = camFrontDef;
         camUp    = camUpDef;
         camRot = camRotDef;
@@ -461,7 +465,6 @@ void Game::loadTextures()
     img = QImage(QString(":/planets/earth.png"));
     mTempImageData.insert("terran", img);
 
-#ifdef QT_DEBUG
     img = QImage(QString("../Aurora/atmosphere.png"));
     mTempImageData.insert("atmosphere", img);
 //    img = QImage(QString("../Aurora/atmosphere.png"));
@@ -484,11 +487,11 @@ void Game::loadTextures()
     mTempImageData.insert("spacecruiser", img);
 //    img = QImage(QString("../Aurora/textures/spacecruiser.png"));
     mTempImageData.insert("spacecruiserSpec", img);
-#else
-    QResource::registerResource("textures/textures.rcc");
-    tex = new QOpenGLTexture(QImage(QString(":/planets/atmosphere.png")));
-    textures.insert("atmosphere", tex);
-#endif
+//#else
+//    QResource::registerResource("textures/textures.rcc");
+//    tex = new QOpenGLTexture(QImage(QString(":/planets/atmosphere.png")));
+//    textures.insert("atmosphere", tex);
+//#endif
 }
 
 void Game::loadShaders()

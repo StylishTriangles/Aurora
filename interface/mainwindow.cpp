@@ -22,11 +22,11 @@ MainWindow::MainWindow(QWidget *parent) :
     loadGameSettings();
     QDir::setCurrent(qApp->applicationDirPath());
     // debug
-#ifdef QT_DEBUG
+
     QDir::setCurrent("..");
 //    qDebug() << QDir::currentPath();
     //on_newGameButton_clicked(); // skip menu
-#endif
+
 }
 
 MainWindow::~MainWindow()

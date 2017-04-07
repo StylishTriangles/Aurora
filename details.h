@@ -1,9 +1,9 @@
 #ifndef DETAILS_H
 #define DETAILS_H
 
+#include <QDomDocument>
 #include<QOpenGLBuffer>
 #include<QString>
-#include<QtXml/QtXml>
 #include<QVector3D>
 #include<QVector2D>
 #include<QVector>

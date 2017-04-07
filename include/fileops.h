@@ -1,12 +1,12 @@
 #ifndef AURORA_FILE_OPS
 #define AURORA_FILE_OPS
+#include <QDomDocument>
 #include <QFile>
 #include <QHash>
 #include <QString>
 #include <QVector>
 #include <QVector2D>
 #include <QVector3D>
-#include <QtXml/QtXml>
 #include <GL/gl.h>
 
 namespace Aurora {

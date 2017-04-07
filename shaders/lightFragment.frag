@@ -137,5 +137,5 @@ void main()
     float ss = (max(t1, 0.0) * max(t2, 0.0)) * 2.0;
     // Accumulate total noise
     float total = n-ss;
-    color = vec4(vec3(total,total,total)*mColor,1.0f);
+    color = vec4(vec3(total,total,total)*mColor*1.8,1.0f);
 }

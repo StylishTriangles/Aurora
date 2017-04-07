@@ -1,6 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include <QDomDocument>
 #include <QElapsedTimer>
 #include <QHash>
 #include <QKeyEvent>
@@ -15,7 +16,6 @@
 #include <QPair>
 #include <QResizeEvent>
 #include <QSet>
-#include <QtXml/QtXml>
 #include <QVector>
 
 #include <algorithm>
