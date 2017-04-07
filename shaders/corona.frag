@@ -143,4 +143,5 @@ void main()
 
     float total = brightness;
     color = vec4(vec3(total,total,total)*mColor,total);
+//    color = vec4(0,1,1,1);
 }

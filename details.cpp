@@ -274,5 +274,5 @@ void Details::addToQueue(const QDomDocument &mData, QString s){
         building = building.nextSiblingElement();
     }
     buildQueue.push_back({s, i});
-    calculateQueue(mData, c0);
+    calculateQueue(mData, 0);
 }

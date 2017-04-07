@@ -64,17 +64,17 @@ void Game::initializeGL()
 {
     initializeOpenGLFunctions();
     //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-//    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
-//    glEnable(GL_DITHER);
+    glEnable(GL_DITHER);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_MULTISAMPLE);
-    glEnable(GL_CULL_FACE);
+//    glEnable(GL_CULL_FACE);
     //glEnable(GL_POLYGON_SMOOTH);
     //glEnable(GL_TEXTURE_2D);
 
     Vao.create();
-    QOpenGLVertexArrayObject::Binder vaoBinder(&Vao);
+//    QOpenGLVertexArrayObject::Binder vaoBinder(&Vao);
 
     projectionMat.setToIdentity();
     projectionMat.perspective(camFov, float(this->width()) / float(this->height()), camNear, camFar);
@@ -130,9 +130,16 @@ void Game::drawModel(ModelContainer* mod)
     default:                            currProgram = planetsProgram;
     }
 
-    QMatrix4x4 modelMat = mod->getModelMat();
-    if(stage==0 && mod->type==ModelContainer::Star)
+    QMatrix4x4 modelMat;
+    if (mod->type == ModelContainer::StarCorona) {
+        modelMat.translate(mod->getPos());
+        modelMat.scale(mod->parent->getScale());
+    }
+    else
+        modelMat = mod->getModelMat();
+    if(stage==0 && (mod->type==ModelContainer::Star or mod->type == ModelContainer::StarCorona))
         modelMat.scale(reduceScale(mod->getScale().x())/mod->getScale().x());
+
     QMatrix4x4 vp = projectionMat * viewMat;
     auto distance = [](QVector3D const& camPos, QVector3D const& modPos) -> float {
         return (camPos-modPos).length();
@@ -209,6 +216,8 @@ void Game::drawModel(ModelContainer* mod)
         glCullFace(GL_BACK);
     if (mod->type==ModelContainer::StarCorona)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    if (stage == 0 and mod->type == ModelContainer::Star)
+        drawModel(mod->getStarCorona());
     if(stage!=0){
         for (int i = 0; i < mod->children.size(); i++)
             drawModel(mod->children[i]);
@@ -229,7 +238,7 @@ void Game::drawOrbit(ModelContainer* mod) {
     planeGeoProgram->setUniformValue("col",mPlayers[solarDetails[actSystem]->getOwner()]->getColor());
 
     mVbo["circle"].bind();
-    this->glEnableVertexAttribArray(0);
+//    this->glEnableVertexAttribArray(0);
     this->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid*)0);
 
     glDrawArrays(GL_LINE_LOOP, 0, 720);
@@ -240,8 +249,8 @@ void Game::drawEdges() {
     edgesProgram->setUniformValue("vp", projectionMat*viewMat);
     edgesProgram->setUniformValue("modelMat", QMatrix4x4());
     mVbo["edges"].bind();
-    this->glEnableVertexAttribArray(0);
-    this->glEnableVertexAttribArray(1);
+//    this->glEnableVertexAttribArray(0);
+//    this->glEnableVertexAttribArray(1);
     this->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
     this->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(2*sizeof(GLfloat)));
 
@@ -298,6 +307,7 @@ void Game::paintGL()
 {
     applyChanges();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     if (!initComplete) {
         drawLoadingScreen();
         emit paintCompleted();
@@ -617,6 +627,9 @@ void Game::loadPrototypes()
     generateSolarSystems(solarSystems, solarDetails);
     mGeometry["edges"] = new QVector<float>();
     generateEdges(solarSystems, edges, *mGeometry["edges"], *mGeometry["geosphere1"], 2*solarSystems.size());
+
+    for (auto* p: solarSystems)
+        p->optimize();
 }
 
 void Game::loadXml(){

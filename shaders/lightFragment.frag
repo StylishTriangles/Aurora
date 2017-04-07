@@ -136,6 +136,7 @@ void main()
     float t2 = snoise((sPosition + unRadius) * frequency) - s;
     float ss = (max(t1, 0.0) * max(t2, 0.0)) * 2.0;
     // Accumulate total noise
+    n = max(n,0.2);
     float total = n-ss;
     color = vec4(vec3(total,total,total)*mColor*1.8,1.0f);
 }

@@ -38,7 +38,9 @@ public:
     QVector3D getPos() const;
     QVector3D getRot() const;
     QVector3D getScale() const;
+    ModelContainer* getStarCorona();
     virtual QMatrix4x4 getModelMat() const;
+    void optimize();
 
     ModelContainer* parent;
     QVector3D position, rotation;

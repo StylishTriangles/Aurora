@@ -1,4 +1,5 @@
 #include "modelcontainer.h"
+#include <algorithm>
 
 ModelContainer::ModelContainer(QVector3D _pos, QVector3D _rot, QString _model, QString _tex, Type _t) :
     parent(nullptr),
@@ -54,6 +55,10 @@ QVector3D ModelContainer::getScale() const
 QMatrix4x4 ModelContainer::getModelMat() const
 {
     QMatrix4x4 ret;
+    if (type == StarCorona) {
+        ret.translate(getPos());
+        return ret;
+    }
     ret.translate(position);
     ret.rotate(rotation.x(),1.0f,0.0f);
     ret.rotate(rotation.y(),0.0f,1.0f);
@@ -68,4 +73,19 @@ QMatrix4x4 ModelContainer::getModelMat() const
         else
             return parent->getModelMat()*ret;
     }
+}
+
+ModelContainer* ModelContainer::getStarCorona()
+{
+    for (int i = children.size()-1; i >= 0; i--)
+        if (children[i]->type == StarCorona)
+            return children[i];
+    return nullptr;
+}
+
+void ModelContainer::optimize()
+{
+    auto sortFunc = [](ModelContainer* lhs, ModelContainer* rhs) ->
+            bool { return lhs->type < rhs->type;};
+    std::sort(children.begin(), children.end(), sortFunc);
 }

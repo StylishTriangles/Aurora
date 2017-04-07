@@ -37,12 +37,12 @@ mat4 rotationMatrix(vec3 axis, float angle)
 
 void main()
 {
-    mat4 rot;
-    for (int i = 0; i < 4; i++) {
-        if (dist2(pts[i],position) < eps)
-            rot = rotationMatrix(camFront, angles[3-i]);
-    }
-    gl_Position = vp/* * modelMat*/ * rot * vec4(normalize(camUp)*6, 1.0f);
+//    mat4 rot;
+//    for (int i = 0; i < 4; i++) {
+//        if (dist2(pts[i],position) < eps)
+//            rot = rotationMatrix(camFront, angles[i]);
+//    }
+    gl_Position = vp * modelMat * vec4(position*4, 1.0f);
     fPosition = position;
     TexCoord = vec2(texCoord.x, texCoord.y);
 }

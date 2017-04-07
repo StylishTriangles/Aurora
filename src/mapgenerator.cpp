@@ -6,9 +6,10 @@
 void generateSolarSystems(QVector<ModelContainer *> &solarSystems, QVector<Details*> &solarDetails){
     int * a=new int(75192);
     long long int b=(long long int)a;
+    delete a;
     qDebug()<<"Random Seed: "<<b;
     std::mt19937 rng(b);
-    std::uniform_real_distribution<float> ufd(-15.0f, 15.0f), eps(-0.1f, 0.1f), alfa(0.0f, 2*M_PI);
+    std::uniform_real_distribution<float> ufd(-6.0f, 6.0f), eps(-0.1f, 0.1f), alfa(0.0f, 2*M_PI);
     std::uniform_int_distribution<int> uid(1, 6), luid(1, 1000);
     GLfloat x, y;
     int planetsInSystem, p;
@@ -209,13 +210,6 @@ void generateEdges(QVector<ModelContainer *> &solarSystems, QVector<QVector<int>
     auto fin = [&rep](int a) -> int {int a1=a;while(rep[a1]!=a1) a1=rep[a1]; while(a!=a1){rep[a]=a1; a=rep[a];} return a;};
     auto unio = [&rep, fin](int a, int b) -> void {rep[fin(a)]=fin(b);};
     auto cr_pr = [](QVector2D a, QVector2D b) -> float {return a.x()*b.y()-a.y()*b.x();};
-    for(int i=0; i<v.size(); i++){ // minimalne drzewo rozpinajace (MST)
-        if(fin(v[i].y())!=fin(v[i].z())){
-            unio(v[i].y(), v[i].z());
-            edges[v[i].y()].push_back(v[i].z());
-            edges[v[i].z()].push_back(v[i].y());
-        }
-    }
     auto checkIfCrossing = [&tmp, &star, &edges, &solarSystems, cr_pr](int a, int b) -> bool {QVector2D p1, p2, p3, p4;
         for(int i=0; i<edges.size(); i++){
             tmp=solarSystems[i]->getModelMat();
@@ -232,6 +226,13 @@ void generateEdges(QVector<ModelContainer *> &solarSystems, QVector<QVector<int>
             }
         }
         return false;};
+    for(int i=0; i<v.size(); i++){ // minimalne drzewo rozpinajace (MST)
+        if(fin(v[i].y())!=fin(v[i].z()) and !checkIfCrossing(v[i].y(), v[i].z())){
+            unio(v[i].y(), v[i].z());
+            edges[v[i].y()].push_back(v[i].z());
+            edges[v[i].z()].push_back(v[i].y());
+        }
+    }
     std::mt19937 rng((long long int)(new int(42369)));
     std::uniform_int_distribution<int> uid(0, solarSystems.size()-1);
     int a, b;
