@@ -33,7 +33,6 @@ public:
         TitanPylons
     };
 
-//    GeometryProvider() = default;
     // radius - radius of icosahedron, outData - vector to write vertex data,
     // stride - stride size in elements, elemPos - position of first vertex in each stride
     static const int STRIDE = 8;    // stride length
@@ -45,9 +44,9 @@ public:
     static std::mt19937 RNG;
     // planimetry
     static void circle(QVector<GLfloat>& outData);
-    static void rectangle3D(QVector<GLfloat>& outData, int stride = STRIDE, int vertexPos = VPOS, int normalPos = NPOS, int texturePos = TPOS); // bot left=(-1,-1,0); top right=(1,1,0)
 
     // stereometry
+    static void rectangle3D(QVector<GLfloat>& outData, int stride = STRIDE, int vertexPos = VPOS, int normalPos = NPOS, int texturePos = TPOS); // bot left=(-1,-1,0); top right=(1,1,0)
     static void icosahedron(QVector<GLfloat>& outData,  int stride = STRIDE, int vertexPos = VPOS, int normalPos = NPOS, int texturePos = TPOS);
     static void geosphere(QVector<GLfloat>& outData, SubdivisionCount subCount = Four, int stride = STRIDE, int vertexPos = VPOS, int normalPos = NPOS, int texPos = TPOS);
     static void sphere(QVector<GLfloat>& outData, const int parallelsAmount = 24, const int meridiansAmount = 24); // stride = 5, vertices [0-2], texture [3-4]

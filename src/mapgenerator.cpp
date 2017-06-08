@@ -281,7 +281,7 @@ void addAtmo(ModelContainer* mod){
 }
 
 void addTitan(ModelContainer* mod, Details& det, std::mt19937& rng, std::uniform_real_distribution<float> &eps, std::uniform_real_distribution<float> &alfa, int idx){
-    ModelContainer* tmp= new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "titan", "terran", ModelContainer::Titan);
+    ModelContainer* tmp= new ModelContainer({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, "titan", "volcanic", ModelContainer::Titan);
     std::uniform_int_distribution<int> uid(1, 10);
     float d, x;
     d=2.0f*idx+3.0f+eps(rng);
