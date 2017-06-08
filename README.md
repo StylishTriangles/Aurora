@@ -19,10 +19,10 @@ Currently presenting:
 * Most game related algorithms wrapped in classes
 
 Solar System with visible lighting effects
-![Solar system](Link to SolarSystem.png)
+![Solar system](https://raw.githubusercontent.com/StylishTriangles/Aurora/!README_IMAGES/SolarSystem.png)
 
 Example constellation generated with random seed
-![Constellation](Link to Constellation.png)
+![Constellation](https://raw.githubusercontent.com/StylishTriangles/Aurora/!README_IMAGES/Constellation.png)
 
 Options interface 
-![Options UI](Link to ...)
+![Options UI](https://raw.githubusercontent.com/StylishTriangles/Aurora/!README_IMAGES/OptionsUI.png)
