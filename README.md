@@ -18,11 +18,14 @@ Currently presenting:
 * XML file data
 * Most game related algorithms wrapped in classes
 
-Solar System with visible lighting effects
+Solar System with visible lighting effects:
+
 ![Solar system](https://raw.githubusercontent.com/StylishTriangles/Aurora/Starlord/!README_IMAGES/SolarSystem.png)
 
-Example constellation generated with random seed
+Example constellation generated with random seed:
+
 ![Constellation](https://raw.githubusercontent.com/StylishTriangles/Aurora/Starlord/!README_IMAGES/Constellation.png)
 
-Options interface 
+Options interface:
+
 ![Options UI](https://raw.githubusercontent.com/StylishTriangles/Aurora/Starlord/!README_IMAGES/OptionsUI.png)
