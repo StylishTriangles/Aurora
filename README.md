@@ -12,6 +12,7 @@ Currently presenting:
 * Multithreaded game logic
 * Elastic ModelContainer class with child objects
 * Fully functional camera
+* Support for static level of detail meshes
 * .obj file parser
 * Constellation generator (planar graph with stars as nodes)
 * GeometryProvider class which generates primitives such as geospheres, icosahedrons, billboards and adequate UV maps 
